@@ -6,8 +6,6 @@
 
 - Nachname, Vorname: 
 - Matrikelnummer: 
-- E-Mail-Adresse: 
-- Datum: 
 
 Dieses Dokument dient als Vorlage für Teilaufgabe 1. Es muss zwingend hinsichtlich Aufbau, Markdown-Syntax und weiterer Vorgaben als Grundlage verwendet werden. Die abzugebenden Dokumente für Teilaufgabe 1 sowie alle Dokumente der nachfolgenden Teilaufgaben müssen vollständig in Markdown (für den Text) und SVG (für Diagramme) erstellt werden.
 
@@ -19,6 +17,11 @@ Diese Vorlage enthält Beispiele, die die erwarteten Inhalte und Ergebnisse verd
 ## Aufgabe 1: Anforderungsanalyse
 
 Analyse der Spielidee (Tipp: Netzwerkprotokolldokumentation kann zusätzlich beim Verständnis der Spielidee helfen) um 7 unterschiedliche Anforderungen (bestehend aus 3 funktionalen, 3 nichtfunktionalen und einer zusätzlichen Designbedingung) nach den folgenden Kriterien zu dokumentieren. Achten Sie darauf die in Skriptum und der Vorlesung behandelten **Qualitätsaspekten** (besonders: atomar, Aktor/System, Aktion, wann, standardisierte Schlüsselwörter) durchgehend zu berücksichtigen.
+
+### Quellen dokumentieren - Aufgabe 1: Anforderungsanalyse
+
+- **Kurzbeschreibung der Übernommenen Teile**: *Was & Wo im Projekt, In welchem Umfang (Idee, Konzept, Texte, Grafik etc.) mit und ohne Anpassungen, etc.*
+- **Quellen der Übernommenen Teile**: *Folien, Bücher, Namen der Quell-Studierenden, URLs zu Webseiten, KI Prompts, etc.*
 
 ### Typ der Anforderung: funktional
 
@@ -177,7 +180,14 @@ Darstellung der initialen Form, welche dazu dient, die Erstellung eines Diagramm
 - **Schnittstelle Datenbank**: Es wird eine Verbindung zur MySQL Datenbank aufgebaut und SQL verwendet, um einmal erstellte Diagramme in der Systemdatenbank abzulegen. Übertragen werden Diagramme als GraphObject mit Bestätigung des Empfanges mittels Rückmeldung der geänderte Zeilen.
 - **Schnittstelle Diagrammdaten**: Es wird die LogSPX FTPS Schnittstelle verwendet, um alle Daten zur Erstellung der Ablaufdiagramme einzulesen. Die Verbindung ist SSL Verschlüsselt, wobei die Daten unter ftps://testserver.com/testfolder zu finden sind. Diagramme werden als UmlXML-Standard übertragen.
 
-## Dokumentation Anforderung
+## Anforderungsdokumentation
+
+### Quellen dokumentieren - Aufgabe 2: Anforderungsdokumentation
+
+- **Kurzbeschreibung der Übernommenen Teile**: *Was & Wo im Projekt, In welchem Umfang (Idee, Konzept, Texte, Grafik etc.) mit und ohne Anpassungen, etc.*
+- **Quellen der Übernommenen Teile**: *Folien, Bücher, Namen der Quell-Studierenden, URLs zu Webseiten, KI Prompts, etc.*
+
+### Anforderungsüberblick
 
 - **Name**: [Namen der Anforderung (wenige Wörter)]
 - **Beschreibung und Priorität**: [Geben Sie eine kurze Beschreibung (2-3 Sätze) der Anforderung an und definieren Sie die Priorität der Anforderung als: Hoch, Mittel, Niedrig]
@@ -252,6 +262,11 @@ Darstellung der initialen Form, welche dazu dient, die Erstellung eines Diagramm
 
 ## Aufgabe 3: Architektur entwerfen, modellieren und validieren
 
+### Quellen dokumentieren - Aufgabe 3: Architektur entwerfen, modellieren und validieren
+
+- **Kurzbeschreibung der Übernommenen Teile**: *Was & Wo im Projekt, In welchem Umfang (Idee, Konzept, Texte, Grafik etc.) mit und ohne Anpassungen, etc.*
+- **Quellen der Übernommenen Teile**: *Folien, Bücher, Namen der Quell-Studierenden, URLs zu Webseiten, KI Prompts, etc.*
+
 ### Klassendiagramm
 
 [Klassendiagramm hier samt, bei Bedarf, Beschreibung beziehungsweise Erläuterung einfügen]
@@ -296,19 +311,6 @@ Alle Diagramme in dieses Kapitel einfügen. Bei Bedarf mit einer kurzen Beschrei
 
 ## Aufgabe 4: Quellen dokumentieren
 
-Dokumentieren Sie Ihre Quellen. Dies ist für Sie wichtig, um die Einstufung einer Arbeit als Plagiat zu vermeiden. Inhalte, die direkt aus dem Moodle Kurs dieses Semesters der LV Software Engineering 1 stammen, können zur Vereinfachung weggelassen werden. Alle anderen Inhalte sind zu zitieren. Die Vorgabe des Studienpräses der Universität Wien lautet: *"Alle fremden Gedanken, die in die eigene Arbeit einfließen, müssen durch Quellenangaben belegt werden."*
+Dokumentieren Sie Ihre Quellen. Dies ist für Sie wichtig, um die Einstufung einer Arbeit als Plagiat zu vermeiden. Geben Sie hierzu Ihre Quellen in den jeweils vorgesehenen Bereichen direkt bei Beginn der jeweiligen Aufgaben an. Inhalte, die direkt aus dem Moodle Kurs dieses Semesters der LV Software Engineering 1 stammen, können zur Vereinfachung weggelassen werden. Alle anderen Inhalte sind zu zitieren. Die Vorgabe des Studienpräses der Universität Wien lautet: *"Alle fremden Gedanken, die in die eigene Arbeit einfließen, müssen durch Quellenangaben belegt werden."* 
 
-### Aufgabe 1: Anforderungsanalyse
 
-- **Kurzbeschreibung der Übernommenen Teile**: *Was & Wo im Projekt, In welchem Umfang (Idee, Konzept, Texte, Grafik etc.) mit und ohne Anpassungen, etc.*
-- **Quellen der Übernommenen Teile**: *Folien, Bücher, Namen der Quell-Studierenden, URLs zu Webseiten, KI Prompts, etc.*
-
-### Aufgabe 2: Anforderungsdokumentation
-
-- **Kurzbeschreibung der übernommenen Teile**: 
-- **Quellen der übernommenen Teile**: 
-
-### Aufgabe 3: Architektur entwerfen, modellieren und validieren
-
-- **Kurzbeschreibung der übernommenen Teile**: 
-- **Quellen der übernommenen Teile**: 
