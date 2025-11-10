@@ -1,7 +1,7 @@
 package client.model;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
  * Class representing the current state of the game.
  */
 public class GameState implements client.observer.util.Observable {
-    private static final Logger logger = LoggerFactory.getLogger(GameState.class);
+    // private static final Logger logger = LoggerFactory.getLogger(GameState.class);
     
     private final String gameStateID;
     private ArrayList<PlayerState> players;
@@ -28,20 +28,20 @@ public class GameState implements client.observer.util.Observable {
     public void addObserver(client.observer.util.Observer observer) {
         if (!observers.contains(observer)) {
             observers.add(observer);
-            logger.debug("Observer {} added to GameState. Total observers: {}", 
-                        observer.getClass().getSimpleName(), observers.size());
+            // logger.debug("Observer {} added to GameState. Total observers: {}", 
+            //             observer.getClass().getSimpleName(), observers.size());
             // Notify the newly added observer immediately with current state
             try {
                 observer.update(this);
-                logger.trace("Newly added observer {} notified of current state", 
-                           observer.getClass().getSimpleName());
+                // logger.trace("Newly added observer {} notified of current state", 
+                //            observer.getClass().getSimpleName());
             } catch (Exception e) {
-                logger.error("Exception occurred while notifying newly added observer {}: {}", 
-                           observer.getClass().getSimpleName(), e.getMessage(), e);
+                // logger.error("Exception occurred while notifying newly added observer {}: {}", 
+                //            observer.getClass().getSimpleName(), e.getMessage(), e);
             }
         } else {
-            logger.trace("Observer {} already registered, skipping duplicate", 
-                        observer.getClass().getSimpleName());
+            // logger.trace("Observer {} already registered, skipping duplicate", 
+            //             observer.getClass().getSimpleName());
         }
     }
 
@@ -49,29 +49,29 @@ public class GameState implements client.observer.util.Observable {
     public void removeObserver(client.observer.util.Observer observer) {
         boolean removed = observers.remove(observer);
         if (removed) {
-            logger.debug("Observer {} removed from GameState. Total observers: {}", 
-                        observer.getClass().getSimpleName(), observers.size());
+            // logger.debug("Observer {} removed from GameState. Total observers: {}", 
+            //             observer.getClass().getSimpleName(), observers.size());
         } else {
-            logger.trace("Observer {} was not found for removal", 
-                        observer.getClass().getSimpleName());
+            // logger.trace("Observer {} was not found for removal", 
+            //             observer.getClass().getSimpleName());
         }
     }
 
     @Override
     public void notifyObservers() {
-        logger.trace("Notifying {} observers of GameState change", observers.size());
+        // logger.trace("Notifying {} observers of GameState change", observers.size());
         // Use a copy to avoid ConcurrentModificationException if observers modify the list
         for (client.observer.util.Observer observer : new ArrayList<>(observers)) {
             try {
-                logger.trace("Notifying observer: {}", observer.getClass().getSimpleName());
+                // logger.trace("Notifying observer: {}", observer.getClass().getSimpleName());
                 observer.update(this);
             } catch (Exception e) {
-                logger.error("Exception occurred while notifying observer {}: {}", 
-                           observer.getClass().getSimpleName(), e.getMessage(), e);
+                // logger.error("Exception occurred while notifying observer {}: {}", 
+                //            observer.getClass().getSimpleName(), e.getMessage(), e);
                 // Continue notifying other observers despite this exception
             }
         }
-        logger.trace("All observers notified successfully");
+        // logger.trace("All observers notified successfully");
     }
     
     /**
@@ -128,7 +128,7 @@ public class GameState implements client.observer.util.Observable {
      * @param gameState The game state to update from
      */
     public void updateGameState(GameState gameState) {
-        logger.debug("Updating GameState with new data");
+        // logger.debug("Updating GameState with new data");
         //System.out.print("notify called: ");
         if (gameState != null) {
             this.players = gameState.getPlayers();
@@ -138,13 +138,13 @@ public class GameState implements client.observer.util.Observable {
             this.opponentFortFound = gameState.isOpponentFortFound();
             this.treasurePosition = gameState.getTreasurePosition();
             this.opponentFortPosition = gameState.getOpponentFortPosition();
-            logger.trace("GameState updated - treasure collected: {}, opponent fort found: {}", 
-                        treasureCollected, opponentFortFound);
+            // logger.trace("GameState updated - treasure collected: {}, opponent fort found: {}", 
+            //             treasureCollected, opponentFortFound);
         } else {
-            logger.warn("Attempted to update GameState with null gameState");
+            // logger.warn("Attempted to update GameState with null gameState");
         }
 
-        logger.debug("GameState update complete, notifying {} observers", observers.size());
+        // logger.debug("GameState update complete, notifying {} observers", observers.size());
         notifyObservers();
         //System.out.println();
     }
@@ -250,7 +250,7 @@ public class GameState implements client.observer.util.Observable {
         this.opponentFortPosition = opponentFortPosition;
         if (opponentFortPosition != null) {
             this.opponentFortFound = true;
-            logger.info("Opponent fort position set at: {}", opponentFortPosition.printCoordinates());
+            // logger.info("Opponent fort position set at: {}", opponentFortPosition.printCoordinates());
         }
         notifyObservers();
     }
@@ -271,7 +271,7 @@ public class GameState implements client.observer.util.Observable {
      */
     public void setPlayers(ArrayList<PlayerState> players) {
         this.players = players;
-        logger.debug("Players list updated with {} players", players != null ? players.size() : 0);
+        // logger.debug("Players list updated with {} players", players != null ? players.size() : 0);
         notifyObservers();
     }
 
@@ -305,7 +305,7 @@ public class GameState implements client.observer.util.Observable {
      */
     public void setMap(GameMap map) {
         this.map = map;
-        logger.debug("Game map updated - size: {}", map != null ? map.getContentSize() : 0);
+        // logger.debug("Game map updated - size: {}", map != null ? map.getContentSize() : 0);
         notifyObservers();
     }
     
@@ -325,7 +325,7 @@ public class GameState implements client.observer.util.Observable {
      */
     public void setTreasureCollected(boolean treasureCollected) {
         this.treasureCollected = treasureCollected;
-        logger.info("Treasure collected status changed to: {}", treasureCollected);
+        // logger.info("Treasure collected status changed to: {}", treasureCollected);
         notifyObservers();
     }
     
@@ -345,7 +345,7 @@ public class GameState implements client.observer.util.Observable {
      */
     public void setOpponentFortFound(boolean opponentFortFound) {
         this.opponentFortFound = opponentFortFound;
-        logger.info("Opponent fort found status changed to: {}", opponentFortFound);
+        // logger.info("Opponent fort found status changed to: {}", opponentFortFound);
         notifyObservers();
     }
     
@@ -366,9 +366,9 @@ public class GameState implements client.observer.util.Observable {
     public void setTreasurePosition(MapNode treasurePosition) {
         this.treasurePosition = treasurePosition;
         if (treasurePosition != null) {
-            logger.info("Treasure position set at: {}", treasurePosition.printCoordinates());
+            // logger.info("Treasure position set at: {}", treasurePosition.printCoordinates());
         } else {
-            logger.debug("Treasure position cleared");
+            // logger.debug("Treasure position cleared");
         }
         notifyObservers();
     }

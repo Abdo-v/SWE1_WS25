@@ -10,8 +10,8 @@ import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 import client.model.GameState;
 import client.model.mapper.GameMap;
@@ -22,7 +22,7 @@ import client.model.mapper.OwnToOppMapOrientation;
 
 public class FortSeeker implements client.observer.util.Observer {
 
-    private static final Logger logger = LoggerFactory.getLogger(FortSeeker.class);
+    // private static final Logger logger = LoggerFactory.getLogger(FortSeeker.class);
 
     private GameState gameState;
     private boolean enemyFortFound = false;
@@ -41,7 +41,7 @@ public class FortSeeker implements client.observer.util.Observer {
      * @return A LinkedHashMap of grass nodes with their visited status.
      */
     public LinkedHashMap<MapNode, Boolean> getTraverseWay(){
-        logger.debug("Generating traversal way for opponent half-map");
+        // logger.debug("Generating traversal way for opponent half-map");
         ArrayList<MapNode> grassNodes = new ArrayList<>();
         if (gameState != null && gameState.getMap() != null) {
             MapNode start = gameState.getOwnFortPosition();
@@ -53,21 +53,21 @@ public class FortSeeker implements client.observer.util.Observer {
                 grassNodes = opponentHalfMap.getMapNodes().stream()
                         .filter(node -> node.getTerrain() == Terrain.GRASS)
                         .collect(Collectors.toCollection(ArrayList::new));
-                logger.debug("Found {} grass nodes in arranged opponent half-map", grassNodes.size());
+                // logger.debug("Found {} grass nodes in arranged opponent half-map", grassNodes.size());
             } else {
-                logger.warn("Opponent half-map or its nodes are null");
+                // logger.warn("Opponent half-map or its nodes are null");
             }
         }
         else {
             if(gameState == null) {
-                logger.error("GameState is null, cannot get traversal way");
+                // logger.error("GameState is null, cannot get traversal way");
                 System.err.println("FortSeeker: GameState is null, cannot get traversal way.");
                 new Throwable("FortSeeker: GameState is null, cannot get traversal way.").printStackTrace();
             } else if (gameState.getMap() == null) {
-                logger.error("GameMap is null, cannot get traversal way");
+                // logger.error("GameMap is null, cannot get traversal way");
                 System.err.println("FortSeeker: GameMap is null, cannot get traversal way.");
             } else {
-                logger.warn("No grass nodes found in the specified half-map");
+                // logger.warn("No grass nodes found in the specified half-map");
                 System.err.println("FortSeeker: No grass nodes found in the specified half-map.");  
             }
         }
@@ -75,15 +75,15 @@ public class FortSeeker implements client.observer.util.Observer {
         for (MapNode node : grassNodes) {
             grassTraversal.put(node, false);
         }
-        logger.debug("Initialized opponent traversal way with {} grass nodes (all unvisited)", grassTraversal.size());
+        // logger.debug("Initialized opponent traversal way with {} grass nodes (all unvisited)", grassTraversal.size());
         return grassTraversal;
     }
 
     public MapNode getEnemyFortNodeIfFound() {
-        logger.trace("Searching for enemy fort in opponent half-map");
+        // logger.trace("Searching for enemy fort in opponent half-map");
         MapNode res = null;
         if (gameState == null || gameState.getMap() == null) {
-            logger.warn("Cannot search for enemy fort - GameState or map is null");
+            // logger.warn("Cannot search for enemy fort - GameState or map is null");
             return null;
         }
         if (gameState.getCurrentPlayerState() == null) {
@@ -92,23 +92,23 @@ public class FortSeeker implements client.observer.util.Observer {
         for (MapNode node : gameState.getMap().getOpponentHalfMap().getMapNodes()) {
             if (node.isFortPresent()) {
                 res = node;
-                logger.info("Enemy fort found at position: {}", res.printCoordinates());
+                // logger.info("Enemy fort found at position: {}", res.printCoordinates());
                 break;
             }
         }
         if(res != null) {
-            logger.debug("Enemy fort confirmed at: {}, current position: {}", 
-                        res.printCoordinates(),
-                        gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
+            // logger.debug("Enemy fort confirmed at: {}, current position: {}", 
+            //             res.printCoordinates(),
+            //             gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
         } else {
-            logger.trace("No enemy fort found in opponent half-map");
+            // logger.trace("No enemy fort found in opponent half-map");
         }
         return res;
     }
 
     public LinkedHashMap<MapNode, Boolean> getTraverseWay(MapNode currentPosition){
-        logger.debug("Generating traversal way for opponent half-map from position: {}", 
-                    currentPosition != null ? currentPosition.printCoordinates() : "null");
+        // logger.debug("Generating traversal way for opponent half-map from position: {}", 
+        //             currentPosition != null ? currentPosition.printCoordinates() : "null");
         ArrayList<MapNode> grassNodes = new ArrayList<>();
         if (gameState != null && gameState.getMap() != null) {
             PlayerHalfMap opponentHalfMap = getArrangedOpponentHalfMap(currentPosition);
@@ -116,19 +116,19 @@ public class FortSeeker implements client.observer.util.Observer {
                 grassNodes = opponentHalfMap.getMapNodes().stream()
                         .filter(node -> node.getTerrain() == Terrain.GRASS)
                         .collect(Collectors.toCollection(ArrayList::new));
-                logger.debug("Found {} grass nodes from position-specific arrangement", grassNodes.size());
+                // logger.debug("Found {} grass nodes from position-specific arrangement", grassNodes.size());
             }
         }
         else {
             if(gameState == null) {
-                logger.error("GameState is null, cannot get traversal way");
+                // logger.error("GameState is null, cannot get traversal way");
                 System.err.println("FortSeeker: GameState is null, cannot get traversal way.");
                 new Throwable("FortSeeker: GameState is null, cannot get traversal way.").printStackTrace();
             } else if (gameState.getMap() == null) {
-                logger.error("GameMap is null, cannot get traversal way");
+                // logger.error("GameMap is null, cannot get traversal way");
                 System.err.println("FortSeeker: GameMap is null, cannot get traversal way.");
             } else {
-                logger.warn("No grass nodes found in the specified half-map");
+                // logger.warn("No grass nodes found in the specified half-map");
                 System.err.println("FortSeeker: No grass nodes found in the specified half-map.");  
             }
         }
@@ -136,15 +136,15 @@ public class FortSeeker implements client.observer.util.Observer {
         for (MapNode node : grassNodes) {
             grassTraversal.put(node, false);
         }
-        logger.debug("Generated position-specific traversal way with {} nodes", grassTraversal.size());
+        // logger.debug("Generated position-specific traversal way with {} nodes", grassTraversal.size());
         return grassTraversal;
     }
 
     public LinkedHashMap<MapNode, Boolean> getFilteredTraverseWay(MapNode enemyTruePosition){
-        logger.info("Filtering traversal way based on enemy position: {}", 
-                   enemyTruePosition != null ? enemyTruePosition.printCoordinates() : "null");
+        // logger.info("Filtering traversal way based on enemy position: {}", 
+        //            enemyTruePosition != null ? enemyTruePosition.printCoordinates() : "null");
         if (enemyTruePosition == null) {
-            logger.error("Enemy true position cannot be null for filtering");
+            // logger.error("Enemy true position cannot be null for filtering");
             throw new IllegalArgumentException("Enemy true position cannot be null");
         }
         if (gameState == null || gameState.getCurrentPlayerState() == null) {
@@ -153,13 +153,13 @@ public class FortSeeker implements client.observer.util.Observer {
         MapNode currentPosition = gameState.getCurrentPlayerState().getCurrentPosition();
         LinkedHashMap<MapNode, Boolean> fullTraversalWay = getTraverseWay(currentPosition);
         LinkedHashMap<MapNode, Boolean> filteredTraversalWay = new LinkedHashMap<>();
-        logger.debug("Filtering {} nodes based on 8-move reachability from enemy position", 
-                    fullTraversalWay.size());
+        // logger.debug("Filtering {} nodes based on 8-move reachability from enemy position", 
+        //             fullTraversalWay.size());
         int reachableCount = 0;
         int unreachableCount = 0;
         for (MapNode node : fullTraversalWay.keySet()) {
             if (node == null) {
-                logger.warn("Skipping null node in traversal way");
+                // logger.warn("Skipping null node in traversal way");
                 System.err.println("FortSeeker: Node is null, skipping.");
                 continue;
             }
@@ -171,8 +171,8 @@ public class FortSeeker implements client.observer.util.Observer {
                 unreachableCount++;
             }
         }
-        logger.info("Filtered traversal way: {} reachable nodes, {} filtered out (unreachable in 8 moves)", 
-                   reachableCount, unreachableCount);
+        // logger.info("Filtered traversal way: {} reachable nodes, {} filtered out (unreachable in 8 moves)", 
+        //            reachableCount, unreachableCount);
         return filteredTraversalWay;
     }
 
@@ -187,20 +187,20 @@ public class FortSeeker implements client.observer.util.Observer {
      */
     private int getCostToReachNode(MapNode startNode, MapNode targetNode) {
         if (startNode == null || targetNode == null || gameState == null || gameState.getMap() == null) {
-            logger.error("Invalid parameters for cost calculation - start: {}, target: {}, gameState: {}, map: {}", 
-                        startNode != null, targetNode != null, gameState != null, 
-                        gameState != null ? gameState.getMap() != null : false);
+            // logger.error("Invalid parameters for cost calculation - start: {}, target: {}, gameState: {}, map: {}", 
+            //             startNode != null, targetNode != null, gameState != null, 
+            //             gameState != null ? gameState.getMap() != null : false);
             System.err.println("FortSeeker.getCostToReachNode: Start, target, gameState, or map is null.");
             return Integer.MAX_VALUE;
         }
 
         if (startNode.equalsByCoordinates(targetNode)) {
-            logger.trace("Start and target are the same, cost is 0");
+            // logger.trace("Start and target are the same, cost is 0");
             return 0; // No cost to stay in place
         }
 
-        logger.trace("Calculating path cost from {} to {}", 
-                    startNode.printCoordinates(), targetNode.printCoordinates());
+        // logger.trace("Calculating path cost from {} to {}", 
+        //             startNode.printCoordinates(), targetNode.printCoordinates());
 
         Map<MapNode, Integer> distances = new HashMap<>();
         Set<MapNode> settledNodes = new HashSet<>();
@@ -222,9 +222,9 @@ public class FortSeeker implements client.observer.util.Observer {
             // If target is polled from PQ, its shortest distance is found
             if (u.equalsByCoordinates(targetNode)) {
                 int finalCost = distances.get(u);
-                logger.trace("Path found from {} to {} with cost {} (explored {} nodes)", 
-                           startNode.printCoordinates(), targetNode.printCoordinates(), 
-                           finalCost, exploredNodes);
+                // logger.trace("Path found from {} to {} with cost {} (explored {} nodes)", 
+                //            startNode.printCoordinates(), targetNode.printCoordinates(), 
+                //            finalCost, exploredNodes);
                 return finalCost; // Target found, return its distance
             }
 
@@ -272,8 +272,8 @@ public class FortSeeker implements client.observer.util.Observer {
         }
 
         // Target not reached if loop finishes without returning
-        logger.debug("No path found from {} to {} (explored {} nodes)", 
-                    startNode.printCoordinates(), targetNode.printCoordinates(), exploredNodes);
+        // logger.debug("No path found from {} to {} (explored {} nodes)", 
+        //             startNode.printCoordinates(), targetNode.printCoordinates(), exploredNodes);
         return Integer.MAX_VALUE; // Indicate unreachable
     }
     /**
@@ -384,12 +384,12 @@ public class FortSeeker implements client.observer.util.Observer {
 
     @Override
     public void update(GameState gameState) {
-        logger.trace("FortSeeker received GameState update");
+        // logger.trace("FortSeeker received GameState update");
         this.gameState = gameState;
         
         if (gameState.getOpponentFortPosition() != null && !enemyFortFound) {
             enemyFortFound = true;
-            logger.info("Enemy fort discovered at position: {}", gameState.getOpponentFortPosition().printCoordinates());
+            // logger.info("Enemy fort discovered at position: {}", gameState.getOpponentFortPosition().printCoordinates());
         }
     }
     // for testing purposes, TDD

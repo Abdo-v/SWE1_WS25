@@ -6,12 +6,12 @@ import client.model.Direction;
 import client.model.GameState;
 import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 public class ShortestPathFinder implements client.observer.util.Observer {
 
-    private static final Logger logger = LoggerFactory.getLogger(ShortestPathFinder.class);
+    // private static final Logger logger = LoggerFactory.getLogger(ShortestPathFinder.class);
     private GameState gameState;
 
     public ShortestPathFinder(GameState gameState) {
@@ -27,34 +27,34 @@ public class ShortestPathFinder implements client.observer.util.Observer {
      * @return The Direction to move towards the target node, or null if no valid move is found.
      */
     public Direction findNextValidNodeToTarget(MapNode targetMapNode){
-        logger.debug("Finding next valid node to target: {}", 
-                    targetMapNode != null ? targetMapNode.printCoordinates() : "null");
+        // logger.debug("Finding next valid node to target: {}", 
+        //             targetMapNode != null ? targetMapNode.printCoordinates() : "null");
         
         MapNode target = targetMapNode;
         MapNode current = gameState.getCurrentPlayerState().getCurrentPosition();
         
         if(current == null || target == null) {
-            logger.error("Current or target position is null - current: {}, target: {}", 
-                        current != null, target != null);
+            // logger.error("Current or target position is null - current: {}, target: {}", 
+            //             current != null, target != null);
             System.err.println("WayFinder: Current or Target position is null, cannot find next valid direction.");
             throw new IllegalStateException("Current and Target position must be set before finding next valid direction.");
         }
         
-        logger.trace("Pathfinding from {} to {}", current.printCoordinates(), target.printCoordinates());
+        // logger.trace("Pathfinding from {} to {}", current.printCoordinates(), target.printCoordinates());
         ArrayList<MapNode> path = findShortestPath(current, target);
         
         if (path.isEmpty() || path == null) {
-            logger.warn("No valid path found to target {}", target.printCoordinates());
+            // logger.warn("No valid path found to target {}", target.printCoordinates());
             System.out.println("WayFinder: No valid path found to target node: path is empty.");
             return null; // No valid path to target
         }
         
-        logger.trace("Path found with {} nodes", path.size());
+        // logger.trace("Path found with {} nodes", path.size());
         
         for(MapNode node : path) {
             if (node.equalsByCoordinates(target)) {
-                logger.error("Already at target node {} - this should not happen during pathfinding", 
-                           target.printCoordinates());
+                // logger.error("Already at target node {} - this should not happen during pathfinding", 
+                //            target.printCoordinates());
                 System.err.println("WayFinder: Reached target node: target should be updated before finding next move.");
                 //print own player state
                 System.out.println("WayFinder: Current Player State: " + gameState.getCurrentPlayerState().toString());
@@ -64,21 +64,21 @@ public class ShortestPathFinder implements client.observer.util.Observer {
                 // call getDirectionToNeighbor to get the direction to the next node in the path
                 if (path.indexOf(node) + 1 < path.size()) {
                     MapNode nextNode = path.get(path.indexOf(node) + 1);
-                    logger.debug("Next node in path: {}", nextNode.printCoordinates());
+                    // logger.debug("Next node in path: {}", nextNode.printCoordinates());
                     //System.out.println(nextNode.toString()); // Commented out for debugging
                     //updateCompaionNext(nextNode);
                     //nextMapNode = nextNode;
                     Direction direction = getDirectionToNeighbor(nextNode);
-                    logger.info("Direction to next node: {}", direction);
+                    // logger.info("Direction to next node: {}", direction);
                     return direction;
                 } else {
-                    logger.warn("Current node is the last in the path, no next node to move towards");
+                    // logger.warn("Current node is the last in the path, no next node to move towards");
                     System.out.println("WayFinder: Current node is the last in the path, no next node to move towards.");
                     return null; // No next node to move towards
                 }
             }
         }
-        logger.warn("Current position {} not found in calculated path", current.printCoordinates());
+        // logger.warn("Current position {} not found in calculated path", current.printCoordinates());
         return null; // If we reach here, something went wrong
     }
 
@@ -94,21 +94,21 @@ public class ShortestPathFinder implements client.observer.util.Observer {
      *         If start and target are the same, returns a list containing just the start node.
      */
     public ArrayList<MapNode> findShortestPath(MapNode start, MapNode target) {
-        logger.debug("Computing shortest path from {} to {} using Dijkstra's algorithm", 
-                    start != null ? start.printCoordinates() : "null",
-                    target != null ? target.printCoordinates() : "null");
+        // logger.debug("Computing shortest path from {} to {} using Dijkstra's algorithm", 
+        //             start != null ? start.printCoordinates() : "null",
+        //             target != null ? target.printCoordinates() : "null");
         
         ArrayList<MapNode> path = new ArrayList<>();
         if (start == null || target == null || gameState == null || gameState.getMap() == null) {
-            logger.error("Invalid pathfinding parameters - start: {}, target: {}, gameState: {}, map: {}", 
-                        start != null, target != null, gameState != null, 
-                        gameState != null ? gameState.getMap() != null : false);
+            // logger.error("Invalid pathfinding parameters - start: {}, target: {}, gameState: {}, map: {}", 
+            //             start != null, target != null, gameState != null, 
+            //             gameState != null ? gameState.getMap() != null : false);
             System.err.println("WayFinder.findShortestPath (Dijkstra): Start, target, gameState, or map is null.");
             return path; // Return empty path
         }
 
         if (start.equalsByCoordinates(target)) {
-            logger.debug("Start and target are the same, returning single-node path");
+            // logger.debug("Start and target are the same, returning single-node path");
             path.add(start);
             return path;
         }
@@ -136,8 +136,8 @@ public class ShortestPathFinder implements client.observer.util.Observer {
 
             if (u.equalsByCoordinates(target)) {
                 pathEndNode = u; // Target found
-                logger.debug("Target reached after exploring {} nodes, settled {} nodes", 
-                           exploredNodes, settledNodesCount);
+                // logger.debug("Target reached after exploring {} nodes, settled {} nodes", 
+                //            exploredNodes, settledNodesCount);
                 break;
             }
 
@@ -166,10 +166,10 @@ public class ShortestPathFinder implements client.observer.util.Observer {
                         distances.put(v, newDistToV);
                         predecessors.put(v, u);
                         
-                        logger.trace("Updated distance to {} from {} to {} (via {})", 
-                                   v.printCoordinates(), 
-                                   distances.getOrDefault(v, Integer.MAX_VALUE), 
-                                   newDistToV, u.printCoordinates());
+                        // logger.trace("Updated distance to {} from {} to {} (via {})", 
+                        //            v.printCoordinates(), 
+                        //            distances.getOrDefault(v, Integer.MAX_VALUE), 
+                        //            newDistToV, u.printCoordinates());
                         
                         // Remove and re-add to update priority in PQ if it was already there
                         // (or rely on PQ handling updates if it supports decrease-key,
@@ -182,8 +182,8 @@ public class ShortestPathFinder implements client.observer.util.Observer {
         }
 
         if (pathEndNode == null) {
-            logger.warn("No path found from {} to {} after exploring {} nodes", 
-                       start.printCoordinates(), target.printCoordinates(), exploredNodes);
+            // logger.warn("No path found from {} to {} after exploring {} nodes", 
+            //            start.printCoordinates(), target.printCoordinates(), exploredNodes);
             System.out.println("WayFinder.findShortestPath (Dijkstra): No path found from (" + start.getX() + "," + start.getY() +
                                ") to (" + target.getX() + "," + target.getY() + ").");
             return path; // Return empty path if target not reached
@@ -200,11 +200,11 @@ public class ShortestPathFinder implements client.observer.util.Observer {
         Collections.reverse(path); // Reverse to get path from start to target
 
         int totalCost = distances.get(pathEndNode);
-        logger.info("Shortest path found: {} nodes, total cost: {}, explored {} nodes", 
-                   pathLength, totalCost, exploredNodes);
-        logger.trace("Path: {}", path.stream()
-                .map(MapNode::printCoordinates)
-                .collect(java.util.stream.Collectors.joining(" -> ")));
+        // logger.info("Shortest path found: {} nodes, total cost: {}, explored {} nodes", 
+        //            pathLength, totalCost, exploredNodes);
+        // logger.trace("Path: {}", path.stream()
+        //         .map(MapNode::printCoordinates)
+        //         .collect(java.util.stream.Collectors.joining(" -> ")));
 
         return path;
     }
@@ -302,35 +302,35 @@ public class ShortestPathFinder implements client.observer.util.Observer {
      * @return The total movement cost as an integer, or -1 if the path is not found.
      */
     public int getCostToReachNode(MapNode start, MapNode target) {
-        logger.debug("Calculating cost to reach {} from {}", 
-                    target != null ? target.printCoordinates() : "null",
-                    start != null ? start.printCoordinates() : "null");
+        // logger.debug("Calculating cost to reach {} from {}", 
+        //             target != null ? target.printCoordinates() : "null",
+        //             start != null ? start.printCoordinates() : "null");
         
         if (start == null || gameState == null || gameState.getMap() == null) {
-            logger.error("Invalid parameters for cost calculation - start: {}, gameState: {}, map: {}", 
-                        start != null, gameState != null, 
-                        gameState != null ? gameState.getMap() != null : false);
+            // logger.error("Invalid parameters for cost calculation - start: {}, gameState: {}, map: {}", 
+            //             start != null, gameState != null, 
+            //             gameState != null ? gameState.getMap() != null : false);
             System.err.println("WayFinder.getCostToReachNode: Node, gameState, or map is null.");
             return -1;
         }
 
         MapNode currentPosition = gameState.getCurrentPlayerState().getCurrentPosition();
         if (currentPosition == null) {
-            logger.error("Current position is null, cannot calculate cost");
+            // logger.error("Current position is null, cannot calculate cost");
             System.err.println("WayFinder.getCostToReachNode: Current position is null.");
             return -1;
         }
 
         if (target == null) {
-            logger.error("Target node is null, cannot calculate cost");
+            // logger.error("Target node is null, cannot calculate cost");
             System.err.println("WayFinder.getCostToReachNode: Target node is null.");
             return -1;
         }
 
         ArrayList<MapNode> path = findShortestPath(start, target);
         if (path.isEmpty()) {
-            logger.warn("No path found from {} to {}, returning -1", 
-                       start.printCoordinates(), target.printCoordinates());
+            // logger.warn("No path found from {} to {}, returning -1", 
+            //            start.printCoordinates(), target.printCoordinates());
             return -1;
         }
 
@@ -338,20 +338,20 @@ public class ShortestPathFinder implements client.observer.util.Observer {
         for (int i = 0; i < path.size() - 1; i++) {
             int segmentCost = getMovementCost(path.get(i), path.get(i + 1));
             totalCost += segmentCost;
-            logger.trace("Segment {} -> {}: cost {}", 
-                        path.get(i).printCoordinates(), 
-                        path.get(i + 1).printCoordinates(), 
-                        segmentCost);
+            // logger.trace("Segment {} -> {}: cost {}", 
+            //             path.get(i).printCoordinates(), 
+            //             path.get(i + 1).printCoordinates(), 
+            //             segmentCost);
         }
         
-        logger.debug("Total cost from {} to {}: {}", 
-                    start.printCoordinates(), target.printCoordinates(), totalCost);
+        // logger.debug("Total cost from {} to {}: {}", 
+        //             start.printCoordinates(), target.printCoordinates(), totalCost);
         return totalCost;
     }
 
     @Override
     public void update(GameState gameState) {
-        logger.trace("ShortestPathFinder received GameState update");
+        // logger.trace("ShortestPathFinder received GameState update");
         this.gameState = gameState;
         //System.out.print(StaticColors.BLUE + "S" + StaticColors.RESET);
     }

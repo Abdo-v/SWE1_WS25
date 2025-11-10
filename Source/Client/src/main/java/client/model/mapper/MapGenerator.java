@@ -44,7 +44,7 @@ public class MapGenerator {
 
             int mountainCells = random.nextInt(5,6);
             int waterCells = random.nextInt(7,8);
-            int fortCells = 6;
+            int fortCells = 1;
 
             fortGrid = possibleFortpositions(width, height, fortCells);
             

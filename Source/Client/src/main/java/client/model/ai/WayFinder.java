@@ -6,13 +6,13 @@ import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
 import client.view.CLIHandler;
 import client.model.StaticColors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class WayFinder implements client.observer.util.Observer{
-    private static final Logger logger = LoggerFactory.getLogger(WayFinder.class);
+    // private static final Logger logger = LoggerFactory.getLogger(WayFinder.class);
     private GameState gameState;
     private LinkedHashMap<MapNode, Boolean> halfMapVisitedGrassFields;
     private LinkedHashMap<MapNode, Boolean> oppHalfMapVisitedGrassFields;
@@ -61,43 +61,43 @@ public class WayFinder implements client.observer.util.Observer{
      * @param state The current GameState.
      */
     public void update(GameState state) {
-        logger.debug("WayFinder received GameState update");
+        // logger.debug("WayFinder received GameState update");
         this.gameState = state;
         
         // Add null safety checks for players list
         if (state.getPlayers() != null && !state.getPlayers().isEmpty()) {
             this.currentMapNode = state.getPlayers().get(0).getCurrentPosition();
-            logger.trace("Current player position updated to: {}", 
-                        currentMapNode != null ? currentMapNode.printCoordinates() : "null");
+            // logger.trace("Current player position updated to: {}", 
+            //             currentMapNode != null ? currentMapNode.printCoordinates() : "null");
         } else {
-            logger.debug("Players list is null or empty, keeping current position: {}", 
-                        currentMapNode != null ? currentMapNode.printCoordinates() : "null");
+            // logger.debug("Players list is null or empty, keeping current position: {}", 
+            //             currentMapNode != null ? currentMapNode.printCoordinates() : "null");
             // Keep the existing currentMapNode if players are not available yet
         }
         
         if(gameState.getMap() != null && gameState.getMap().getContentSize() >= 50 && (halfMapVisitedGrassFields == null || halfMapVisitedGrassFields.isEmpty())) {
             halfMapVisitedGrassFields = treasureSeeker.getTraverseWay();
-            logger.debug("Half map visited grass fields initialized with {} fields", 
-                        halfMapVisitedGrassFields != null ? halfMapVisitedGrassFields.size() : 0);
+            // logger.debug("Half map visited grass fields initialized with {} fields", 
+            //             halfMapVisitedGrassFields != null ? halfMapVisitedGrassFields.size() : 0);
         }
         if (gameState.getMap() != null && (gameState.getMap().getContentSize() == 100) && (oppHalfMapVisitedGrassFields == null || oppHalfMapVisitedGrassFields.isEmpty())) {
             oppHalfMapVisitedGrassFields = fortSeeker.getTraverseWay();
-            logger.debug("Opponent half map visited grass fields initialized with {} fields", 
-                        oppHalfMapVisitedGrassFields != null ? oppHalfMapVisitedGrassFields.size() : 0);
+            // logger.debug("Opponent half map visited grass fields initialized with {} fields", 
+            //             oppHalfMapVisitedGrassFields != null ? oppHalfMapVisitedGrassFields.size() : 0);
         }
         if(movesMade == 8) {
             enemyFirstTurePosition = this.gameState.getEnemyCurrentPosition();
             oppHalfMapVisitedGrassFields = fortSeeker.getFilteredTraverseWay(enemyFirstTurePosition);
-            logger.debug("Enemy first turn position detected: {}, filtered traverse way updated", 
-                        enemyFirstTurePosition != null ? enemyFirstTurePosition.printCoordinates() : "null");
+            // logger.debug("Enemy first turn position detected: {}, filtered traverse way updated", 
+            //             enemyFirstTurePosition != null ? enemyFirstTurePosition.printCoordinates() : "null");
         }
         if(gameState.getMap() != null && gameState.getMap().getContentSize() == 100 && (allMountainFields == null || allMountainFields.isEmpty())) { // target M
             allMountainFields = strategyGuide.getAllMountainFields();
-            logger.debug("All mountain fields initialized with {} mountains", 
-                        allMountainFields != null ? allMountainFields.size() : 0);
+            // logger.debug("All mountain fields initialized with {} mountains", 
+            //             allMountainFields != null ? allMountainFields.size() : 0);
             //System.out.println("WayFinder: All mountain fields initialized: " + allMountainFields.toString());
         }
-        logger.trace("WayFinder update completed");
+        // logger.trace("WayFinder update completed");
         //System.out.print(StaticColors.BLUE + "W" + StaticColors.RESET);
     }
 
@@ -108,8 +108,7 @@ public class WayFinder implements client.observer.util.Observer{
      * @throws AIDecisionException If the AI cannot determine a valid move.
      */
     public Direction findNext() throws AIDecisionException {
-        logger.debug("Finding next move - treasure collected: {}, moves made: {}", 
-                    gameState != null ? gameState.isTreasureCollected() : "unknown", movesMade);
+    	// logger.debug("Finding next move - treasure collected: {}, moves made: {}", gameState != null ? gameState.isTreasureCollected() : "unknown", movesMade);
         
         // Validate game state before making decisions
         if (gameState == null) {
@@ -145,8 +144,7 @@ public class WayFinder implements client.observer.util.Observer{
             
             if (nextDirection != null) {
                 movesMade++;
-                logger.info("WayFinder selected direction: {} (move #{}, strategy: {})", 
-                           nextDirection, movesMade, strategy ? "treasure hunting" : "fort seeking");
+             // logger.info("WayFinder selected direction: {} (move #{}, strategy: {})", nextDirection, movesMade, strategy ? "treasure hunting" : "fort seeking");
                 return nextDirection;
             } else {
                 throw new AIDecisionException(
@@ -159,7 +157,7 @@ public class WayFinder implements client.observer.util.Observer{
         } catch (AIDecisionException e) {
             throw e; // Re-throw AI exceptions
         } catch (Exception e) {
-            logger.error("Unexpected error in AI decision making: {}", e.getMessage(), e);
+        	// logger.error("Unexpected error in AI decision making: {}", e.getMessage(), e);
             throw new AIDecisionException(
                 "Unexpected error during move calculation: " + e.getMessage(),
                 e,
@@ -177,7 +175,7 @@ public class WayFinder implements client.observer.util.Observer{
      * @throws AIDecisionException If the strategy fails to determine a valid move.
      */
     private Direction moveBasedOnStrategy(boolean strategy) throws AIDecisionException {
-        logger.trace("Moving based on strategy: {}", strategy ? "treasure hunting" : "fort seeking");
+        // logger.trace("Moving based on strategy: {}", strategy ? "treasure hunting" : "fort seeking");
         
         try {
             // Validate current position
@@ -249,7 +247,7 @@ public class WayFinder implements client.observer.util.Observer{
         } catch (AIDecisionException e) {
             throw e; // Re-throw our custom exceptions
         } catch (Exception e) {
-            logger.error("Unexpected error in move strategy: {}", e.getMessage(), e);
+            // logger.error("Unexpected error in move strategy: {}", e.getMessage(), e);
             throw new AIDecisionException(
                 "Strategy execution failed: " + e.getMessage(),
                 e,
@@ -374,14 +372,13 @@ public class WayFinder implements client.observer.util.Observer{
                 );
             }
             
-            logger.debug("Found best node: {} with value: {} (evaluated {} candidates)", 
-                        bestNode.printCoordinates(), bestValue, candidatesEvaluated);
+            // logger.debug("Found best node: {} with value: {} (evaluated {} candidates)", bestNode.printCoordinates(), bestValue, candidatesEvaluated);
             return bestNode;
             
         } catch (AIDecisionException e) {
             throw e; // Re-throw our custom exceptions
         } catch (Exception e) {
-            logger.error("Unexpected error in half map traversal: {}", e.getMessage(), e);
+            // logger.error("Unexpected error in half map traversal: {}", e.getMessage(), e);
             throw new AIDecisionException(
                 "Half map traversal failed: " + e.getMessage(),
                 e,
@@ -600,24 +597,24 @@ public class WayFinder implements client.observer.util.Observer{
      * This method is used to register the observers for the WayFinder.
      */
     public void addSubObservers(){
-        logger.debug("Adding sub-observers to GameState");
+        // logger.debug("Adding sub-observers to GameState");
         if(this.shortestPathFinder != null) {
             this.gameState.addObserver(this.shortestPathFinder);
-            logger.trace("ShortestPathFinder observer added");
+            // logger.trace("ShortestPathFinder observer added");
         }
         if(this.treasureSeeker != null) {
             this.gameState.addObserver(this.treasureSeeker);
-            logger.trace("TreasureSeeker observer added");
+            // logger.trace("TreasureSeeker observer added");
         }
         if(this.fortSeeker != null) {
             this.gameState.addObserver(this.fortSeeker);
-            logger.trace("FortSeeker observer added");
+            // logger.trace("FortSeeker observer added");
         }
         if(this.strategyGuide != null) {
             this.gameState.addObserver(this.strategyGuide);
-            logger.trace("StrategyGuide observer added");
+            // logger.trace("StrategyGuide observer added");
         }
-        logger.debug("All sub-observers added successfully");
+        // logger.debug("All sub-observers added successfully");
     }
 
     // getters and setters for testing, TDD
@@ -642,23 +639,23 @@ public class WayFinder implements client.observer.util.Observer{
     }
     public void setCurrentMapNode(MapNode currentMapNode) {
         this.currentMapNode = currentMapNode;
-        logger.debug("Current MapNode set to: {}", currentMapNode.printCoordinates());
+        // logger.debug("Current MapNode set to: {}", currentMapNode.printCoordinates());
     }
     public void setTreasureSeeker(TreasureSeeker treasureSeeker) {
         this.treasureSeeker = treasureSeeker;
-        logger.debug("TreasureSeeker set for WayFinder");
+        // logger.debug("TreasureSeeker set for WayFinder");
     }
     public void setFortSeeker(FortSeeker fortSeeker) {
         this.fortSeeker = fortSeeker;
-        logger.debug("FortSeeker set for WayFinder");
+        // logger.debug("FortSeeker set for WayFinder");
     }
     public void setShortestPathFinder(ShortestPathFinder shortestPathFinder) {
         this.shortestPathFinder = shortestPathFinder;
-        logger.debug("ShortestPathFinder set for WayFinder");
+        // logger.debug("ShortestPathFinder set for WayFinder");
     }
     public void setStrategyGuide(StrategyGuide strategyGuide) {
         this.strategyGuide = strategyGuide;
-        logger.debug("StrategyGuide set for WayFinder");
+        // logger.debug("StrategyGuide set for WayFinder");
     }
 
     /**
@@ -668,7 +665,7 @@ public class WayFinder implements client.observer.util.Observer{
      */
     public void setGameState(GameState state){
         this.gameState = state;
-        logger.debug("GameState set for WayFinder");
+        // logger.debug("GameState set for WayFinder");
     }
 
 }

@@ -10,12 +10,12 @@ import client.model.mapper.MapNode;
 import client.model.mapper.OwnToOppMapOrientation;
 import client.model.mapper.PlayerHalfMap;
 import client.model.mapper.Terrain;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 public class TreasureSeeker implements client.observer.util.Observer {
 
-    private static final Logger logger = LoggerFactory.getLogger(TreasureSeeker.class);
+    // private static final Logger logger = LoggerFactory.getLogger(TreasureSeeker.class);
     private GameState gameState;
     private boolean treasureFound = false;
 
@@ -39,7 +39,7 @@ public class TreasureSeeker implements client.observer.util.Observer {
      * @return A LinkedHashMap of grass nodes with their visited status.
      */
     public LinkedHashMap<MapNode, Boolean> getTraverseWay() {
-        logger.debug("Generating traversal way for own half-map");
+        // logger.debug("Generating traversal way for own half-map");
         //System.out.println("TreasureSeeker: getTreverseWay: current node: " + gameState.getPlayers().get(0).getCurrentPosition().toString());// for log
         ArrayList<MapNode> grassNodes = new ArrayList<>();
         if (gameState != null && gameState.getMap() != null) {
@@ -49,22 +49,22 @@ public class TreasureSeeker implements client.observer.util.Observer {
                 grassNodes = ownHalfMap.getMapNodes().stream()
                         .filter(node -> node.getTerrain() == Terrain.GRASS)
                         .collect(Collectors.toCollection(ArrayList::new));
-                logger.debug("Found {} grass nodes in arranged own half-map", grassNodes.size());
+                // logger.debug("Found {} grass nodes in arranged own half-map", grassNodes.size());
             } else {
-                logger.warn("Own half-map or its nodes are null");
+                // logger.warn("Own half-map or its nodes are null");
             }
             //System.out.println("initial arranged own half: "+ grassNodes.toString());//for log
         }
         else{
             if(gameState == null) {
-                logger.error("GameState is null, cannot get traversal way");
+                // logger.error("GameState is null, cannot get traversal way");
                 System.err.println("TreasureSeeker: GameState is null, cannot get traversal way.");
                 new Throwable("TreasureSeeker: GameState is null, cannot get traversal way.").printStackTrace();
             } else if (gameState.getMap() == null) {
-                logger.error("GameMap is null, cannot get traversal way");
+                // logger.error("GameMap is null, cannot get traversal way");
                 System.err.println("TreasureSeeker: GameMap is null, cannot get traversal way.");
             } else {
-                logger.warn("No grass nodes found in the specified half-map");
+                // logger.warn("No grass nodes found in the specified half-map");
                 System.err.println("TreasureSeeker: No grass nodes found in the specified half-map.");
             }
         }
@@ -73,7 +73,7 @@ public class TreasureSeeker implements client.observer.util.Observer {
             // Initialize all grass nodes as unvisited
             grassTraversal.put(node, false);
         }
-        logger.debug("Initialized traversal way with {} grass nodes (all unvisited)", grassTraversal.size());
+        // logger.debug("Initialized traversal way with {} grass nodes (all unvisited)", grassTraversal.size());
         //System.out.println("arranged half: "+ grassTraversal.toString());
         return grassTraversal;
     }
@@ -84,29 +84,29 @@ public class TreasureSeeker implements client.observer.util.Observer {
      * @return the treasure node if found, otherwise null
      */
     public MapNode getTreasureNodeIfFound() {
-        logger.trace("Searching for treasure in own half-map");
+        // logger.trace("Searching for treasure in own half-map");
         MapNode res = null;
         
         if (gameState == null || gameState.getMap() == null) {
-            logger.warn("Cannot search for treasure - GameState or map is null");
+            // logger.warn("Cannot search for treasure - GameState or map is null");
             return null;
         }
         
         for (MapNode node : gameState.getMap().getOwnHalfMap().getMapNodes()) {
             if (node.isTreasurePresent()) {
                 res = node;
-                logger.info("Treasure found at position: {}", res.printCoordinates());
+                // logger.info("Treasure found at position: {}", res.printCoordinates());
                 break;
             }
         }
         
         if(res != null) {
-            logger.debug("Treasure confirmed at: {}, current position: {}", 
-                        res.printCoordinates(), 
-                        gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
+            // logger.debug("Treasure confirmed at: {}, current position: {}", 
+            //             res.printCoordinates(), 
+            //             gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
             //System.out.println("Treasure found at: " + res.toString() + ", current position: " + gameState.getCurrentPlayerState().getCurrentPosition().toString());// for log
         } else {
-            logger.trace("No treasure found in own half-map");
+            // logger.trace("No treasure found in own half-map");
         }
         return res; // placeholder
     }
@@ -119,13 +119,13 @@ public class TreasureSeeker implements client.observer.util.Observer {
      * @return The arranged PlayerHalfMap containing nodes in Y-snake order.
      */
     public PlayerHalfMap getArrangedOwnHalfMap(MapNode currentPosition){
-        logger.debug("Arranging own half-map in Y-snake pattern from position: {}", 
-                    currentPosition != null ? currentPosition.printCoordinates() : "null");
+        // logger.debug("Arranging own half-map in Y-snake pattern from position: {}", 
+        //             currentPosition != null ? currentPosition.printCoordinates() : "null");
         
         GameMap currentMap = gameState.getMap();
         PlayerHalfMap arrangedOwnHalfMap = new PlayerHalfMap();
         if (currentPosition == null) {
-            logger.error("Current position cannot be null for map arrangement");
+            // logger.error("Current position cannot be null for map arrangement");
             throw new IllegalArgumentException("Current position cannot be null");
         }
 
@@ -133,7 +133,7 @@ public class TreasureSeeker implements client.observer.util.Observer {
         int minScanY, maxScanY, yMidPointThreshold;
         OwnToOppMapOrientation orientation = currentMap.getOrientation();
         
-        logger.trace("Map orientation for arrangement: {}", orientation);
+        // logger.trace("Map orientation for arrangement: {}", orientation);
         
         // Determine the boundaries and midpoints for the player's own half-map
         switch (orientation) {
@@ -154,12 +154,12 @@ public class TreasureSeeker implements client.observer.util.Observer {
                 minScanY = 5; maxScanY = 9; yMidPointThreshold = 8;  // currentPosition.getY() < 8 means "top" part of this half
                 break;
             default:
-                logger.error("Invalid map orientation: {}", orientation);
+                // logger.error("Invalid map orientation: {}", orientation);
                 throw new IllegalArgumentException("Invalid orientation: " + orientation);
         }
 
-        logger.trace("Scan boundaries - X: {}-{} (threshold: {}), Y: {}-{} (threshold: {})", 
-                    minScanX, maxScanX, xMidPointThreshold, minScanY, maxScanY, yMidPointThreshold);
+        // logger.trace("Scan boundaries - X: {}-{} (threshold: {}), Y: {}-{} (threshold: {})", 
+        //             minScanX, maxScanX, xMidPointThreshold, minScanY, maxScanY, yMidPointThreshold);
 
         // Determine X iteration direction (outer loop)
         boolean scanXLeftToRight;
@@ -185,8 +185,8 @@ public class TreasureSeeker implements client.observer.util.Observer {
             currentYScanTopToBottom = false;
         }
 
-        logger.trace("Y-snake traversal configuration - X: {} to {} (increment: {}), initial Y direction: {}", 
-                    currentIterX, endIterX, iterXIncrement, currentYScanTopToBottom ? "top-to-bottom" : "bottom-to-top");
+        // logger.trace("Y-snake traversal configuration - X: {} to {} (increment: {}), initial Y direction: {}", 
+        //             currentIterX, endIterX, iterXIncrement, currentYScanTopToBottom ? "top-to-bottom" : "bottom-to-top");
 
         int nodesAdded = 0;
         // Y-Snake traversal
@@ -213,18 +213,18 @@ public class TreasureSeeker implements client.observer.util.Observer {
             currentYScanTopToBottom = !currentYScanTopToBottom; // Flip Y scan direction for the next X column
         }
         
-        logger.debug("Y-snake arrangement completed - added {} nodes to own half-map", nodesAdded);
+        // logger.debug("Y-snake arrangement completed - added {} nodes to own half-map", nodesAdded);
         return arrangedOwnHalfMap;
     }
 
     @Override
     public void update(GameState gameState) {
-        logger.trace("TreasureSeeker received GameState update");
+        // logger.trace("TreasureSeeker received GameState update");
         this.gameState = gameState;
         
         if (gameState.getTreasurePosition() != null && !treasureFound) {
             treasureFound = true;
-            logger.info("Treasure discovered at position: {}", gameState.getTreasurePosition().printCoordinates());
+            // logger.info("Treasure discovered at position: {}", gameState.getTreasurePosition().printCoordinates());
         }
         
         //System.err.print(StaticColors.BLUE + "T" + StaticColors.RESET);

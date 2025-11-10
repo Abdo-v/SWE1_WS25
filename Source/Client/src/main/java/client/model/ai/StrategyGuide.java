@@ -1,7 +1,7 @@
 package client.model.ai;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
@@ -10,7 +10,7 @@ import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
 
 public class StrategyGuide implements client.observer.util.Observer {
-    private static final Logger logger = LoggerFactory.getLogger(StrategyGuide.class);
+    // private static final Logger logger = LoggerFactory.getLogger(StrategyGuide.class);
 
     private GameState gameState;
     
@@ -20,8 +20,8 @@ public class StrategyGuide implements client.observer.util.Observer {
      */
     public StrategyGuide(GameState gameState) {
         this.gameState = gameState;
-        logger.debug("StrategyGuide initialized with GameState: {}", 
-                    gameState != null ? gameState.getGameStateID() : "null");
+        // logger.debug("StrategyGuide initialized with GameState: {}", 
+        //             gameState != null ? gameState.getGameStateID() : "null");
     }
     
     /**
@@ -30,12 +30,12 @@ public class StrategyGuide implements client.observer.util.Observer {
      */
     public StrategyGuide() {
         this.gameState = null;
-        logger.debug("StrategyGuide initialized with null GameState");
+        // logger.debug("StrategyGuide initialized with null GameState");
     }
 
     @Override
     public void update(GameState gameState) {
-        logger.trace("StrategyGuide received GameState update");
+        // logger.trace("StrategyGuide received GameState update");
         this.gameState = gameState;
         
         if (gameState != null && gameState.getMap() != null) {
@@ -43,7 +43,7 @@ public class StrategyGuide implements client.observer.util.Observer {
             long mountainCount = gameState.getMap().getGameMapNodes().stream()
                     .filter(node -> node.getTerrain() == Terrain.MOUNTAIN)
                     .count();
-            logger.trace("Updated StrategyGuide - total nodes: {}, mountains: {}", totalNodes, mountainCount);
+            // logger.trace("Updated StrategyGuide - total nodes: {}, mountains: {}", totalNodes, mountainCount);
         }
     }
 
@@ -53,11 +53,11 @@ public class StrategyGuide implements client.observer.util.Observer {
      * @return An ArrayList of MapNode objects representing grass nodes surrounding the current node.
      */
     public ArrayList<MapNode> getGrassNodesFromExtendedVision(MapNode currentNode){
-        logger.debug("Finding grass nodes from extended vision at position: {}", 
-                    currentNode != null ? currentNode.printCoordinates() : "null");
+        // logger.debug("Finding grass nodes from extended vision at position: {}", 
+        //             currentNode != null ? currentNode.printCoordinates() : "null");
         
         if (currentNode == null) {
-            logger.warn("Cannot get extended vision from null node");
+            // logger.warn("Cannot get extended vision from null node");
             return new ArrayList<>();
         }
         
@@ -70,8 +70,8 @@ public class StrategyGuide implements client.observer.util.Observer {
             }
         }
         
-        logger.debug("Extended vision from {} found {} grass nodes out of {} surrounding nodes", 
-                    currentNode.printCoordinates(), grassNodes.size(), surroundingNodes.size());
+        // logger.debug("Extended vision from {} found {} grass nodes out of {} surrounding nodes", 
+        //             currentNode.printCoordinates(), grassNodes.size(), surroundingNodes.size());
         return grassNodes;
     }
     
@@ -83,17 +83,17 @@ public class StrategyGuide implements client.observer.util.Observer {
      */
     public ArrayList<MapNode> getSurroundingNodes(MapNode position) {
         if (position == null) {
-            logger.warn("Cannot get surrounding nodes for null position");
+            // logger.warn("Cannot get surrounding nodes for null position");
             return new ArrayList<>();
         }
         
-        logger.trace("Getting surrounding nodes for position: {}", position.printCoordinates());
+        // logger.trace("Getting surrounding nodes for position: {}", position.printCoordinates());
         MapNode currentMapNode = position;
         //System.err.println("extended VISION: called, current: " + currentMapNode.toString());
         ArrayList<MapNode> nodes = new ArrayList<>();
         
         if (gameState == null || gameState.getMap() == null) {
-            logger.error("Cannot get surrounding nodes - GameState or map is null");
+            // logger.error("Cannot get surrounding nodes - GameState or map is null");
             return nodes;
         }
         
@@ -120,13 +120,13 @@ public class StrategyGuide implements client.observer.util.Observer {
                 } catch (IllegalArgumentException e) {
                     // Out of bounds, skip this node
                     outOfBoundsCount++;
-                    logger.trace("Skipped out-of-bounds coordinate ({}, {})", x, y);
+                    // logger.trace("Skipped out-of-bounds coordinate ({}, {})", x, y);
                 }
             }
         }
         
-        logger.trace("Found {} surrounding nodes for {} (skipped {} out-of-bounds)", 
-                    nodes.size(), position.printCoordinates(), outOfBoundsCount);
+        // logger.trace("Found {} surrounding nodes for {} (skipped {} out-of-bounds)", 
+        //             nodes.size(), position.printCoordinates(), outOfBoundsCount);
         //System.out.println("extended VISION: found nodes: " + nodes.toString());
         return nodes;
     }
@@ -138,23 +138,23 @@ public class StrategyGuide implements client.observer.util.Observer {
      * @return A LinkedHashMap containing all mountain fields.
      */
     public LinkedHashMap<MapNode,Boolean> getAllMountainFields(){
-        logger.debug("Collecting all mountain fields from game map");
+        // logger.debug("Collecting all mountain fields from game map");
         LinkedHashMap<MapNode, Boolean> mountainFields = new LinkedHashMap<>();
         
         if (gameState != null && gameState.getMap() != null) {
             for (MapNode node : gameState.getMap().getGameMapNodes()) {
                 if (node.getTerrain() == Terrain.MOUNTAIN) {
-                    mountainFields.put(node, false); // Initialize all mountain nodes as unvisited
+                    mountainFields.put(node, false);
                 }
             }
-            logger.info("Found {} mountain fields in the game map", mountainFields.size());
+            // logger.info("Found {} mountain fields in the game map", mountainFields.size());
             
-            if (logger.isTraceEnabled()) {
-                mountainFields.keySet().forEach(mountain -> 
-                    logger.trace("Mountain at: {}", mountain.printCoordinates()));
-            }
+            // if (logger.isTraceEnabled()) {
+            //     mountainFields.keySet().forEach(mountain -> 
+            //         logger.trace("Mountain at: {}", mountain.printCoordinates()));
+            // }
         } else {
-            logger.error("Cannot get mountain fields - GameState or GameMap is null");
+            // logger.error("Cannot get mountain fields - GameState or GameMap is null");
             System.err.println("StrategyGuide: GameState or GameMap is null, cannot get mountain fields.");
         }
         

@@ -2,8 +2,8 @@ package client.main;
 import client.controller.GameManager;
 import client.exception.ConfigurationException;
 import client.exception.GameCommunicationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 
 
 // please note that most methodes are made
@@ -11,18 +11,18 @@ import org.slf4j.LoggerFactory;
 // this is not a good practice in production code
 
 public class MainClient {
-    private static final Logger logger = LoggerFactory.getLogger(MainClient.class);
+    // private static final Logger logger = LoggerFactory.getLogger(MainClient.class);
 
     public static void main(String[] args) {
         try {
             // Set default logging configuration - file only, no console
-            System.setProperty("CONSOLE_LOGGING", "false");
-            System.setProperty("FILE_LOGGING", "true");
+            // System.setProperty("CONSOLE_LOGGING", "false");
+            // System.setProperty("FILE_LOGGING", "true");
             
             // Parse command line arguments for logging configuration
-            parseLoggingArguments(args);
+            // parseLoggingArguments(args);
             
-            logger.info("Application starting...");
+            // logger.info("Application starting...");
             
             // Validate basic arguments with custom exception
             validateBasicArguments(args);
@@ -34,12 +34,12 @@ public class MainClient {
             // Validate game mode with custom exception
             validateGameMode(gameMode);
 
-            logger.info("Game client configuration - Mode: {}, Server: {}, GameID: {}", gameMode, serverBaseUrl, gameId);
+            // logger.info("Game client configuration - Mode: {}, Server: {}, GameID: {}", gameMode, serverBaseUrl, gameId);
 
             // Inform user about logging configuration
-            System.out.println("📋 LOGGING INFO: File logging enabled by default → logs/game-client.log");
-            System.out.println("   Common options: -DCONSOLE_LOGGING=true (CLI only) | --no-file (no logging) | -DCONSOLE_LOGGING=true --file-log (CLI+file)");
-            System.out.println();
+            // System.out.println("📋 LOGGING INFO: File logging enabled by default → logs/game-client.log");
+            // System.out.println("   Common options: -DCONSOLE_LOGGING=true (CLI only) | --no-file (no logging) | -DCONSOLE_LOGGING=true --file-log (CLI+file)");
+            // System.out.println();
             
             System.out.println("🎮 GAME CLIENT STARTING");
             System.out.println("========================");
@@ -50,48 +50,48 @@ public class MainClient {
             System.out.println("use TR game mode for terminal dynamic mode (map real time update)");
             System.out.println("use TRR game mode for reduced representation game flow (no map, moves represented in text lines)");
 
-            logger.debug("Creating shared game state with gameId: {}", gameId);
+            // logger.debug("Creating shared game state with gameId: {}", gameId);
             client.model.GameState sharedGameState = new client.model.GameState(gameId);
             GameManager gameManager = new GameManager(sharedGameState, serverBaseUrl, gameMode);
-            logger.debug("GameManager initialized successfully");
+            // logger.debug("GameManager initialized successfully");
 
             System.out.println("👤 Registering player...");
-            logger.info("Attempting to register player: Abdalrahman Mohammed (abdalrahmm77)");
+            // logger.info("Attempting to register player: Abdalrahman Mohammed (abdalrahmm77)");
             String playerId = gameManager.registerPlayer("Abdalrahman", "Mohammed", "abdalrahmm77");
             gameManager.setPlayerId(playerId);
             System.out.println("🎮 Successfully registered player with ID: " + playerId);
-            logger.info("Player registration successful with ID: {}", playerId);
+            // logger.info("Player registration successful with ID: {}", playerId);
 
-            logger.debug("Updating initial game state after player registration");
+            // logger.debug("Updating initial game state after player registration");
             gameManager.updateGameState();
 
-            logger.debug("Waiting for game state to become ready (player status != MUST_WAIT)");
+            // logger.debug("Waiting for game state to become ready (player status != MUST_WAIT)");
             while (gameManager.getCurrentPlayerStatus() == client.model.PlayerStatus.MUST_WAIT) {
                 System.out.println("Waiting for game state after register...");
-                logger.trace("Player status is MUST_WAIT, continuing to poll...");
+                // logger.trace("Player status is MUST_WAIT, continuing to poll...");
                 gameManager.updateGameState();
             }
-            logger.info("Game state ready, player status: {}", gameManager.getCurrentPlayerStatus());
+            // logger.info("Game state ready, player status: {}", gameManager.getCurrentPlayerStatus());
 
             System.out.println("Generating and sending half map...");
-            logger.info("Starting half map generation and transmission");
+            // logger.info("Starting half map generation and transmission");
             gameManager.generateAndSendHalfMap();
-            logger.info("Half map successfully generated and sent");
+            // logger.info("Half map successfully generated and sent");
 
-            logger.debug("Updating game state after half map submission");
+            // logger.debug("Updating game state after half map submission");
 			gameManager.updateGameState();
-			logger.debug("Visualizing full map");
+			// logger.debug("Visualizing full map");
 			gameManager.visualizeMap("full");
 
 			System.out.println("Starting main game loop...");
-			logger.info("Entering main game loop with mode: {}", gameMode);
+			// logger.info("Entering main game loop with mode: {}", gameMode);
 			gameManager.startGameLoop(gameMode);
-			logger.info("Game loop completed");
+			// logger.info("Game loop completed");
 
         } catch (ConfigurationException e) {
             // Handle configuration errors with user-friendly messages
             System.err.println(e.getHelpMessage());
-            logger.error("Configuration error: {}", e.getMessage(), e);
+            // logger.error("Configuration error: {}", e.getMessage(), e);
             System.exit(1);
         } catch (GameCommunicationException e) {
             // Handle communication errors with retry suggestions
@@ -107,16 +107,16 @@ public class MainClient {
                 System.err.println("   • Check if the game ID is valid");
                 System.err.println("   • Contact support if the problem persists");
             }
-            logger.error("Communication error: {}", e.getMessage(), e);
+            // logger.error("Communication error: {}", e.getMessage(), e);
             System.exit(1);
         } catch (Exception e) {
             System.err.println("❌ Unexpected Error: " + e.getMessage());
-            logger.error("Critical error during game execution: {}", e.getMessage(), e);
+            // logger.error("Critical error during game execution: {}", e.getMessage(), e);
             e.printStackTrace();
             System.exit(1);
         }
         
-        logger.info("Application shutting down");
+        // logger.info("Application shutting down");
     }
 
     /**
@@ -175,6 +175,7 @@ public class MainClient {
      * Parses command line arguments for logging configuration and sets system properties
      * that will be used by logback.xml
      */
+    /* LOGGING DISABLED
     public static void parseLoggingArguments(String[] args) throws ConfigurationException {
         for (String arg : args) {
             if (arg.startsWith("--log-level=")) {
@@ -242,6 +243,7 @@ public class MainClient {
             }
         }
     }
+    */
 
     /**
      * Validates log level values.
@@ -250,6 +252,7 @@ public class MainClient {
      * @param parameterName The name of the parameter for error reporting
      * @throws ConfigurationException if the log level is invalid
      */
+    /* LOGGING DISABLED
     public static void validateLogLevel(String level, String parameterName) throws ConfigurationException {
         String[] validLevels = {"TRACE", "DEBUG", "INFO", "WARN", "ERROR"};
         for (String validLevel : validLevels) {
@@ -265,6 +268,7 @@ public class MainClient {
             validLevels
         );
     }
+    */
 
     /**
      * Validates log file path.
@@ -272,6 +276,7 @@ public class MainClient {
      * @param filePath The file path to validate
      * @throws ConfigurationException if the file path is invalid
      */
+    /* LOGGING DISABLED
     public static void validateLogFilePath(String filePath) throws ConfigurationException {
         if (filePath == null || filePath.trim().isEmpty()) {
             throw new ConfigurationException(
@@ -306,10 +311,12 @@ public class MainClient {
             }
         }
     }
+    */
 
     /**
      * Prints detailed help for logging configuration options
      */
+    /* LOGGING DISABLED
     public static void printLoggingHelp() {
         System.out.println("📋 LOGGING CONFIGURATION HELP");
         System.out.println("===============================");
@@ -342,4 +349,5 @@ public class MainClient {
         System.out.println("  # Different levels for different components:");
         System.out.println("  java MainClient TR http://localhost:8080 Ew26i --ai-log=TRACE --network-log=DEBUG --game-log=INFO --file-log");
     }
+    */
 }

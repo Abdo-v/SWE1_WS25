@@ -1,7 +1,7 @@
 package client.controller;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
 import client.exception.AIDecisionException;
@@ -18,7 +18,7 @@ import client.model.common.Notification;
 import messagesbase.UniquePlayerIdentifier;
 
 public class GameManager {
-    private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
+    // private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     
     private client.model.GameState gameState;
     private NetworkCenter networkCenter;
@@ -33,7 +33,7 @@ public class GameManager {
     private static final String RESET = "\u001B[0m";
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
-        logger.debug("Creating GameManager with gameId: {}, server: {}, mode: {}", state.getGameStateID(), serverBaseUrl, gameMode);
+        // // logger.debug("Creating GameManager with gameId: {}, server: {}, mode: {}", state.getGameStateID(), serverBaseUrl, gameMode);
         this.gameState = state;
         this.networkCenter = new NetworkCenter(serverBaseUrl, state.getGameStateID());
         this.gameMap = state.getMap();
@@ -43,7 +43,7 @@ public class GameManager {
         state.addObserver(dynamicView);
         wayFinder.setGameState(state);
         wayFinder.addSubObservers();
-        logger.debug("GameManager initialization completed successfully");
+        // // logger.debug("GameManager initialization completed successfully");
     }
 
     /**
@@ -53,7 +53,7 @@ public class GameManager {
      * @param playerId The unique player identifier.
      */
     public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId) {
-        logger.debug("Creating GameManager with gameId: {}, server: {}, playerId: {}", gameId, serverBaseUrl, playerId.getUniquePlayerID());
+        // // logger.debug("Creating GameManager with gameId: {}, server: {}, playerId: {}", gameId, serverBaseUrl, playerId.getUniquePlayerID());
         this.networkCenter = new NetworkCenter(serverBaseUrl, gameId, playerId);
         this.gameState = new client.model.GameState(gameId);
     }
@@ -64,7 +64,7 @@ public class GameManager {
      * @param serverBaseUrl The base URL of the server.
      */
     public GameManager(String gameId, String serverBaseUrl) {
-        logger.debug("Creating GameManager with gameId: {}, server: {}", gameId, serverBaseUrl);
+        // // logger.debug("Creating GameManager with gameId: {}, server: {}", gameId, serverBaseUrl);
         this.networkCenter = new NetworkCenter(serverBaseUrl, gameId);
         this.gameState = new client.model.GameState(gameId);
     }
@@ -79,7 +79,7 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for player registration.
      */
     public String registerPlayer(String firstName, String lastName, String uAccount) throws GameCommunicationException, GameStateException {
-        logger.info("Attempting to register player: {} {}, uAccount: {}", firstName, lastName, uAccount);
+        // // logger.info("Attempting to register player: {} {}, uAccount: {}", firstName, lastName, uAccount);
         
         // Validate game state before registration
         if (gameState == null) {
@@ -96,7 +96,7 @@ public class GameManager {
             this.playerId = playerIdentifier.getUniquePlayerID();
             client.model.PlayerState playerState = new client.model.PlayerState(playerId, firstName, lastName, uAccount);
             gameState.addPlayer(playerState);
-            logger.info("Successfully registered player {} with ID: {}", playerState.getLastName(), playerId);
+            // // logger.info("Successfully registered player {} with ID: {}", playerState.getLastName(), playerId);
             return playerId;
         } catch (GameCommunicationException e) {
             // Re-throw communication exceptions as-is
@@ -120,7 +120,7 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for map generation.
      */
     public void generateAndSendHalfMap() throws GameCommunicationException, GameStateException {
-        logger.debug("Generating and sending half map for player ID: {}", playerId);
+        // // logger.debug("Generating and sending half map for player ID: {}", playerId);
         
         if (playerId == null) {
             throw new GameStateException(
@@ -135,10 +135,10 @@ public class GameManager {
             int width = 10;
             int height = 5;
             PlayerHalfMap halfMapToSend = generateHalfMap(width, height, playerId);
-            logger.trace("Generated half map: {}", halfMapToSend.toString());
+            // // logger.trace("Generated half map: {}", halfMapToSend.toString());
             validateHalfMap(halfMapToSend);
             sendHalfMap(halfMapToSend);
-            logger.info("Half map sent successfully for player ID: {}", playerId);
+            // // logger.info("Half map sent successfully for player ID: {}", playerId);
         } catch (GameCommunicationException e) {
             throw e; // Re-throw communication exceptions
         } catch (Exception e) {
@@ -154,15 +154,15 @@ public class GameManager {
     }
 
     private void validateHalfMap(PlayerHalfMap halfMap) {
-        logger.debug("Validating half map");
+        // // logger.debug("Validating half map");
         Notification validation = mapValidator.validate(halfMap);
         if (validation.hasErrors()) {
-            logger.error("Map validation failed: {}", validation.getErrorMessages());
+            // // logger.error("Map validation failed: {}", validation.getErrorMessages());
             System.err.println("❌ Map validation failed:");
             System.err.println(validation.getErrorMessages());
             throw new IllegalStateException("Generated map is invalid: " + validation.getErrorMessages());
         } else {
-            logger.info("Map validation successful");
+            // // logger.info("Map validation successful");
             // print in green all is ok
             System.out.println(GREEN + "✅ Map validation found no errors, sending map..." + RESET);
         }
@@ -175,9 +175,9 @@ public class GameManager {
      */
     private void sendHalfMap(PlayerHalfMap halfMap) throws GameCommunicationException {
         try {
-            logger.debug("Sending half map to server");
+            // // logger.debug("Sending half map to server");
             networkCenter.sendHalfMap(halfMap);
-            logger.debug("Half map successfully transmitted to server");
+            // // logger.debug("Half map successfully transmitted to server");
         } catch (Exception e) {
             throw new GameCommunicationException(
                 "Failed to send half map to server: " + e.getMessage(),
@@ -197,11 +197,11 @@ public class GameManager {
      * @return The generated PlayerHalfMap.
      */
     private PlayerHalfMap generateHalfMap(int width, int height, String playerId) {
-        logger.debug("Generating half map with dimensions {}x{} for player: {}", width, height, playerId);
+        // // logger.debug("Generating half map with dimensions {}x{} for player: {}", width, height, playerId);
         MapGenerator generator = new MapGenerator();
         PlayerHalfMap halfMapToSend = generator.generateMap(width, height, playerId);
         cliHandler.printHalfMap(halfMapToSend, "own"); 
-        logger.debug("Half map generation completed");
+        // // logger.debug("Half map generation completed");
         return halfMapToSend;
     }
 
@@ -212,10 +212,10 @@ public class GameManager {
      */
     public boolean fullMapAvailable() throws GameCommunicationException {
         try {
-            logger.trace("Checking if full map is available");
+            // // logger.trace("Checking if full map is available");
             messagesbase.messagesfromserver.GameState serverGameState = networkCenter.pollGameState();
             boolean available = serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 100;
-            logger.debug("Full map availability check: {}", available);
+            // // logger.debug("Full map availability check: {}", available);
             return available;
         } catch (Exception e) {
             throw new GameCommunicationException(
@@ -235,7 +235,7 @@ public class GameManager {
      */
     public void updateGameState() throws GameCommunicationException, MapProcessingException {
         try {
-            logger.trace("Updating game state from server");
+            // // logger.trace("Updating game state from server");
             long startPollGameState = System.nanoTime();
             messagesbase.messagesfromserver.GameState serverState = networkCenter.pollGameState();
             long polt = (System.nanoTime() - startPollGameState) / 1_000_000;
@@ -261,12 +261,12 @@ public class GameManager {
             }
             
             this.gameState.updateGameState(polledState);
-            logger.trace("Game state update completed (poll: {}ms)", polt);
+            // // logger.trace("Game state update completed (poll: {}ms)", polt);
             
         } catch (GameCommunicationException | MapProcessingException e) {
             throw e; // Re-throw our custom exceptions
         } catch (Exception e) {
-            logger.error("Unexpected error updating game state: {}", e.getMessage(), e);
+            // // logger.error("Unexpected error updating game state: {}", e.getMessage(), e);
             throw new MapProcessingException(
                 "Unexpected error during game state update: " + e.getMessage(),
                 e,
@@ -286,7 +286,7 @@ public class GameManager {
      */
     public messagesbase.messagesfromserver.GameState managerpollGameState() throws GameCommunicationException {
         try {
-            logger.trace("Polling server for current game state");
+            // // logger.trace("Polling server for current game state");
             return networkCenter.pollGameState();
         } catch (Exception e) {
             throw new GameCommunicationException(
@@ -306,14 +306,14 @@ public class GameManager {
      * @throws GameStateException If the player is not found in the game state.
      */
     public messagesbase.messagesfromserver.EPlayerGameState pollMyStatus() throws GameCommunicationException, GameStateException {
-        logger.trace("Polling player status for player: {}", playerId);
+        // // logger.trace("Polling player status for player: {}", playerId);
         
         try {
             messagesbase.messagesfromserver.GameState serverGameState = managerpollGameState();
             
             for (messagesbase.messagesfromserver.PlayerState playerState : serverGameState.getPlayers()) {
                 if (playerState.getUniquePlayerID().equals(playerId)) {
-                    logger.trace("Player {} status: {}", playerId, playerState.getState());
+                    // // logger.trace("Player {} status: {}", playerId, playerState.getState());
                     return playerState.getState();
                 }
             }
@@ -350,7 +350,7 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for making moves.
      */
     public void makeMove(String gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
-        logger.debug("Making move for player: {}", playerId);
+        // // logger.debug("Making move for player: {}", playerId);
         
         // Validate game state before making move
         if (gameState == null || gameState.getCurrentPlayerState() == null) {
@@ -365,19 +365,19 @@ public class GameManager {
         try {
             Direction nextMoveDirection = wayFinder.findNext();
             if (nextMoveDirection != null) {
-                logger.debug("WayFinder suggested direction: {}", nextMoveDirection);
+                // // logger.debug("WayFinder suggested direction: {}", nextMoveDirection);
                 try {
                     networkCenter.sendMove(nextMoveDirection);
-                    logger.info("Move {} sent successfully for player {}", nextMoveDirection, playerId);
+                    // // logger.info("Move {} sent successfully for player {}", nextMoveDirection, playerId);
                     
                     if (gameMode.equals("TRR")) {
-                        logger.info("Player {} (TRR mode) moved to: {}", playerId, gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
+                        // // logger.info("Player {} (TRR mode) moved to: {}", playerId, gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
                         System.out.print("Move " + nextMoveDirection.name() + " sent to server, ");
                     }
                 } catch (GameCommunicationException e) {
                     throw e; // Re-throw communication exceptions
                 } catch (Exception e) {
-                    logger.error("Error making move for player {}: {}", playerId, e.getMessage(), e);
+                    // // logger.error("Error making move for player {}: {}", playerId, e.getMessage(), e);
                     throw new GameCommunicationException(
                         "Failed to send move to server: " + e.getMessage(),
                         e,
@@ -387,7 +387,7 @@ public class GameManager {
                     );
                 }
             } else {
-                logger.warn("WayFinder did not suggest a valid move for player {}. This may indicate AI decision failure.", playerId);
+                // // logger.warn("WayFinder did not suggest a valid move for player {}. This may indicate AI decision failure.", playerId);
                 throw new AIDecisionException(
                     "WayFinder failed to determine a valid move",
                     "WayFinder",
@@ -398,7 +398,7 @@ public class GameManager {
         } catch (AIDecisionException | GameCommunicationException e) {
             throw e; // Re-throw our custom exceptions
         } catch (Exception e) {
-            logger.error("Unexpected error during move making: {}", e.getMessage(), e);
+            // // logger.error("Unexpected error during move making: {}", e.getMessage(), e);
             throw new GameStateException(
                 "Unexpected error during move making: " + e.getMessage(),
                 e,
@@ -427,7 +427,7 @@ public class GameManager {
         
         for (client.model.PlayerState playerState : gameState.getPlayers()) {
             if (playerState.getPlayerID().equals(playerId)) {
-                logger.trace("Current player {} status: {}", playerId, playerState.getStatus());
+                // // logger.trace("Current player {} status: {}", playerId, playerState.getStatus());
                 return playerState.getStatus();
             }
         }
@@ -448,18 +448,18 @@ public class GameManager {
      */
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
         if (gameMode.equals("TR")) {
-            logger.info("Starting game with dynamic visualization (TR mode)");
+            // // logger.info("Starting game with dynamic visualization (TR mode)");
             System.out.println("\n🎮 Starting game with dynamic visualization...");
             try {
                 Thread.sleep(1000);
                 enableDynamicVisualization();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                logger.warn("Game loop initialization interrupted");
+                // // logger.warn("Game loop initialization interrupted");
             }
         }
         
-        logger.info("Entering main game loop with mode: {}", gameMode);
+        // // logger.info("Entering main game loop with mode: {}", gameMode);
         int loops = 0;
         boolean gameIsRunning = true;
         client.model.PlayerStatus currentStatus;
@@ -469,14 +469,14 @@ public class GameManager {
                 boolean acted = false;
                 updateGameState();
                 currentStatus = getCurrentPlayerStatus();
-                logger.trace("Game loop iteration: {}, Player status: {}", loops, currentStatus);
+                // // logger.trace("Game loop iteration: {}, Player status: {}", loops, currentStatus);
                 
                 switch (currentStatus) {
                     case MUST_WAIT:
-                        logger.debug("Player {} must wait.", playerId);
+                        // // logger.debug("Player {} must wait.", playerId);
                         break;
                     case MUST_ACT:
-                        logger.debug("Player {} must act.", playerId);
+                        // // logger.debug("Player {} must act.", playerId);
                         try {
                             makeMove(gameMode);
                             if(gameMode.equals("TRR")) {
@@ -484,11 +484,11 @@ public class GameManager {
                             }
                             acted = true;
                         } catch (AIDecisionException e) {
-                            logger.error("AI Decision Error for player {}: {}", playerId, e.getMessage());
+                            // // logger.error("AI Decision Error for player {}: {}", playerId, e.getMessage());
                             System.err.println("🤖 AI Error: " + e.getMessage());
                             // Continue game loop - AI errors shouldn't terminate the game
                         } catch (GameCommunicationException e) {
-                            logger.error("Communication error during move for player {}: {}", playerId, e.getMessage());
+                            // // logger.error("Communication error during move for player {}: {}", playerId, e.getMessage());
                             System.err.println("🌐 Network Error: " + e.getMessage());
                             if (!e.isRecoverable()) {
                                 throw e; // Fatal communication error
@@ -498,25 +498,25 @@ public class GameManager {
                         break;
                     case WON:
                         disableDynamicVisualization();
-                        logger.info("PLAYER {} WON THE GAME! Loops: {}", playerId, loops);
+                        // // logger.info("PLAYER {} WON THE GAME! Loops: {}", playerId, loops);
                         System.out.println("🎉🎉🎉======= = = YOU WON! = = =======🎉🎉🎉");
-                        logger.info("Final player state: {}", gameState.getCurrentPlayerState().toString());
+                        // // logger.info("Final player state: {}", gameState.getCurrentPlayerState().toString());
                         System.out.println(gameState.getCurrentPlayerState().toString());
                         if (gameMode.equals("TR")) System.out.println(" loops: " + loops);
                         gameIsRunning = false;
                         break;
                     case LOST:
                         disableDynamicVisualization();
-                        logger.warn("PLAYER {} LOST THE GAME. Loops: {}", playerId, loops);
+                        // // logger.warn("PLAYER {} LOST THE GAME. Loops: {}", playerId, loops);
                         System.out.println("💀💀💀======= = = YOU LOST! = = =======💀💀💀");
-                        logger.info("Final player state: {}", gameState.getCurrentPlayerState().toString());
+                        // // logger.info("Final player state: {}", gameState.getCurrentPlayerState().toString());
                         System.out.println(gameState.getCurrentPlayerState().toString());
                         if (gameMode.equals("TR")) System.out.println(" loops: " + loops);
                         gameIsRunning = false;
                         break;
                     default:
                         disableDynamicVisualization();
-                        logger.error("Unhandled player state: {}. Exiting game.", currentStatus);
+                        // // logger.error("Unhandled player state: {}. Exiting game.", currentStatus);
                         System.err.println("Unhandled player state: " + currentStatus + ". Exiting game.");
                         gameIsRunning = false;
                         break;
@@ -524,17 +524,17 @@ public class GameManager {
                 
                 loops++;
                 if (acted) {
-                    logger.trace("Loop {} completed with action", loops);
+                    // // logger.trace("Loop {} completed with action", loops);
                 } else {
-                    logger.trace("Loop {} completed (no action taken)", loops);
+                    // // logger.trace("Loop {} completed (no action taken)", loops);
                 }
                 if(gameMode.equals("TRR")) {
-                    logger.debug("Loop {} completed (TRR mode).", loops);
+                    // // logger.debug("Loop {} completed (TRR mode).", loops);
                     System.out.println(" loops: " + loops);
                 }
                 
             } catch (MapProcessingException e) {
-                logger.error("Map processing error in game loop: {}", e.getMessage(), e);
+                // // logger.error("Map processing error in game loop: {}", e.getMessage(), e);
                 System.err.println("🗺️ Map Error: " + e.getRecoveryMessage());
                 if (!e.isRecoverable()) {
                     throw new GameStateException(
@@ -550,7 +550,7 @@ public class GameManager {
             } catch (GameCommunicationException | GameStateException e) {
                 throw e; // Re-throw fatal exceptions
             } catch (Exception e) {
-                logger.error("Unexpected error in game loop: {}", e.getMessage(), e);
+                // // logger.error("Unexpected error in game loop: {}", e.getMessage(), e);
                 throw new GameStateException(
                     "Unexpected error in game loop: " + e.getMessage(),
                     e,
@@ -563,7 +563,7 @@ public class GameManager {
         }
         
         disableDynamicVisualization();
-        logger.info("Game loop completed after {} iterations", loops);
+        // // logger.info("Game loop completed after {} iterations", loops);
     }
 
     /**
@@ -613,10 +613,10 @@ public class GameManager {
      */
     public boolean isServerMapEmpty() throws GameCommunicationException {
         try {
-            logger.trace("Checking if server map is empty");
+            // // logger.trace("Checking if server map is empty");
             messagesbase.messagesfromserver.GameState serverGameState = networkCenter.pollGameState();
             if (serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 0) {
-                logger.debug("Server map is empty");
+                // // logger.debug("Server map is empty");
                 return true;
             }
         } catch (Exception e) {
@@ -633,23 +633,23 @@ public class GameManager {
 
     public boolean shouldAct() {
         boolean mustAct = this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_ACT;
-        logger.trace("Should act check for player {}: {}", playerId, mustAct);
+        // // logger.trace("Should act check for player {}: {}", playerId, mustAct);
         return mustAct;
     }
 
     public boolean shouldWait() {
         boolean mustWait = this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_WAIT;
-        logger.trace("Should wait check for player {}: {}", playerId, mustWait);
+        // // logger.trace("Should wait check for player {}: {}", playerId, mustWait);
         return mustWait;
     }
 
     public void visualizeMap(String mapType) {
-        logger.debug("Visualizing map type: {}", mapType);
+        // // logger.debug("Visualizing map type: {}", mapType);
         cliHandler.visualizeMap(mapType);
     }
 
     public void enableDynamicVisualization() {
-        logger.debug("Enabling dynamic visualization");
+        // // logger.debug("Enabling dynamic visualization");
         dynamicView.enableDynamicMode();
     }
 
@@ -657,7 +657,7 @@ public class GameManager {
      * Disable dynamic visualization
      */
     public void disableDynamicVisualization() {
-        logger.debug("Disabling dynamic visualization");
+        // // logger.debug("Disabling dynamic visualization");
         dynamicView.disableDynamicMode();
     }
 

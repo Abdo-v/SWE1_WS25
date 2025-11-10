@@ -15,7 +15,7 @@ public class MapValidator {
     private static final double MIN_MOUNTAIN_PERCENTAGE = 0.10;
     private static final double MIN_GRASS_PERCENTAGE = 0.48;
     private static final double MIN_WATER_PERCENTAGE = 0.14;
-    private static final double CASTLE_PERCENTAGE = 0.12; // 6 castles
+    private static final double CASTLE_PERCENTAGE = 0.02; // 1 castle
     private static final double MIN_EDGE_WALKABLE_PERCENTAGE = 0.51;
 
     /**

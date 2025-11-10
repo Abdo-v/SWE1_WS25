@@ -1,7 +1,7 @@
 package client.controller.network.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -15,7 +15,7 @@ import client.model.mapper.PlayerHalfMap;
 import messagesbase.UniquePlayerIdentifier;
 
 public class Converter {
-    private static final Logger logger = LoggerFactory.getLogger(Converter.class);
+    // private static final Logger logger = LoggerFactory.getLogger(Converter.class);
     
     Converter(){}
 
@@ -25,14 +25,14 @@ public class Converter {
      * @return The internal game state.
      */
     public client.model.GameState convertServerGamestate(messagesbase.messagesfromserver.GameState serverGameState, UniquePlayerIdentifier playerId) {
-        logger.debug("Converting server game state for player: {}", 
-                    playerId != null ? playerId.getUniquePlayerID() : "unknown");
+        // logger.debug("Converting server game state for player: {}", 
+        //             playerId != null ? playerId.getUniquePlayerID() : "unknown");
         
         ArrayList<client.model.PlayerState> clientPlayers = new ArrayList<>();
         messagesbase.messagesfromserver.FullMap serverMap = serverGameState.getMap();
         
         if (serverGameState.getPlayers() != null && !serverGameState.getPlayers().isEmpty()) {
-            logger.trace("Processing {} players from server game state", serverGameState.getPlayers().size());
+            // logger.trace("Processing {} players from server game state", serverGameState.getPlayers().size());
             String myPlayerUniqueId = null;
             if (playerId != null) {
                 myPlayerUniqueId = playerId.getUniquePlayerID();
@@ -40,7 +40,7 @@ public class Converter {
             if (myPlayerUniqueId != null) {
                 for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverGameState.getPlayers()) {
                     if (serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId)) {
-                        logger.trace("Processing own player state for: {}", myPlayerUniqueId);
+                        // logger.trace("Processing own player state for: {}", myPlayerUniqueId);
                         MapNode playerMapNode = new MapNode();
                         for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
                             if (node.getPlayerPositionState() == messagesbase.messagesfromserver.EPlayerPositionState.MyPlayerPosition || node.getPlayerPositionState() == messagesbase.messagesfromserver.EPlayerPositionState.BothPlayerPosition) {
@@ -48,7 +48,7 @@ public class Converter {
                                 playerMapNode.setY(node.getY());
                                 playerMapNode.setTerrain(convertServerTerrain(node.getTerrain()));
                                 playerMapNode.setFortPresent(isFortOnServerNode(node));
-                                logger.trace("Found own player position at ({}, {})", node.getX(), node.getY());
+                                // logger.trace("Found own player position at ({}, {})", node.getX(), node.getY());
                             }
                         }
                         clientPlayers.add(convertServerPlayerState(serverPlayer, playerMapNode));
@@ -58,7 +58,7 @@ public class Converter {
             }
             for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverGameState.getPlayers()) {
                 if (myPlayerUniqueId == null || !serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId)) {
-                    logger.trace("Processing opponent player state for: {}", serverPlayer.getUniquePlayerID());
+                    // logger.trace("Processing opponent player state for: {}", serverPlayer.getUniquePlayerID());
                     MapNode playerMapNode = new MapNode();
                     for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
                         if (node.getPlayerPositionState() == messagesbase.messagesfromserver.EPlayerPositionState.EnemyPlayerPosition || node.getPlayerPositionState() == messagesbase.messagesfromserver.EPlayerPositionState.BothPlayerPosition) {
@@ -66,7 +66,7 @@ public class Converter {
                             playerMapNode.setY(node.getY());
                             playerMapNode.setTerrain(convertServerTerrain(node.getTerrain()));
                             playerMapNode.setFortPresent(isFortOnServerNode(node));
-                            logger.trace("Found opponent position at ({}, {})", node.getX(), node.getY());
+                            // logger.trace("Found opponent position at ({}, {})", node.getX(), node.getY());
                         }
                     }
                     clientPlayers.add(convertServerPlayerState(serverPlayer, playerMapNode));
@@ -78,19 +78,19 @@ public class Converter {
         gameState.setOpponentFortFound(serverMapHasEnemyFort(serverGameState.getMap()));
         if(getTreasurePositionFromServerMap(serverGameState.getMap()) != null) {
             gameState.setTreasurePosition(getTreasurePositionFromServerMap(serverGameState.getMap()));
-            logger.debug("Treasure position set at: {}", getTreasurePositionFromServerMap(serverGameState.getMap()).printCoordinates());
+            // logger.debug("Treasure position set at: {}", getTreasurePositionFromServerMap(serverGameState.getMap()).printCoordinates());
         } else {
             gameState.setTreasurePosition(null);
-            logger.trace("No treasure position found in server map");
+            // logger.trace("No treasure position found in server map");
         }
         if(getEnemyFortMapNodeFromServerMap(serverGameState.getMap()) != null) {
             gameState.setOpponentFortPosition(getEnemyFortMapNodeFromServerMap(serverGameState.getMap()));
-            logger.debug("Enemy fort position set at: {}", getEnemyFortMapNodeFromServerMap(serverGameState.getMap()).printCoordinates());
+            // logger.debug("Enemy fort position set at: {}", getEnemyFortMapNodeFromServerMap(serverGameState.getMap()).printCoordinates());
         } else {
             gameState.setOpponentFortPosition(null);
-            logger.trace("No enemy fort position found in server map");
+            // logger.trace("No enemy fort position found in server map");
         }
-        logger.debug("Game state conversion completed successfully");
+        // logger.debug("Game state conversion completed successfully");
         return gameState;
     }
 
@@ -101,15 +101,15 @@ public class Converter {
      * @return The internal player state.
      */
     public client.model.PlayerState convertServerPlayerState(messagesbase.messagesfromserver.PlayerState serverPlayerState, MapNode playerMapNode) {
-        logger.trace("Converting server player state for: {} {}", serverPlayerState.getFirstName(), serverPlayerState.getLastName());
+        // logger.trace("Converting server player state for: {} {}", serverPlayerState.getFirstName(), serverPlayerState.getLastName());
         client.model.PlayerState playerState = new client.model.PlayerState(serverPlayerState.getUniquePlayerID(), serverPlayerState.getFirstName(), serverPlayerState.getLastName(), serverPlayerState.getUAccount(), serverPlayerState.hasCollectedTreasure(), playerMapNode, convertServerStatus(serverPlayerState.getState()));
         return playerState;
     }
 
     public client.model.PlayerStatus convertServerStatus(messagesbase.messagesfromserver.EPlayerGameState serverStatus){
-        logger.trace("Converting server status: {}", serverStatus);
+        // logger.trace("Converting server status: {}", serverStatus);
         if (serverStatus == null) {
-            logger.error("Server status is null");
+            // logger.error("Server status is null");
             throw new IllegalArgumentException("Server status cannot be null");
         }
         switch(serverStatus){
@@ -122,7 +122,7 @@ public class Converter {
             case Won:
                 return client.model.PlayerStatus.WON;
             default:
-                logger.error("Unknown server status encountered: {}", serverStatus);
+                // logger.error("Unknown server status encountered: {}", serverStatus);
                 throw new IllegalArgumentException("Unknown server status: " + serverStatus);
         }
     }
@@ -134,11 +134,11 @@ public class Converter {
      */
     public client.model.mapper.GameMap convertServerMap(messagesbase.messagesfromserver.FullMap serverMap) {
         if (serverMap.isEmpty()) {
-            logger.info("Server map is empty, returning an empty GameMap");
+            // logger.info("Server map is empty, returning an empty GameMap");
             return new client.model.mapper.GameMap();
         }
         
-        logger.debug("Converting server map with {} nodes", serverMap.getMapNodes().size());
+        // logger.debug("Converting server map with {} nodes", serverMap.getMapNodes().size());
         Collection<messagesbase.messagesfromserver.FullMapNode> serverMapNodes = serverMap.getMapNodes();
         OwnToOppMapOrientation orientation = null;
         boolean vertical = false;
@@ -148,7 +148,7 @@ public class Converter {
             if (node.getX() > 9){horizontal = true;break;}
         }
         
-        logger.trace("Map orientation analysis - vertical: {}, horizontal: {}", vertical, horizontal);
+        // logger.trace("Map orientation analysis - vertical: {}, horizontal: {}", vertical, horizontal);
         
         ArrayList<MapNode> internalNodes = new ArrayList<>();
         for (messagesbase.messagesfromserver.FullMapNode node : serverMapNodes) {
@@ -160,10 +160,10 @@ public class Converter {
                 if(node.getFortState() == messagesbase.messagesfromserver.EFortState.MyFortPresent){
                     if(node.getY() <= 4){
                         orientation = OwnToOppMapOrientation.UP_DOWN;
-                        logger.debug("Map orientation determined: UP_DOWN (fort at Y={})", node.getY());
+                        // logger.debug("Map orientation determined: UP_DOWN (fort at Y={})", node.getY());
                     } else {
                         orientation = OwnToOppMapOrientation.DOWN_UP;
-                        logger.debug("Map orientation determined: DOWN_UP (fort at Y={})", node.getY());
+                        // logger.debug("Map orientation determined: DOWN_UP (fort at Y={})", node.getY());
                     }
                     break;
                 }
@@ -174,17 +174,17 @@ public class Converter {
                 if(node.getFortState() == messagesbase.messagesfromserver.EFortState.MyFortPresent) {
                     if(node.getX() <= 9){
                         orientation = OwnToOppMapOrientation.LEFT_RIGHT;
-                        logger.debug("Map orientation determined: LEFT_RIGHT (fort at X={})", node.getX());
+                        // logger.debug("Map orientation determined: LEFT_RIGHT (fort at X={})", node.getX());
                     } else {
                         orientation = OwnToOppMapOrientation.RIGHT_LEFT;
-                        logger.debug("Map orientation determined: RIGHT_LEFT (fort at X={})", node.getX());
+                        // logger.debug("Map orientation determined: RIGHT_LEFT (fort at X={})", node.getX());
                     }
                     break;
                 }
             }
         }
         if (orientation == null) {
-            logger.warn("Map orientation could not be determined, returning empty GameMap");
+            // logger.warn("Map orientation could not be determined, returning empty GameMap");
             return new client.model.mapper.GameMap();
         }
         // Determine maxX and maxY based on orientation
@@ -199,7 +199,7 @@ public class Converter {
             maxY = 4;  // Full map height is 5 fields (0-4)
         }
         GameMap gameMap = new GameMap(internalNodes, orientation, maxX, maxY);
-        logger.debug("Server map conversion completed - orientation: {}, dimensions: {}x{}", orientation, maxX+1, maxY+1);
+        // logger.debug("Server map conversion completed - orientation: {}, dimensions: {}x{}", orientation, maxX+1, maxY+1);
         return gameMap;
     }
 
@@ -209,7 +209,7 @@ public class Converter {
      * @return The internal map node.
      */
     public MapNode convertServerMapNode(messagesbase.messagesfromserver.FullMapNode serverMapNode) {
-        logger.trace("Converting server map node at ({}, {})", serverMapNode.getX(), serverMapNode.getY());
+        // logger.trace("Converting server map node at ({}, {})", serverMapNode.getX(), serverMapNode.getY());
         return new MapNode(serverMapNode.getX(), serverMapNode.getY(), convertServerTerrain(serverMapNode.getTerrain()), isFortOnServerNode(serverMapNode), isTreasureOnServerNode(serverMapNode));
     }
 
@@ -219,14 +219,14 @@ public class Converter {
      * @return True if enemy fort is present, false otherwise.
      */
     public boolean serverMapHasEnemyFort(messagesbase.messagesfromserver.FullMap serverMap) {
-        logger.trace("Checking server map for enemy fort");
+        // logger.trace("Checking server map for enemy fort");
         for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
             if (node.getFortState() == messagesbase.messagesfromserver.EFortState.EnemyFortPresent) {
-                logger.debug("Enemy fort found in server map at ({}, {})", node.getX(), node.getY());
+                // logger.debug("Enemy fort found in server map at ({}, {})", node.getX(), node.getY());
                 return true;
             }
         }
-        logger.trace("No enemy fort found in server map");
+        // logger.trace("No enemy fort found in server map");
         return false;
     }
 
@@ -259,8 +259,8 @@ public class Converter {
      * @return A half map in the format expected by the server.
      */
     public messagesbase.messagesfromclient.PlayerHalfMap convertClientHalfMap(PlayerHalfMap halfMap, UniquePlayerIdentifier playerId) {
-        logger.debug("Converting client half map to server format for player: {}", playerId.getUniquePlayerID());
-        logger.trace("Client half map contains {} nodes", halfMap.getMapNodes().size());
+        // logger.debug("Converting client half map to server format for player: {}", playerId.getUniquePlayerID());
+        // logger.trace("Client half map contains {} nodes", halfMap.getMapNodes().size());
         messagesbase.messagesfromclient.PlayerHalfMap ServerHalfMap = new messagesbase.messagesfromclient.PlayerHalfMap(playerId, convertClientNodes(halfMap.getMapNodes()));
         return ServerHalfMap;
     }
@@ -271,7 +271,7 @@ public class Converter {
      * @return Collection of Server map nodes.
      */
     public Collection<messagesbase.messagesfromclient.PlayerHalfMapNode> convertClientNodes(List<MapNode> nodes) {
-        logger.trace("Converting {} client nodes to server format", nodes.size());
+        // logger.trace("Converting {} client nodes to server format", nodes.size());
         HashSet<messagesbase.messagesfromclient.PlayerHalfMapNode> ServerNodes = new HashSet<messagesbase.messagesfromclient.PlayerHalfMapNode>();
         for (MapNode node : nodes) {
             ServerNodes.add(new messagesbase.messagesfromclient.PlayerHalfMapNode(node.getX(), node.getY(), node.isFortPresent(), convertClientTerrain(node.getTerrain())));
@@ -285,7 +285,7 @@ public class Converter {
      * @return The corresponding Server terrain.
      */
     public messagesbase.messagesfromclient.ETerrain convertClientTerrain(client.model.mapper.Terrain clientTerrain) {
-        logger.trace("Converting client terrain: {}", clientTerrain);
+        // logger.trace("Converting client terrain: {}", clientTerrain);
         if (clientTerrain == client.model.mapper.Terrain.MOUNTAIN) {
             return messagesbase.messagesfromclient.ETerrain.Mountain;
         } else if (clientTerrain == client.model.mapper.Terrain.WATER) {
@@ -301,7 +301,7 @@ public class Converter {
      * @return The corresponding client terrain.
      */
     public client.model.mapper.Terrain convertServerTerrain(messagesbase.messagesfromclient.ETerrain serverTerrain) {
-        logger.trace("Converting server terrain: {}", serverTerrain);
+        // logger.trace("Converting server terrain: {}", serverTerrain);
         if (serverTerrain == messagesbase.messagesfromclient.ETerrain.Mountain) {
             return client.model.mapper.Terrain.MOUNTAIN;
         } else if (serverTerrain == messagesbase.messagesfromclient.ETerrain.Water) {
@@ -317,7 +317,7 @@ public class Converter {
      * @return The Server move.
      */
     public messagesbase.messagesfromclient.EMove convertClientDirection(Direction d){
-        logger.trace("Converting client direction: {}", d);
+        // logger.trace("Converting client direction: {}", d);
         if (d == Direction.UP) {
             return messagesbase.messagesfromclient.EMove.Up;
         } else if (d == Direction.DOWN) {
@@ -327,7 +327,7 @@ public class Converter {
         } else if (d == Direction.RIGHT) {
             return messagesbase.messagesfromclient.EMove.Right;
         } else {
-            logger.warn("Unable to convert client direction: {}", d);
+            // logger.warn("Unable to convert client direction: {}", d);
             return null;
         }
     }

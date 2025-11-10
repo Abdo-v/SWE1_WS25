@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Build-Timestamp: 2025-11-11T00:42:30.729+0100
+Created-By: Gradle 8.8
+Build-Jdk: 21.0.7 (Eclipse Adoptium 21.0.7+6-LTS)
+Built-By: Abdo
+Build-OS: Windows 11 amd64 10.0
+Main-Class: org.springframework.boot.loader.launch.JarLauncher
+Start-Class: client.main.MainClient
+Spring-Boot-Version: 3.3.2
+Spring-Boot-Classes: BOOT-INF/classes/
+Spring-Boot-Lib: BOOT-INF/lib/
+Spring-Boot-Classpath-Index: BOOT-INF/classpath.idx
+Spring-Boot-Layers-Index: BOOT-INF/layers.idx
+Build-Jdk-Spec: 21
+Implementation-Title: Client
+
