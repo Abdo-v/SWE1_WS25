@@ -23,11 +23,7 @@
 
 # Business Logik (Logik/Algorithmen, die nicht zu den vorherigen Themen passen)
 ### Kurzbeschreibung der übernommenen Teile:
-- Flood Fill Algorithm: bei Kartengenerierung (nur die Idee & Erklärung, nicht die Implementierung!).
-- Dijkstra's Algorithm: bei Wegfindug (ShortestPathFinder, nur Idee & Erklärung, nicht die Impementierung!)
-### Quellen der übernommenen Teile:
-- Flood Fill: GeeksforGeeks: https://www.geeksforgeeks.org/dsa/flood-fill-algorithm/
-- Dijkstra's: GeeksforGeeks - https://www.geeksforgeeks.org/dsa/dijkstras-shortest-path-algorithm-greedy-algo-7/
+- Keine externen Quellen. Nur die in der VO/UE zur Verfügung gestellten Materialen & eigene Arbeit aus dem Vorsemester
 
 # Sonstige Quellen (welche nicht zu den vorherigen Punkten eingeordnet werden können)
 ### Kurzbeschreibung der übernommenen Teile:
