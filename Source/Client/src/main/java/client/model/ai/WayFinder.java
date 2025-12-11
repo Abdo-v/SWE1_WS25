@@ -14,19 +14,14 @@ import java.util.*;
 public class WayFinder implements client.observer.util.Observer{
     // private static final Logger logger = LoggerFactory.getLogger(WayFinder.class);
     private GameState gameState;
-    private LinkedHashMap<MapNode, Boolean> halfMapVisitedGrassFields;
-    private LinkedHashMap<MapNode, Boolean> oppHalfMapVisitedGrassFields;
-    private LinkedHashMap<MapNode, Boolean> allMountainFields; //target M
+    private WayHelper wayHelper;
+    private StateHolder stateHolder;
     private MapNode currentMapNode;
     private ShortestPathFinder shortestPathFinder;
     private TreasureSeeker treasureSeeker;
     private FortSeeker fortSeeker;
     private StrategyGuide strategyGuide;
     int movesMade = 0;
-    boolean treasureAlreadyFound = false;
-    boolean treasureAlreadyCollected = false;
-    boolean fortAlreadyFound = false;
-    MapNode enemyFirstTurePosition = null;
     
     /**
      * Constructs a WayFinder with a given GameState.
@@ -34,6 +29,8 @@ public class WayFinder implements client.observer.util.Observer{
      * @param state The initial GameState.
      */
     public WayFinder(GameState state) {
+        this.wayHelper = new WayHelper(state);
+        this.stateHolder = new StateHolder(state);
         update(state);
     }
 
@@ -43,9 +40,8 @@ public class WayFinder implements client.observer.util.Observer{
      */
     public WayFinder(){
         this.gameState = null;
-        this.halfMapVisitedGrassFields = new LinkedHashMap<>();
-        this.oppHalfMapVisitedGrassFields = new LinkedHashMap<>();
-        this.allMountainFields = new LinkedHashMap<>();// target M
+        this.wayHelper = new WayHelper();
+        this.stateHolder = new StateHolder();
         this.currentMapNode = new MapNode();
         this.shortestPathFinder = new ShortestPathFinder();
         this.treasureSeeker = new TreasureSeeker();
@@ -63,6 +59,8 @@ public class WayFinder implements client.observer.util.Observer{
     public void update(GameState state) {
         // logger.debug("WayFinder received GameState update");
         this.gameState = state;
+        wayHelper.update(state);
+        stateHolder.update(state);
         
         // Add null safety checks for players list
         if (state.getPlayers() != null && !state.getPlayers().isEmpty()) {
@@ -75,27 +73,27 @@ public class WayFinder implements client.observer.util.Observer{
             // Keep the existing currentMapNode if players are not available yet
         }
         
-        if(gameState.getMap() != null && gameState.getMap().getContentSize() >= 50 && (halfMapVisitedGrassFields == null || halfMapVisitedGrassFields.isEmpty())) {
-            halfMapVisitedGrassFields = treasureSeeker.getTraverseWay();
+        if(gameState.getMap() != null && gameState.getMap().getContentSize() >= 50 && (wayHelper.getHalfMapVisitedGrassFields() == null || wayHelper.getHalfMapVisitedGrassFields().isEmpty())) {
+            wayHelper.setHalfMapVisitedGrassFields(treasureSeeker.getTraverseWay());
             // logger.debug("Half map visited grass fields initialized with {} fields", 
-            //             halfMapVisitedGrassFields != null ? halfMapVisitedGrassFields.size() : 0);
+            //             wayHelper.getHalfMapVisitedGrassFields() != null ? wayHelper.getHalfMapVisitedGrassFields().size() : 0);
         }
-        if (gameState.getMap() != null && (gameState.getMap().getContentSize() == 100) && (oppHalfMapVisitedGrassFields == null || oppHalfMapVisitedGrassFields.isEmpty())) {
-            oppHalfMapVisitedGrassFields = fortSeeker.getTraverseWay();
+        if (gameState.getMap() != null && (gameState.getMap().getContentSize() == 100) && (wayHelper.getOppHalfMapVisitedGrassFields() == null || wayHelper.getOppHalfMapVisitedGrassFields().isEmpty())) {
+            wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getTraverseWay());
             // logger.debug("Opponent half map visited grass fields initialized with {} fields", 
-            //             oppHalfMapVisitedGrassFields != null ? oppHalfMapVisitedGrassFields.size() : 0);
+            //             wayHelper.getOppHalfMapVisitedGrassFields() != null ? wayHelper.getOppHalfMapVisitedGrassFields().size() : 0);
         }
         if(movesMade == 8) {
-            enemyFirstTurePosition = this.gameState.getEnemyCurrentPosition();
-            oppHalfMapVisitedGrassFields = fortSeeker.getFilteredTraverseWay(enemyFirstTurePosition);
+            stateHolder.setEnemyFirstTruePosition(this.gameState.getEnemyCurrentPosition());
+            wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getFilteredTraverseWay(stateHolder.getEnemyFirstTruePosition()));
             // logger.debug("Enemy first turn position detected: {}, filtered traverse way updated", 
-            //             enemyFirstTurePosition != null ? enemyFirstTurePosition.printCoordinates() : "null");
+            //             stateHolder.getEnemyFirstTruePosition() != null ? stateHolder.getEnemyFirstTruePosition().printCoordinates() : "null");
         }
-        if(gameState.getMap() != null && gameState.getMap().getContentSize() == 100 && (allMountainFields == null || allMountainFields.isEmpty())) { // target M
-            allMountainFields = strategyGuide.getAllMountainFields();
+        if(gameState.getMap() != null && gameState.getMap().getContentSize() == 100 && (wayHelper.getAllMountainFieldsMap() == null || wayHelper.getAllMountainFieldsMap().isEmpty())) { // target M
+            wayHelper.setAllMountainFields(strategyGuide.getAllMountainFields());
             // logger.debug("All mountain fields initialized with {} mountains", 
-            //             allMountainFields != null ? allMountainFields.size() : 0);
-            //System.out.println("WayFinder: All mountain fields initialized: " + allMountainFields.toString());
+            //             wayHelper.getAllMountainFieldsMap() != null ? wayHelper.getAllMountainFieldsMap().size() : 0);
+            //System.out.println("WayFinder: All mountain fields initialized: " + wayHelper.getAllMountainFieldsMap().toString());
         }
         // logger.trace("WayFinder update completed");
         //System.out.print(StaticColors.BLUE + "W" + StaticColors.RESET);
@@ -269,7 +267,7 @@ public class WayFinder implements client.observer.util.Observer{
             ArrayList<MapNode> visitedHalfMapNodes = new ArrayList<>();
             
             // Validate required data structures
-            if (strategy && (halfMapVisitedGrassFields == null || allMountainFields == null)) {
+            if (strategy && (wayHelper.getHalfMapVisitedGrassFields() == null || wayHelper.getAllMountainFieldsMap() == null)) {
                 throw new AIDecisionException(
                     "Cannot traverse half map: required data structures not initialized for treasure hunting",
                     "WayFinder",
@@ -278,7 +276,7 @@ public class WayFinder implements client.observer.util.Observer{
                 );
             }
             
-            if (!strategy && (oppHalfMapVisitedGrassFields == null || allMountainFields == null)) {
+            if (!strategy && (wayHelper.getOppHalfMapVisitedGrassFields() == null || wayHelper.getAllMountainFieldsMap() == null)) {
                 throw new AIDecisionException(
                     "Cannot traverse half map: required data structures not initialized for fort seeking",
                     "WayFinder",
@@ -289,24 +287,24 @@ public class WayFinder implements client.observer.util.Observer{
             
             // Build visited nodes list
             if (strategy) {
-                for (MapNode grassNode : halfMapVisitedGrassFields.keySet()) {
-                    if (halfMapVisitedGrassFields.get(grassNode)) {
+                for (MapNode grassNode : wayHelper.getHalfMapVisitedGrassFields().keySet()) {
+                    if (wayHelper.getHalfMapVisitedGrassFields().get(grassNode)) {
                         visitedHalfMapNodes.add(grassNode);
                     }
                 }
-                for (MapNode mountainNode : allMountainFields.keySet()) {
-                    if (allMountainFields.get(mountainNode)) {
+                for (MapNode mountainNode : wayHelper.getAllMountainFieldsMap().keySet()) {
+                    if (wayHelper.getAllMountainFieldsMap().get(mountainNode)) {
                         visitedHalfMapNodes.add(mountainNode);
                     }
                 }
             } else {
-                for (MapNode grassNode : oppHalfMapVisitedGrassFields.keySet()) {
-                    if (oppHalfMapVisitedGrassFields.get(grassNode)) {
+                for (MapNode grassNode : wayHelper.getOppHalfMapVisitedGrassFields().keySet()) {
+                    if (wayHelper.getOppHalfMapVisitedGrassFields().get(grassNode)) {
                         visitedHalfMapNodes.add(grassNode);
                     }
                 }
-                for (MapNode mountainNode : allMountainFields.keySet()) {
-                    if (allMountainFields.get(mountainNode)) {
+                for (MapNode mountainNode : wayHelper.getAllMountainFieldsMap().keySet()) {
+                    if (wayHelper.getAllMountainFieldsMap().get(mountainNode)) {
                         visitedHalfMapNodes.add(mountainNode);
                     }
                 }
@@ -338,7 +336,7 @@ public class WayFinder implements client.observer.util.Observer{
                     }
                 }
             } else {
-                for (MapNode tile : oppHalfMapVisitedGrassFields.keySet()) {
+                for (MapNode tile : wayHelper.getOppHalfMapVisitedGrassFields().keySet()) {
                     if (tile.getTerrain() == Terrain.WATER) continue;
                     if (!visitedHalfMapNodes.contains(tile)) {
                         candidatesEvaluated++;
@@ -349,7 +347,7 @@ public class WayFinder implements client.observer.util.Observer{
                         }
                     }
                 }
-                for (MapNode tile : this.allMountainFields.keySet()) {
+                for (MapNode tile : wayHelper.getAllMountainFieldsMap().keySet()) {
                     if (!visitedHalfMapNodes.contains(tile) && !gameState.getMap().isNodeInOwnHalf(tile)) {
                         candidatesEvaluated++;
                         float ratio = getCostToVisionRatio(tile, strategy);
@@ -409,11 +407,11 @@ public class WayFinder implements client.observer.util.Observer{
                 
                 MapNode fortNode = fortSeeker.getEnemyFortNodeIfFound();
                 if (fortNode != null) {
-                    if (!fortAlreadyFound) {
+                    if (!stateHolder.isFortAlreadyFound()) {
                         if (CLIHandler.isGameModeReduced()) {
                             System.out.println(StaticColors.PURPLE + "enemy fort found at: (" + fortNode.getX() + "," + fortNode.getY() + "), moving towards it." + StaticColors.RESET);
                         }
-                        fortAlreadyFound = true;
+                        stateHolder.setFortAlreadyFound(true);
                     }
                     
                     MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, 
@@ -474,11 +472,11 @@ public class WayFinder implements client.observer.util.Observer{
                 
                 MapNode treasureNode = treasureSeeker.getTreasureNodeIfFound();
                 if (treasureNode != null) {
-                    if (!treasureAlreadyFound) {
+                    if (!stateHolder.isTreasureAlreadyFound()) {
                         if (CLIHandler.isGameModeReduced()) {
                             System.out.println(StaticColors.ORANGE + "treasure found at: (" + treasureNode.getX() + "," + treasureNode.getY() + "), moving towards it." + StaticColors.RESET);
                         }
-                        treasureAlreadyFound = true;
+                        stateHolder.setTreasureAlreadyFound(true);
                     }
                     
                     MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, 
@@ -533,13 +531,13 @@ public class WayFinder implements client.observer.util.Observer{
         if (node != null && node.getTerrain() == Terrain.GRASS) {
             if (ownHalf) {
                 // mark as visited in own half map
-                this.halfMapVisitedGrassFields.put(node, true);
+                wayHelper.getHalfMapVisitedGrassFields().put(node, true);
             } else {
                 // mark as visited in opponent half map
-                this.oppHalfMapVisitedGrassFields.put(node, true);
+                wayHelper.getOppHalfMapVisitedGrassFields().put(node, true);
             }
         } else if (node != null && (node.getTerrain() == Terrain.MOUNTAIN)) {
-            this.allMountainFields.put(node, true); // target M
+            wayHelper.getAllMountainFieldsMap().put(node, true); // target M
         }
     }
 
@@ -557,14 +555,14 @@ public class WayFinder implements client.observer.util.Observer{
         //get a list of visited grass nodes
         ArrayList<MapNode> visitedGrassNodes = new ArrayList<>();
         if (strategy) {
-            for (MapNode grassNode : halfMapVisitedGrassFields.keySet()) {
-                if (halfMapVisitedGrassFields.get(grassNode)) {
+            for (MapNode grassNode : wayHelper.getHalfMapVisitedGrassFields().keySet()) {
+                if (wayHelper.getHalfMapVisitedGrassFields().get(grassNode)) {
                     visitedGrassNodes.add(grassNode);
                 }
             }
         } else {
-            for (MapNode grassNode : oppHalfMapVisitedGrassFields.keySet()) {
-                if (oppHalfMapVisitedGrassFields.get(grassNode)) {
+            for (MapNode grassNode : wayHelper.getOppHalfMapVisitedGrassFields().keySet()) {
+                if (wayHelper.getOppHalfMapVisitedGrassFields().get(grassNode)) {
                     visitedGrassNodes.add(grassNode);
                 }
             }
@@ -598,6 +596,14 @@ public class WayFinder implements client.observer.util.Observer{
      */
     public void addSubObservers(){
         // logger.debug("Adding sub-observers to GameState");
+        if(this.wayHelper != null) {
+            this.gameState.addObserver(this.wayHelper);
+            // logger.trace("WayHelper observer added");
+        }
+        if(this.stateHolder != null) {
+            this.gameState.addObserver(this.stateHolder);
+            // logger.trace("StateHolder observer added");
+        }
         if(this.shortestPathFinder != null) {
             this.gameState.addObserver(this.shortestPathFinder);
             // logger.trace("ShortestPathFinder observer added");
@@ -666,6 +672,22 @@ public class WayFinder implements client.observer.util.Observer{
     public void setGameState(GameState state){
         this.gameState = state;
         // logger.debug("GameState set for WayFinder");
+    }
+    
+    public WayHelper getWayHelper() {
+        return wayHelper;
+    }
+    
+    public void setWayHelper(WayHelper wayHelper) {
+        this.wayHelper = wayHelper;
+    }
+    
+    public StateHolder getStateHolder() {
+        return stateHolder;
+    }
+    
+    public void setStateHolder(StateHolder stateHolder) {
+        this.stateHolder = stateHolder;
     }
 
 }

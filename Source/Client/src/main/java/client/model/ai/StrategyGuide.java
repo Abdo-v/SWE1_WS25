@@ -13,6 +13,7 @@ public class StrategyGuide implements client.observer.util.Observer {
     // private static final Logger logger = LoggerFactory.getLogger(StrategyGuide.class);
 
     private GameState gameState;
+    private WayHelper wayHelper;
     
     /**
      * Constructs a StrategyGuide with the given GameState.
@@ -20,6 +21,7 @@ public class StrategyGuide implements client.observer.util.Observer {
      */
     public StrategyGuide(GameState gameState) {
         this.gameState = gameState;
+        this.wayHelper = new WayHelper(gameState);
         // logger.debug("StrategyGuide initialized with GameState: {}", 
         //             gameState != null ? gameState.getGameStateID() : "null");
     }
@@ -30,6 +32,7 @@ public class StrategyGuide implements client.observer.util.Observer {
      */
     public StrategyGuide() {
         this.gameState = null;
+        this.wayHelper = new WayHelper();
         // logger.debug("StrategyGuide initialized with null GameState");
     }
 
@@ -37,6 +40,7 @@ public class StrategyGuide implements client.observer.util.Observer {
     public void update(GameState gameState) {
         // logger.trace("StrategyGuide received GameState update");
         this.gameState = gameState;
+        wayHelper.update(gameState);
         
         if (gameState != null && gameState.getMap() != null) {
             int totalNodes = gameState.getMap().getGameMapNodes().size();
@@ -138,27 +142,7 @@ public class StrategyGuide implements client.observer.util.Observer {
      * @return A LinkedHashMap containing all mountain fields.
      */
     public LinkedHashMap<MapNode,Boolean> getAllMountainFields(){
-        // logger.debug("Collecting all mountain fields from game map");
-        LinkedHashMap<MapNode, Boolean> mountainFields = new LinkedHashMap<>();
-        
-        if (gameState != null && gameState.getMap() != null) {
-            for (MapNode node : gameState.getMap().getGameMapNodes()) {
-                if (node.getTerrain() == Terrain.MOUNTAIN) {
-                    mountainFields.put(node, false);
-                }
-            }
-            // logger.info("Found {} mountain fields in the game map", mountainFields.size());
-            
-            // if (logger.isTraceEnabled()) {
-            //     mountainFields.keySet().forEach(mountain -> 
-            //         logger.trace("Mountain at: {}", mountain.printCoordinates()));
-            // }
-        } else {
-            // logger.error("Cannot get mountain fields - GameState or GameMap is null");
-            System.err.println("StrategyGuide: GameState or GameMap is null, cannot get mountain fields.");
-        }
-        
-        return mountainFields;
+        return wayHelper.getAllMountainFields();
     }
     // for testing purposes, TDD
     public Object getGameState() {

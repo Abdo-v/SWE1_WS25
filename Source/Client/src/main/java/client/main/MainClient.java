@@ -1,5 +1,6 @@
 package client.main;
 import client.controller.GameManager;
+import client.controller.network.GameIdFetcher;
 import client.exception.ConfigurationException;
 import client.exception.GameCommunicationException;
 // import org.slf4j.Logger;
@@ -28,12 +29,27 @@ public class MainClient {
             validateBasicArguments(args);
             String gameMode = args[0];
             String serverBaseUrl = args[1];
-            String gameId = args[2];
-            //String gameId = "0XAyf";// only for quick testing
+            String gameId;
             
             // Validate game mode with custom exception
             validateGameMode(gameMode);
-
+            
+            // For ATTR mode, fetch game ID automatically; otherwise use provided game ID
+            if ("ATTR".equals(gameMode)) {
+                System.out.println("🔍 Auto-fetching game ID from server (ATTR mode)...");
+                gameId = GameIdFetcher.fetchGameId(serverBaseUrl);
+                System.out.println("✅ Retrieved game ID: " + gameId);
+            } else {
+                if (args.length < 3) {
+                    throw new ConfigurationException(
+                        "Game ID required for " + gameMode + " mode. Expected: <gameMode> <serverBaseUrl> <gameId>",
+                        "arguments",
+                        "count=" + args.length,
+                        new String[]{"gameMode", "serverBaseUrl", "gameId"}
+                    );
+                }
+                gameId = args[2];
+            }
             // logger.info("Game client configuration - Mode: {}, Server: {}, GameID: {}", gameMode, serverBaseUrl, gameId);
 
             // Inform user about logging configuration
@@ -45,10 +61,11 @@ public class MainClient {
             System.out.println("========================");
             System.out.println("📡 Server: " + serverBaseUrl);
             System.out.println("🎯 Game ID: " + gameId);
-            System.out.println("🖥️  Mode: " + (gameMode.equals("TR") ? "Terminal" : gameMode));
+            System.out.println("🖥️  Mode: " + (gameMode.equals("TR") ? "Terminal" : (gameMode.equals("TRR") ? "Terminal Reduced" : (gameMode.equals("ATTR") ? "Auto-Fetch Terminal" : gameMode))));
             System.out.println("please note the following:");
             System.out.println("use TR game mode for terminal dynamic mode (map real time update)");
             System.out.println("use TRR game mode for reduced representation game flow (no map, moves represented in text lines)");
+            System.out.println("use ATTR game mode for auto-fetch terminal mode (game ID fetched automatically)");
 
             // logger.debug("Creating shared game state with gameId: {}", gameId);
             client.model.GameState sharedGameState = new client.model.GameState(gameId);
@@ -126,15 +143,17 @@ public class MainClient {
      * @throws ConfigurationException if arguments are insufficient or invalid
      */
     public static void validateBasicArguments(String[] args) throws ConfigurationException {
-        if (args.length < 3) {
+        if (args.length < 2) {
             throw new ConfigurationException(
-                "Insufficient arguments provided. Expected: <gameMode> <serverBaseUrl> <gameId>",
+                "Insufficient arguments provided. Expected: <gameMode> <serverBaseUrl>",
                 "arguments",
                 "count=" + args.length,
-                new String[]{"gameMode", "serverBaseUrl", "gameId", "[options...]"}
+                new String[]{"gameMode", "serverBaseUrl", "[options...]"}
             );
         }
     }
+
+
 
     /**
      * Validates the game mode parameter.
@@ -148,11 +167,11 @@ public class MainClient {
                 "Game mode cannot be null or empty",
                 "gameMode",
                 gameMode,
-                new String[]{"TR", "TRR"}
+                new String[]{"TR", "TRR", "ATTR"}
             );
         }
         
-        String[] validModes = {"TR", "TRR"};
+        String[] validModes = {"TR", "TRR", "ATTR"};
         boolean isValid = false;
         for (String validMode : validModes) {
             if (validMode.equals(gameMode)) {
