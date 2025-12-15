@@ -1,10 +1,15 @@
 package client.model.mapper;
 
+import client.model.common.Notification;
+
 import java.util.Random;
 import java.util.Stack;
 
 public class MapGenerator {
     private PlayerHalfMap halfMap = null;
+
+    private static final double MIN_EDGE_WALKABLE_PERCENTAGE = 0.40;
+    private static final double MIN_EDGE_BLOCKED_PERCENTAGE = 0.20;
 
     /**
      * Constructs a MapGenerator.
@@ -21,6 +26,15 @@ public class MapGenerator {
      * @throws IllegalArgumentException if width or height is not positive.
      */
     public PlayerHalfMap generateMap(int width, int height, String playerID) {
+        return generateMap(width, height, playerID, null);
+    }
+
+    /**
+     * Generates a half map with the specified width, height, and player ID.
+     * If an existing half map is provided (for the "second" client), generation also tries to ensure
+     * that edge transitions are possible on at least 40% of each edge (walkable on both sides).
+     */
+    public PlayerHalfMap generateMap(int width, int height, String playerID, PlayerHalfMap existingHalfMap) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Width and height must be positive");
         }
@@ -50,7 +64,7 @@ public class MapGenerator {
             
             placeTerrain(terrainGrid, fortGrid, Terrain.MOUNTAIN, mountainCells, width, height, random);
             
-            placeWaterWithConstraints(terrainGrid, fortGrid, waterCells, width, height, random);
+            placeWaterWithConstraints(terrainGrid, fortGrid, waterCells, width, height, random, existingHalfMap);
             
             for (int x = 0; x < width; x++) {
                 for (int y = 0; y < height; y++) {
@@ -58,11 +72,12 @@ public class MapGenerator {
                     halfMap.addMapNode(node);
                 }
             }
-            
-            if (checkBorderWalkability(terrainGrid, width, height) && 
-                checkConnectivity(terrainGrid, width, height)) {
-                validMap = true;
-            }
+
+            MapValidator validator = new MapValidator();
+            Notification result = (existingHalfMap == null)
+                    ? validator.validate(halfMap)
+                    : validator.validate(halfMap, existingHalfMap);
+            validMap = !result.hasErrors();
         }
         
         return halfMap;
@@ -123,35 +138,55 @@ public class MapGenerator {
      * @param height The height of the map.
      * @param random The random number generator.
      */
-    private void placeWaterWithConstraints(Terrain[][] grid, boolean[][] fort, int count, 
-                                          int width, int height, Random random) {
+    private void placeWaterWithConstraints(Terrain[][] grid,
+                                          boolean[][] fort,
+                                          int count,
+                                          int width,
+                                          int height,
+                                          Random random,
+                                          PlayerHalfMap existingHalfMap) {
+        int minEdgeWaterTopBottom = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * width);
+        int minEdgeWaterLeftRight = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * height);
+
+        // Place minimum required water on each edge first (to satisfy the >=20% non-walkable rule).
+        placeMinimumWaterOnEdge(grid, fort, width, height, random, existingHalfMap, Edge.TOP, minEdgeWaterTopBottom);
+        placeMinimumWaterOnEdge(grid, fort, width, height, random, existingHalfMap, Edge.BOTTOM, minEdgeWaterTopBottom);
+        placeMinimumWaterOnEdge(grid, fort, width, height, random, existingHalfMap, Edge.LEFT, minEdgeWaterLeftRight);
+        placeMinimumWaterOnEdge(grid, fort, width, height, random, existingHalfMap, Edge.RIGHT, minEdgeWaterLeftRight);
+
+        // Count currently placed water
         int placed = 0;
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if (grid[x][y] == Terrain.WATER) {
+                    placed++;
+                }
+            }
+        }
+
         int attempts = 0;
-        int maxAttempts = count * 10;
-        
+        int maxAttempts = Math.max(100, count * 50);
+
         while (placed < count && attempts < maxAttempts) {
             attempts++;
             int x = random.nextInt(width);
             int y = random.nextInt(height);
-            
-            if (fort[x][y] || grid[x][y] == Terrain.WATER || grid[x][y] == Terrain.MOUNTAIN) {
+
+            if (!canPlaceWater(grid, fort, x, y)) {
                 continue;
             }
-            
-            boolean isBorder = (x == 0 || x == width-1 || y == 0 || y == height-1);
-            
+
             Terrain original = grid[x][y];
             grid[x][y] = Terrain.WATER;
-            
+
             boolean valid = true;
-            if (isBorder && !checkBorderWalkability(grid, width, height)) {
+            if (!checkBorderConstraints(grid, width, height)) {
                 valid = false;
             }
-            
             if (valid && !checkConnectivity(grid, width, height)) {
                 valid = false;
             }
-            
+
             if (valid) {
                 placed++;
             } else {
@@ -161,45 +196,156 @@ public class MapGenerator {
     }
 
     /**
-     * Checks if at least 51% of each border is walkable (non-water).
-     * @param grid The terrain grid.
-     * @param width The width of the map.
-     * @param height The height of the map.
-     * @return true if at least 51% of each border is walkable, false otherwise.
+     * Checks edge constraints: per edge at least 40% walkable (non-water) and at least 20% blocked (water).
      */
-    private boolean checkBorderWalkability(Terrain[][] grid, int width, int height) {
-        int walkableBottom = 0;
+    private boolean checkBorderConstraints(Terrain[][] grid, int width, int height) {
+        int requiredTopBottomWalkable = (int) Math.ceil(MIN_EDGE_WALKABLE_PERCENTAGE * width);
+        int requiredTopBottomBlocked = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * width);
+        int requiredLeftRightWalkable = (int) Math.ceil(MIN_EDGE_WALKABLE_PERCENTAGE * height);
+        int requiredLeftRightBlocked = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * height);
+
+        int topWalkable = 0;
+        int topBlocked = 0;
         for (int x = 0; x < width; x++) {
-            if (grid[x][0] != Terrain.WATER) {
-                walkableBottom++;
-            }
+            if (grid[x][0] == Terrain.WATER) topBlocked++; else topWalkable++;
         }
-        
-        int walkableTop = 0;
+
+        int bottomWalkable = 0;
+        int bottomBlocked = 0;
         for (int x = 0; x < width; x++) {
-            if (grid[x][height-1] != Terrain.WATER) {
-                walkableTop++;
-            }
+            if (grid[x][height - 1] == Terrain.WATER) bottomBlocked++; else bottomWalkable++;
         }
-        
-        int walkableLeft = 0;
+
+        int leftWalkable = 0;
+        int leftBlocked = 0;
         for (int y = 0; y < height; y++) {
-            if (grid[0][y] != Terrain.WATER) {
-                walkableLeft++;
-            }
+            if (grid[0][y] == Terrain.WATER) leftBlocked++; else leftWalkable++;
         }
-        
-        int walkableRight = 0;
+
+        int rightWalkable = 0;
+        int rightBlocked = 0;
         for (int y = 0; y < height; y++) {
-            if (grid[width-1][y] != Terrain.WATER) {
-                walkableRight++;
+            if (grid[width - 1][y] == Terrain.WATER) rightBlocked++; else rightWalkable++;
+        }
+
+        return (topWalkable >= requiredTopBottomWalkable && topBlocked >= requiredTopBottomBlocked &&
+                bottomWalkable >= requiredTopBottomWalkable && bottomBlocked >= requiredTopBottomBlocked &&
+                leftWalkable >= requiredLeftRightWalkable && leftBlocked >= requiredLeftRightBlocked &&
+                rightWalkable >= requiredLeftRightWalkable && rightBlocked >= requiredLeftRightBlocked);
+    }
+
+    private enum Edge {
+        TOP,
+        BOTTOM,
+        LEFT,
+        RIGHT
+    }
+
+    private void placeMinimumWaterOnEdge(Terrain[][] grid,
+                                        boolean[][] fort,
+                                        int width,
+                                        int height,
+                                        Random random,
+                                        PlayerHalfMap existingHalfMap,
+                                        Edge edge,
+                                        int minWaterNeeded) {
+        int edgeLen = (edge == Edge.TOP || edge == Edge.BOTTOM) ? width : height;
+        int requiredWalkable = (int) Math.ceil(MIN_EDGE_WALKABLE_PERCENTAGE * edgeLen);
+        int maxWaterAllowed = edgeLen - requiredWalkable;
+
+        int currentWater = countWaterOnEdge(grid, width, height, edge);
+        int attempts = 0;
+        int maxAttempts = 500;
+
+        while (currentWater < minWaterNeeded && attempts < maxAttempts) {
+            attempts++;
+            int x;
+            int y;
+            if (edge == Edge.TOP) {
+                y = 0;
+                x = random.nextInt(width);
+            } else if (edge == Edge.BOTTOM) {
+                y = height - 1;
+                x = random.nextInt(width);
+            } else if (edge == Edge.LEFT) {
+                x = 0;
+                y = random.nextInt(height);
+            } else {
+                x = width - 1;
+                y = random.nextInt(height);
+            }
+
+            if (!canPlaceWater(grid, fort, x, y)) {
+                continue;
+            }
+
+            // Prefer placing water where it does NOT reduce potential crossable transitions.
+            if (existingHalfMap != null) {
+                MapNode opposite = getOppositeEdgeNode(existingHalfMap, edge, x, y, width, height);
+                if (opposite != null && opposite.isWalkable()) {
+                    // Try another coordinate first.
+                    // This is a soft preference; we'll still place later if needed.
+                    if (attempts < maxAttempts / 2) {
+                        continue;
+                    }
+                }
+            }
+
+            Terrain original = grid[x][y];
+            grid[x][y] = Terrain.WATER;
+
+            int newEdgeWater = countWaterOnEdge(grid, width, height, edge);
+            boolean valid = newEdgeWater <= maxWaterAllowed;
+            if (valid && !checkConnectivity(grid, width, height)) {
+                valid = false;
+            }
+
+            if (valid) {
+                currentWater = newEdgeWater;
+            } else {
+                grid[x][y] = original;
             }
         }
-        
-        return (walkableBottom >= Math.ceil(width * 0.51) &&
-                walkableTop >= Math.ceil(width * 0.51) &&
-                walkableLeft >= Math.ceil(height * 0.51) &&
-                walkableRight >= Math.ceil(height * 0.51));
+    }
+
+    private int countWaterOnEdge(Terrain[][] grid, int width, int height, Edge edge) {
+        int count = 0;
+        if (edge == Edge.TOP) {
+            for (int x = 0; x < width; x++) if (grid[x][0] == Terrain.WATER) count++;
+        } else if (edge == Edge.BOTTOM) {
+            for (int x = 0; x < width; x++) if (grid[x][height - 1] == Terrain.WATER) count++;
+        } else if (edge == Edge.LEFT) {
+            for (int y = 0; y < height; y++) if (grid[0][y] == Terrain.WATER) count++;
+        } else {
+            for (int y = 0; y < height; y++) if (grid[width - 1][y] == Terrain.WATER) count++;
+        }
+        return count;
+    }
+
+    private boolean canPlaceWater(Terrain[][] grid, boolean[][] fort, int x, int y) {
+        return !fort[x][y] && grid[x][y] != Terrain.WATER && grid[x][y] != Terrain.MOUNTAIN;
+    }
+
+    private MapNode getOppositeEdgeNode(PlayerHalfMap existingHalfMap,
+                                       Edge newEdge,
+                                       int x,
+                                       int y,
+                                       int width,
+                                       int height) {
+        if (existingHalfMap == null) {
+            return null;
+        }
+        if (newEdge == Edge.LEFT) {
+            return existingHalfMap.getMapNode(width - 1, y);
+        }
+        if (newEdge == Edge.RIGHT) {
+            return existingHalfMap.getMapNode(0, y);
+        }
+        if (newEdge == Edge.TOP) {
+            return existingHalfMap.getMapNode(x, height - 1);
+        }
+        // BOTTOM
+        return existingHalfMap.getMapNode(x, 0);
     }
 
     /**
