@@ -1,0 +1,98 @@
+package client.controller;
+
+import client.controller.network.service.NetworkCenter;
+import client.exception.GameCommunicationException;
+import client.exception.GameStateException;
+
+public class GameStateQueryService {
+
+    private final NetworkCenter networkCenter;
+
+    public GameStateQueryService(NetworkCenter networkCenter) {
+        this.networkCenter = networkCenter;
+    }
+
+    public boolean isFullMapAvailable() throws GameCommunicationException {
+        try {
+            messagesbase.messagesfromserver.GameState serverGameState = pollGameState();
+            return serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 100;
+        } catch (GameCommunicationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new GameCommunicationException(
+                "Failed to check full map availability: " + e.getMessage(),
+                e,
+                networkCenter != null ? "unknown" : "no_network",
+                "FULL_MAP_CHECK",
+                -1
+            );
+        }
+    }
+
+    public messagesbase.messagesfromserver.GameState pollGameState() throws GameCommunicationException {
+        try {
+            return networkCenter.pollGameState();
+        } catch (GameCommunicationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new GameCommunicationException(
+                "Failed to poll game state from server: " + e.getMessage(),
+                e,
+                networkCenter != null ? "unknown" : "no_network",
+                "POLL_GAME_STATE",
+                -1
+            );
+        }
+    }
+
+    public boolean isServerMapEmpty() throws GameCommunicationException {
+        try {
+            messagesbase.messagesfromserver.GameState serverGameState = pollGameState();
+            return serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 0;
+        } catch (GameCommunicationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new GameCommunicationException(
+                "Failed to check if server map is empty: " + e.getMessage(),
+                e,
+                networkCenter != null ? "unknown" : "no_network",
+                "CHECK_SERVER_MAP_EMPTY",
+                -1
+            );
+        }
+    }
+
+    public messagesbase.messagesfromserver.EPlayerGameState pollPlayerStatus(String playerId, String gameStateId)
+        throws GameCommunicationException, GameStateException {
+
+        try {
+            messagesbase.messagesfromserver.GameState serverGameState = pollGameState();
+
+            for (messagesbase.messagesfromserver.PlayerState playerState : serverGameState.getPlayers()) {
+                if (playerState.getUniquePlayerID().equals(playerId)) {
+                    return playerState.getState();
+                }
+            }
+
+            throw new GameStateException(
+                "Player not found in server game state",
+                gameStateId,
+                "POLL_PLAYER_STATUS",
+                "player_not_found",
+                "player_present"
+            );
+
+        } catch (GameCommunicationException | GameStateException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new GameStateException(
+                "Unexpected error polling player status: " + e.getMessage(),
+                e,
+                gameStateId,
+                "POLL_PLAYER_STATUS",
+                "error",
+                null
+            );
+        }
+    }
+}

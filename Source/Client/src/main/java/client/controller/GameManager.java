@@ -29,6 +29,7 @@ public class GameManager {
     private final GameOutput output;
     private final HalfMapService halfMapService;
     private final GameStateSynchronizer gameStateSynchronizer;
+    private final GameStateQueryService gameStateQueryService;
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
         this(state, serverBaseUrl, gameMode, new GameManagerView());
@@ -43,6 +44,7 @@ public class GameManager {
         this.output = output;
         this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
+        this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
         state.addObserver(cliHandler);
         state.addObserver(wayFinder);
         state.addObserver(dynamicView);
@@ -68,6 +70,7 @@ public class GameManager {
         this.output = output;
         this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
+        this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
     }
 
     /**
@@ -86,6 +89,7 @@ public class GameManager {
         this.output = output;
         this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
+        this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
     }
 
     /**
@@ -148,21 +152,7 @@ public class GameManager {
      * @throws GameCommunicationException If polling fails due to network issues.
      */
     public boolean fullMapAvailable() throws GameCommunicationException {
-        try {
-            // // logger.trace("Checking if full map is available");
-            messagesbase.messagesfromserver.GameState serverGameState = networkCenter.pollGameState();
-            boolean available = serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 100;
-            // // logger.debug("Full map availability check: {}", available);
-            return available;
-        } catch (Exception e) {
-            throw new GameCommunicationException(
-                "Failed to check full map availability: " + e.getMessage(),
-                e,
-                networkCenter != null ? "unknown" : "no_network",
-                "FULL_MAP_CHECK",
-                -1
-            );
-        }
+        return gameStateQueryService.isFullMapAvailable();
     }
 
     /**
@@ -180,18 +170,7 @@ public class GameManager {
      * @throws GameCommunicationException If polling fails due to network issues.
      */
     public messagesbase.messagesfromserver.GameState managerpollGameState() throws GameCommunicationException {
-        try {
-            // // logger.trace("Polling server for current game state");
-            return networkCenter.pollGameState();
-        } catch (Exception e) {
-            throw new GameCommunicationException(
-                "Failed to poll game state from server: " + e.getMessage(),
-                e,
-                networkCenter != null ? "unknown" : "no_network",
-                "POLL_GAME_STATE",
-                -1
-            );
-        }
+        return gameStateQueryService.pollGameState();
     }
 
     /**
@@ -201,41 +180,7 @@ public class GameManager {
      * @throws GameStateException If the player is not found in the game state.
      */
     public messagesbase.messagesfromserver.EPlayerGameState pollMyStatus() throws GameCommunicationException, GameStateException {
-        // // logger.trace("Polling player status for player: {}", playerId);
-        
-        try {
-            messagesbase.messagesfromserver.GameState serverGameState = managerpollGameState();
-            
-            for (messagesbase.messagesfromserver.PlayerState playerState : serverGameState.getPlayers()) {
-                if (playerState.getUniquePlayerID().equals(playerId)) {
-                    // // logger.trace("Player {} status: {}", playerId, playerState.getState());
-                    return playerState.getState();
-                }
-            }
-            
-            // Player not found in server state
-            throw new GameStateException(
-                "Player not found in server game state",
-                gameState.getGameStateID(),
-                "POLL_PLAYER_STATUS",
-                "player_not_found",
-                "player_present"
-            );
-            
-        } catch (GameCommunicationException e) {
-            throw e; // Re-throw communication exceptions
-        } catch (GameStateException e) {
-            throw e; // Re-throw game state exceptions
-        } catch (Exception e) {
-            throw new GameStateException(
-                "Unexpected error polling player status: " + e.getMessage(),
-                e,
-                gameState.getGameStateID(),
-                "POLL_PLAYER_STATUS",
-                "error",
-                null
-            );
-        }
+        return gameStateQueryService.pollPlayerStatus(playerId, gameState != null ? gameState.getGameStateID() : "unknown");
     }
 
     /**
@@ -503,12 +448,6 @@ public class GameManager {
      */
     public boolean isServerMapEmpty() throws GameCommunicationException {
         try {
-            // // logger.trace("Checking if server map is empty");
-            messagesbase.messagesfromserver.GameState serverGameState = networkCenter.pollGameState();
-            if (serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 0) {
-                // // logger.debug("Server map is empty");
-                return true;
-            }
         } catch (Exception e) {
             throw new GameCommunicationException(
                 "Failed to check if server map is empty: " + e.getMessage(),
@@ -518,7 +457,7 @@ public class GameManager {
                 -1
             );
         }
-        return false;
+        return gameStateQueryService.isServerMapEmpty();
     }
 
     public boolean shouldAct() {
