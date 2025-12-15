@@ -31,8 +31,10 @@ public class NetworkCenter {
     private final WebClient webClient;
     private final String gameId;
     private final String serverBaseUrl;
+    private final NetworkCenterConfig config;
     private UniquePlayerIdentifier playerId = null;
-    private Converter converter = new Converter();
+    private final ClientToServerConverter clientToServerConverter = new ClientToServerConverter();
+    private final ServerToClientConverter serverToClientConverter = new ServerToClientConverter();
 
     /**
      * Constructs a NetworkCenter with the given server base URL, game ID, and player ID.
@@ -41,10 +43,15 @@ public class NetworkCenter {
      * @param playerId The unique player identifier.
      */
     public NetworkCenter(String serverBaseUrl, String gameId, UniquePlayerIdentifier playerId) {
+        this(serverBaseUrl, gameId, playerId, NetworkCenterConfig.defaultConfig());
+    }
+
+    public NetworkCenter(String serverBaseUrl, String gameId, UniquePlayerIdentifier playerId, NetworkCenterConfig config) {
      // logger.debug("Creating NetworkCenter with server: {}, gameId: {}, playerId: {}", serverBaseUrl, gameId, playerId.getUniquePlayerID());
         this.gameId = gameId;
         this.serverBaseUrl = serverBaseUrl;
         this.playerId = playerId;
+        this.config = config;
         this.webClient = WebClient.builder()
                 .baseUrl(serverBaseUrl + "/games")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE) 
@@ -59,9 +66,14 @@ public class NetworkCenter {
      * @param gameId The ID of the game.
      */
     public NetworkCenter(String serverBaseUrl, String gameId) {
+        this(serverBaseUrl, gameId, NetworkCenterConfig.defaultConfig());
+    }
+
+    public NetworkCenter(String serverBaseUrl, String gameId, NetworkCenterConfig config) {
      // logger.debug("Creating NetworkCenter with server: {}, gameId: {}", serverBaseUrl, gameId);
         this.gameId = gameId;
         this.serverBaseUrl = serverBaseUrl;
+        this.config = config;
         this.webClient = WebClient.builder()
                 .baseUrl(serverBaseUrl + "/games")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE) 
@@ -150,8 +162,8 @@ public class NetworkCenter {
         try {
          // logger.info("Sending half map for player: {} in game: {}", playerId.getUniquePlayerID(), gameId);
          // logger.debug("Converting client half map to server format");
-            messagesbase.messagesfromclient.PlayerHalfMap clientHalfMap = 
-                    converter.convertClientHalfMap(halfMap, this.playerId);
+                messagesbase.messagesfromclient.PlayerHalfMap clientHalfMap =
+                    clientToServerConverter.convertClientHalfMap(halfMap, this.playerId);
             
          // logger.debug("Transmitting half map to server");
             Mono<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>> webAccess = webClient
@@ -301,7 +313,7 @@ public class NetworkCenter {
         }
         
         try {
-            Thread.sleep(400); 
+            Thread.sleep(config.pollGameStateDelayMillis());
             
             Mono<ResponseEnvelope<GameState>> webAccess = webClient
                     .method(HttpMethod.GET)
@@ -384,7 +396,7 @@ public class NetworkCenter {
      */
     public messagesbase.messagesfromclient.PlayerHalfMap convertClientHalfMap(PlayerHalfMap halfMap) {
      // logger.trace("Converting client half map to server format for player: {}", playerId != null ? playerId.getUniquePlayerID() : "unknown");
-        return converter.convertClientHalfMap(halfMap, this.playerId);
+        return clientToServerConverter.convertClientHalfMap(halfMap, this.playerId);
     }
 
     /**
@@ -393,7 +405,7 @@ public class NetworkCenter {
      * @return Collection of network map nodes.
      */
     public Collection<messagesbase.messagesfromclient.PlayerHalfMapNode> convertToServerNodes(List<MapNode> nodes) {
-        return converter.convertClientNodes(nodes);
+        return clientToServerConverter.convertClientNodes(nodes);
     }
 
     /**
@@ -402,7 +414,7 @@ public class NetworkCenter {
      * @return The corresponding network terrain.
      */
     public messagesbase.messagesfromclient.ETerrain convertClientTerrain(client.model.mapper.Terrain clientTerrain) {
-        return converter.convertClientTerrain(clientTerrain);
+        return clientToServerConverter.convertClientTerrain(clientTerrain);
     }
 
     /**
@@ -411,7 +423,7 @@ public class NetworkCenter {
      * @return The corresponding client terrain.
      */
     public client.model.mapper.Terrain convertServerTerrain(messagesbase.messagesfromclient.ETerrain serverTerrain) {
-        return converter.convertServerTerrain(serverTerrain);
+        return serverToClientConverter.convertServerTerrain(serverTerrain);
     }
 
     /**
@@ -421,7 +433,7 @@ public class NetworkCenter {
      */
     public client.model.GameState convertServerGamestate(messagesbase.messagesfromserver.GameState serverGameState) {
      // logger.trace("Converting server game state to client format for player: {}", playerId != null ? playerId.getUniquePlayerID() : "unknown");
-        return converter.convertServerGamestate(serverGameState, this.playerId);
+        return serverToClientConverter.convertServerGamestate(serverGameState, this.playerId);
     }
 
     /**
@@ -431,14 +443,7 @@ public class NetworkCenter {
      */
     public boolean serverMapHasEnemyFort(messagesbase.messagesfromserver.FullMap serverMap) {
      // logger.trace("Checking for enemy fort in server map");
-        for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
-            if (node.getFortState() == messagesbase.messagesfromserver.EFortState.EnemyFortPresent) {
-             // logger.debug("Enemy fort found at position ({}, {})", node.getX(), node.getY());
-                return true;
-            }
-        }
-     // logger.trace("No enemy fort found in server map");
-        return false;
+        return serverToClientConverter.serverMapHasEnemyFort(serverMap);
     }
 
     /**
@@ -448,7 +453,7 @@ public class NetworkCenter {
      */
     public client.model.mapper.GameMap convertServerMap(messagesbase.messagesfromserver.FullMap serverMap) {
      // logger.debug("Converting server map to client format, nodes: {}", serverMap != null ? serverMap.getMapNodes().size() : 0);
-        return converter.convertServerMap(serverMap);
+        return serverToClientConverter.convertServerMap(serverMap);
     }
 
     /**
@@ -458,11 +463,11 @@ public class NetworkCenter {
      * @return The internal player state.
      */
     public client.model.PlayerState convertServerPlayerState(messagesbase.messagesfromserver.PlayerState serverPlayerState, MapNode playerMapNode) {
-        return converter.convertServerPlayerState(serverPlayerState, playerMapNode);
+        return serverToClientConverter.convertServerPlayerState(serverPlayerState, playerMapNode);
     }
 
     public client.model.PlayerStatus convertServerStatus(messagesbase.messagesfromserver.EPlayerGameState serverStatus){
-        return converter.convertServerStatus(serverStatus);
+        return serverToClientConverter.convertServerStatus(serverStatus);
     }
 
     /**
@@ -471,7 +476,7 @@ public class NetworkCenter {
      * @return The internal map node.
      */
     public MapNode convertServerMapNode(messagesbase.messagesfromserver.FullMapNode serverMapNode) {
-        return converter.convertServerMapNode(serverMapNode);
+        return serverToClientConverter.convertServerMapNode(serverMapNode);
     }
 
     /**
@@ -481,7 +486,7 @@ public class NetworkCenter {
      */
     public messagesbase.messagesfromclient.EMove convertClientDirection(Direction d){
      // logger.trace("Converting client direction {} to server move", d);
-        return converter.convertClientDirection(d);
+        return clientToServerConverter.convertClientDirection(d);
     }
 
     /**
