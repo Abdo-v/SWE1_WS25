@@ -16,7 +16,9 @@ public class MapValidator {
     private static final double MIN_GRASS_PERCENTAGE = 0.48;
     private static final double MIN_WATER_PERCENTAGE = 0.14;
     private static final double CASTLE_PERCENTAGE = 0.02; // 1 castle
-    private static final double MIN_EDGE_WALKABLE_PERCENTAGE = 0.51;
+    private static final double MIN_EDGE_WALKABLE_PERCENTAGE = 0.40;
+    private static final double MIN_EDGE_BLOCKED_PERCENTAGE = 0.20;
+    private static final double MIN_EDGE_CROSSABLE_PERCENTAGE = 0.40;
 
     /**
      * Validates a PlayerHalfMap according to game rules and structural requirements.
@@ -100,10 +102,65 @@ public class MapValidator {
         // Only proceed with complex validations if basic structure and terrain are okay
         if (!notification.hasErrors()) {
             validateReachability(halfMap, notification, maxX, maxY);
-            validateEdgeWalkability(halfMap, notification, maxX, maxY);
+            validateEdgeConstraints(halfMap, notification, maxX, maxY);
         }
 
         return notification;
+    }
+
+    /**
+     * Validates a PlayerHalfMap and also checks edge-crossing compatibility with an existing half-map.
+     * This is intended for the client that generates the second half-map.
+     *
+     * Rule: For each edge of the new half-map, at least 40% of edge fields must allow a successful
+     * transition to the corresponding opposite edge of the existing half-map (walkable on both sides).
+     *
+     * Pairings checked:
+     * - new LEFT  (x=0)      vs existing RIGHT (x=maxX)
+     * - new RIGHT (x=maxX)   vs existing LEFT  (x=0)
+     * - new TOP   (y=0)      vs existing BOTTOM(y=maxY)
+     * - new BOTTOM(y=maxY)   vs existing TOP   (y=0)
+     */
+    public Notification validate(PlayerHalfMap newHalfMap, PlayerHalfMap existingHalfMap) {
+        Notification notification = validate(newHalfMap);
+        if (notification.hasErrors()) {
+            return notification;
+        }
+        if (existingHalfMap == null) {
+            return notification;
+        }
+
+        int[] newDims = determineDimensions(newHalfMap);
+        int[] existingDims = determineDimensions(existingHalfMap);
+
+        if (newDims[0] != existingDims[0] || newDims[1] != existingDims[1]) {
+            notification.addError(String.format(
+                    "Half-map dimensions mismatch. New=%dx%d, Existing=%dx%d",
+                    newDims[0], newDims[1], existingDims[0], existingDims[1]));
+            return notification;
+        }
+
+        int maxX = newDims[0] - 1;
+        int maxY = newDims[1] - 1;
+        validateEdgeCrossingCompatibility(newHalfMap, existingHalfMap, notification, maxX, maxY);
+        return notification;
+    }
+
+    private int[] determineDimensions(PlayerHalfMap halfMap) {
+        List<MapNode> nodes = halfMap.getMapNodes();
+        if (nodes == null || nodes.isEmpty()) {
+            return new int[]{0, 0};
+        }
+        int maxX = -1;
+        int maxY = -1;
+        for (MapNode node : nodes) {
+            if (node == null) {
+                continue;
+            }
+            maxX = Math.max(maxX, node.getX());
+            maxY = Math.max(maxY, node.getY());
+        }
+        return new int[]{maxX + 1, maxY + 1};
     }
 
     /**
@@ -251,6 +308,7 @@ public class MapValidator {
                                  String edgeName) {
         int totalEdgeNodes = 0;
         int walkableEdgeNodes = 0;
+        int blockedEdgeNodes = 0;
 
         for (int varCoord = startVarCoord; varCoord <= endVarCoord; varCoord++) {
             int x, y;
@@ -268,6 +326,8 @@ public class MapValidator {
                 totalEdgeNodes++;
                 if (node.isWalkable()) {
                     walkableEdgeNodes++;
+                } else {
+                    blockedEdgeNodes++;
                 }
             } else {
                 // This should ideally be caught earlier by map completeness checks.
@@ -283,11 +343,17 @@ public class MapValidator {
         if (totalEdgeNodes == 0) return; // Edge has no length (e.g. startVarCoord > endVarCoord)
 
         int requiredWalkableNodes = (int) Math.ceil(MIN_EDGE_WALKABLE_PERCENTAGE * totalEdgeNodes);
+        int requiredBlockedNodes = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * totalEdgeNodes);
 
         if (walkableEdgeNodes < requiredWalkableNodes) {
-            String requiredPercentageStr = String.format("%.0f%%", MIN_EDGE_WALKABLE_PERCENTAGE * 100);
-            notification.addError(String.format("%s walkability below threshold. Required: >=%s (%d nodes), Found: %d/%d nodes.",
-                                  edgeName, requiredPercentageStr, requiredWalkableNodes, walkableEdgeNodes, totalEdgeNodes));
+            notification.addError(String.format(
+                    "%s walkability below threshold. Required: >=%.0f%% (%d nodes), Found: %d/%d nodes.",
+                    edgeName, MIN_EDGE_WALKABLE_PERCENTAGE * 100, requiredWalkableNodes, walkableEdgeNodes, totalEdgeNodes));
+        }
+        if (blockedEdgeNodes < requiredBlockedNodes) {
+            notification.addError(String.format(
+                    "%s non-walkable fields below threshold. Required: >=%.0f%% (%d nodes), Found: %d/%d nodes.",
+                    edgeName, MIN_EDGE_BLOCKED_PERCENTAGE * 100, requiredBlockedNodes, blockedEdgeNodes, totalEdgeNodes));
         }
     }
 
@@ -301,7 +367,7 @@ public class MapValidator {
      * @param maxX The maximum X coordinate of the map
      * @param maxY The maximum Y coordinate of the map
      */
-    private void validateEdgeWalkability(PlayerHalfMap halfMap, Notification notification, int maxX, int maxY) {
+    private void validateEdgeConstraints(PlayerHalfMap halfMap, Notification notification, int maxX, int maxY) {
         // Assuming map coordinates start at (0,0) as per earlier checks (minX=0, minY=0)
         int minX = 0; 
         int minY = 0;
@@ -314,5 +380,85 @@ public class MapValidator {
         checkSingleEdge(halfMap, notification, minX, true, minY, maxY, "Left Edge (X=" + minX + ")");
         // Right edge: X is fixed at maxX, Y varies from minY to maxY
         checkSingleEdge(halfMap, notification, maxX, true, minY, maxY, "Right Edge (X=" + maxX + ")");
+    }
+
+    private void validateEdgeCrossingCompatibility(PlayerHalfMap newHalfMap,
+                                                  PlayerHalfMap existingHalfMap,
+                                                  Notification notification,
+                                                  int maxX,
+                                                  int maxY) {
+        // LEFT(new) vs RIGHT(existing)
+        checkCrossingOnVerticalEdge(newHalfMap, existingHalfMap, notification,
+                0, maxX, maxY, "Left Edge (new X=0) vs Right Edge (existing X=" + maxX + ")");
+
+        // RIGHT(new) vs LEFT(existing)
+        checkCrossingOnVerticalEdge(newHalfMap, existingHalfMap, notification,
+                maxX, 0, maxY, "Right Edge (new X=" + maxX + ") vs Left Edge (existing X=0)");
+
+        // TOP(new y=0) vs BOTTOM(existing y=maxY)
+        checkCrossingOnHorizontalEdge(newHalfMap, existingHalfMap, notification,
+                0, maxY, maxX, "Top Edge (new Y=0) vs Bottom Edge (existing Y=" + maxY + ")");
+
+        // BOTTOM(new y=maxY) vs TOP(existing y=0)
+        checkCrossingOnHorizontalEdge(newHalfMap, existingHalfMap, notification,
+                maxY, 0, maxX, "Bottom Edge (new Y=" + maxY + ") vs Top Edge (existing Y=0)");
+    }
+
+    private void checkCrossingOnVerticalEdge(PlayerHalfMap newHalfMap,
+                                            PlayerHalfMap existingHalfMap,
+                                            Notification notification,
+                                            int newX,
+                                            int existingX,
+                                            int maxY,
+                                            String label) {
+        int total = maxY + 1;
+        int crossable = 0;
+        for (int y = 0; y <= maxY; y++) {
+            MapNode n1 = newHalfMap.getMapNode(newX, y);
+            MapNode n2 = existingHalfMap.getMapNode(existingX, y);
+            if (n1 == null || n2 == null) {
+                notification.addError("Missing node(s) while checking crossing: " + label + " at y=" + y);
+                return;
+            }
+            if (n1.isWalkable() && n2.isWalkable()) {
+                crossable++;
+            }
+        }
+
+        int required = (int) Math.ceil(MIN_EDGE_CROSSABLE_PERCENTAGE * total);
+        if (crossable < required) {
+            notification.addError(String.format(
+                    "Crossing compatibility below threshold for %s. Required: >=%.0f%% (%d fields), Found: %d/%d fields.",
+                    label, MIN_EDGE_CROSSABLE_PERCENTAGE * 100, required, crossable, total));
+        }
+    }
+
+    private void checkCrossingOnHorizontalEdge(PlayerHalfMap newHalfMap,
+                                              PlayerHalfMap existingHalfMap,
+                                              Notification notification,
+                                              int newY,
+                                              int existingY,
+                                              int maxX,
+                                              String label) {
+        int total = maxX + 1;
+        int crossable = 0;
+        for (int x = 0; x <= maxX; x++) {
+            MapNode n1 = newHalfMap.getMapNode(x, newY);
+            MapNode n2 = existingHalfMap.getMapNode(x, existingY);
+            if (n1 == null || n2 == null) {
+                notification.addError("Missing node(s) while checking crossing: " + label + " at x=" + x);
+                return;
+            }
+            if (n1.isWalkable() && n2.isWalkable()) {
+                crossable++;
+            }
+        }
+
+        int required = (int) Math.ceil(MIN_EDGE_CROSSABLE_PERCENTAGE * total);
+        if (crossable < required) {
+            notification.addError(String.format(
+                    "Crossing compatibility below threshold for %s. Required: >=%.0f%% (%d fields), Found: %d/%d fields.",
+                    label, MIN_EDGE_CROSSABLE_PERCENTAGE * 100, required, crossable, total));
+        }
     }
 }
