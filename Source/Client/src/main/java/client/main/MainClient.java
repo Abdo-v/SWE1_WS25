@@ -3,6 +3,7 @@ import client.controller.GameManager;
 import client.controller.network.GameIdFetcher;
 import client.exception.ConfigurationException;
 import client.exception.GameCommunicationException;
+import client.view.ClientStartupView;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,7 @@ public class MainClient {
     // private static final Logger logger = LoggerFactory.getLogger(MainClient.class);
 
     public static void main(String[] args) {
+        ClientStartupView view = new ClientStartupView();
         try {
             // Set default logging configuration - file only, no console
             // System.setProperty("CONSOLE_LOGGING", "false");
@@ -36,9 +38,9 @@ public class MainClient {
             
             // For ATTR mode, fetch game ID automatically; otherwise use provided game ID
             if ("ATTR".equals(gameMode)) {
-                System.out.println("🔍 Auto-fetching game ID from server (ATTR mode)...");
+                view.showAutoFetchGameIdStart();
                 gameId = GameIdFetcher.fetchGameId(serverBaseUrl);
-                System.out.println("✅ Retrieved game ID: " + gameId);
+                view.showAutoFetchGameIdResult(gameId);
             } else {
                 if (args.length < 3) {
                     throw new ConfigurationException(
@@ -57,26 +59,18 @@ public class MainClient {
             // System.out.println("   Common options: -DCONSOLE_LOGGING=true (CLI only) | --no-file (no logging) | -DCONSOLE_LOGGING=true --file-log (CLI+file)");
             // System.out.println();
             
-            System.out.println("🎮 GAME CLIENT STARTING");
-            System.out.println("========================");
-            System.out.println("📡 Server: " + serverBaseUrl);
-            System.out.println("🎯 Game ID: " + gameId);
-            System.out.println("🖥️  Mode: " + (gameMode.equals("TR") ? "Terminal" : (gameMode.equals("TRR") ? "Terminal Reduced" : (gameMode.equals("ATTR") ? "Auto-Fetch Terminal" : gameMode))));
-            System.out.println("please note the following:");
-            System.out.println("use TR game mode for terminal dynamic mode (map real time update)");
-            System.out.println("use TRR game mode for reduced representation game flow (no map, moves represented in text lines)");
-            System.out.println("use ATTR game mode for auto-fetch terminal mode (game ID fetched automatically)");
+            view.showStartupBanner(serverBaseUrl, gameId, gameMode);
 
             // logger.debug("Creating shared game state with gameId: {}", gameId);
             client.model.GameState sharedGameState = new client.model.GameState(gameId);
             GameManager gameManager = new GameManager(sharedGameState, serverBaseUrl, gameMode);
             // logger.debug("GameManager initialized successfully");
 
-            System.out.println("👤 Registering player...");
+            view.showRegisteringPlayer();
             // logger.info("Attempting to register player: Abdalrahman Mohammed (abdalrahmm77)");
-            String playerId = gameManager.registerPlayer("Abdalrahman", "Mohammed", "abdalrahmm77");
+            String playerId = gameManager.registerPlayer(ClientDefaults.PLAYER_FIRST_NAME, ClientDefaults.PLAYER_LAST_NAME, ClientDefaults.PLAYER_UACCOUNT);
             gameManager.setPlayerId(playerId);
-            System.out.println("🎮 Successfully registered player with ID: " + playerId);
+            view.showPlayerRegistered(playerId);
             // logger.info("Player registration successful with ID: {}", playerId);
 
             // logger.debug("Updating initial game state after player registration");
@@ -84,13 +78,13 @@ public class MainClient {
 
             // logger.debug("Waiting for game state to become ready (player status != MUST_WAIT)");
             while (gameManager.getCurrentPlayerStatus() == client.model.PlayerStatus.MUST_WAIT) {
-                System.out.println("Waiting for game state after register...");
+                view.showWaitingForGameStateAfterRegister();
                 // logger.trace("Player status is MUST_WAIT, continuing to poll...");
                 gameManager.updateGameState();
             }
             // logger.info("Game state ready, player status: {}", gameManager.getCurrentPlayerStatus());
 
-            System.out.println("Generating and sending half map...");
+            view.showGeneratingAndSendingHalfMap();
             // logger.info("Starting half map generation and transmission");
             gameManager.generateAndSendHalfMap();
             // logger.info("Half map successfully generated and sent");
@@ -100,36 +94,24 @@ public class MainClient {
 			// logger.debug("Visualizing full map");
 			gameManager.visualizeMap("full");
 
-			System.out.println("Starting main game loop...");
+            view.showStartingMainGameLoop();
 			// logger.info("Entering main game loop with mode: {}", gameMode);
 			gameManager.startGameLoop(gameMode);
 			// logger.info("Game loop completed");
 
         } catch (ConfigurationException e) {
             // Handle configuration errors with user-friendly messages
-            System.err.println(e.getHelpMessage());
+            view.showConfigurationError(e.getHelpMessage());
             // logger.error("Configuration error: {}", e.getMessage(), e);
             System.exit(1);
         } catch (GameCommunicationException e) {
             // Handle communication errors with retry suggestions
-            System.err.println("🌐 Network Communication Error: " + e.getMessage());
-            if (e.isRecoverable()) {
-                System.err.println("💡 This error might be temporary. Try:");
-                System.err.println("   • Check your internet connection");
-                System.err.println("   • Verify the server URL: " + e.getServerUrl());
-                System.err.println("   • Wait a moment and restart the application");
-            } else {
-                System.err.println("❌ This appears to be a permanent issue:");
-                System.err.println("   • Verify server availability");
-                System.err.println("   • Check if the game ID is valid");
-                System.err.println("   • Contact support if the problem persists");
-            }
+            view.showCommunicationError(e);
             // logger.error("Communication error: {}", e.getMessage(), e);
             System.exit(1);
         } catch (Exception e) {
-            System.err.println("❌ Unexpected Error: " + e.getMessage());
+            view.showUnexpectedError(e);
             // logger.error("Critical error during game execution: {}", e.getMessage(), e);
-            e.printStackTrace();
             System.exit(1);
         }
         
