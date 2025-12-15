@@ -1,15 +1,28 @@
 package client.model.mapper;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.Objects;
 import java.util.Random;
-import java.util.Stack;
 
 public class MapGenerator {
-    private PlayerHalfMap halfMap = null;
+    private static final int[][] CARDINAL_DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+    private final MapGenerationConfig config;
 
     /**
      * Constructs a MapGenerator.
      */
     public MapGenerator() {
+        this(MapGenerationConfig.defaultConfig());
+    }
+
+    /**
+     * Constructs a MapGenerator with custom generation parameters.
+     * @param config Generation configuration.
+     */
+    public MapGenerator(MapGenerationConfig config) {
+        this.config = Objects.requireNonNull(config, "config");
     }
 
     /**
@@ -25,12 +38,13 @@ public class MapGenerator {
             throw new IllegalArgumentException("Width and height must be positive");
         }
 
-        halfMap = null;
+        Objects.requireNonNull(playerID, "playerID");
+
         boolean validMap = false;
         Random random = new Random();
         
         while (!validMap) {
-            halfMap = new PlayerHalfMap(playerID);
+            PlayerHalfMap halfMap = new PlayerHalfMap(playerID);
             
             Terrain[][] terrainGrid = new Terrain[width][height];
             boolean[][] fortGrid = new boolean[width][height];
@@ -42,11 +56,11 @@ public class MapGenerator {
                 }
             }
 
-            int mountainCells = random.nextInt(5,6);
-            int waterCells = random.nextInt(7,8);
-            int fortCells = 1;
+            int mountainCells = randomInInclusiveRange(random, config.minMountainTiles(), config.maxMountainTiles());
+            int waterCells = randomInInclusiveRange(random, config.minWaterTiles(), config.maxWaterTiles());
+            int fortCells = config.fortTiles();
 
-            fortGrid = possibleFortpositions(width, height, fortCells);
+            fortGrid = possibleFortPositions(width, height, fortCells, random);
             
             placeTerrain(terrainGrid, fortGrid, Terrain.MOUNTAIN, mountainCells, width, height, random);
             
@@ -62,10 +76,11 @@ public class MapGenerator {
             if (checkBorderWalkability(terrainGrid, width, height) && 
                 checkConnectivity(terrainGrid, width, height)) {
                 validMap = true;
+                return halfMap;
             }
         }
-        
-        return halfMap;
+
+        throw new IllegalStateException("Map generation failed unexpectedly");
     }
 
     /**
@@ -74,9 +89,8 @@ public class MapGenerator {
      * @param height The height of the map.
      * @return A boolean grid where true indicates a fort position.
      */
-    private boolean[][] possibleFortpositions(int width, int height, int fortCells) {
+    private boolean[][] possibleFortPositions(int width, int height, int fortCells, Random random) {
         boolean[][] fortPositions = new boolean[width][height];
-        Random random = new Random();
         for(int fortsPlaced=0; fortsPlaced<fortCells;){
             int fortX = random.nextInt(width);
             int fortY = random.nextInt(height);
@@ -127,7 +141,7 @@ public class MapGenerator {
                                           int width, int height, Random random) {
         int placed = 0;
         int attempts = 0;
-        int maxAttempts = count * 10;
+        int maxAttempts = count * config.waterPlacementAttemptMultiplier();
         
         while (placed < count && attempts < maxAttempts) {
             attempts++;
@@ -195,11 +209,14 @@ public class MapGenerator {
                 walkableRight++;
             }
         }
+
+        int requiredWidth = (int) Math.ceil(width * config.minBorderWalkableRatio());
+        int requiredHeight = (int) Math.ceil(height * config.minBorderWalkableRatio());
         
-        return (walkableBottom >= Math.ceil(width * 0.51) &&
-                walkableTop >= Math.ceil(width * 0.51) &&
-                walkableLeft >= Math.ceil(height * 0.51) &&
-                walkableRight >= Math.ceil(height * 0.51));
+        return (walkableBottom >= requiredWidth &&
+                walkableTop >= requiredWidth &&
+                walkableLeft >= requiredHeight &&
+                walkableRight >= requiredHeight);
     }
 
     /**
@@ -222,6 +239,10 @@ public class MapGenerator {
                 }
             }
             if (startX != -1) break;
+        }
+
+        if (startX == -1) {
+            return false;
         }
         
         floodFill(grid, visited, startX, startY, width, height);
@@ -248,10 +269,8 @@ public class MapGenerator {
      */
     private void floodFill(Terrain[][] grid, boolean[][] visited, int startX, int startY, 
                           int width, int height) {
-        Stack<int[]> stack = new Stack<>();
+        Deque<int[]> stack = new ArrayDeque<>();
         stack.push(new int[]{startX, startY});
-        
-        int[][] directions = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
         
         while (!stack.isEmpty()) {
             int[] pos = stack.pop();
@@ -264,9 +283,17 @@ public class MapGenerator {
             
             visited[x][y] = true;
             
-            for (int[] dir : directions) {
+            for (int[] dir : CARDINAL_DIRECTIONS) {
                 stack.push(new int[]{x + dir[0], y + dir[1]});
             }
         }
+    }
+
+    private int randomInInclusiveRange(Random random, int minInclusive, int maxInclusive) {
+        if (minInclusive == maxInclusive) {
+            return minInclusive;
+        }
+        int boundExclusive = Math.addExact(maxInclusive, 1);
+        return random.nextInt(minInclusive, boundExclusive);
     }
 }
