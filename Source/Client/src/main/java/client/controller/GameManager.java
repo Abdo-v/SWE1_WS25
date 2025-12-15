@@ -4,14 +4,18 @@ package client.controller;
 // import org.slf4j.LoggerFactory;
 import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
+import client.exception.FailureReason;
+import client.exception.Operation;
 import client.exception.AIDecisionException;
 import client.exception.MapProcessingException;
 import client.model.*;
+import client.model.GameMode;
 import client.model.ai.WayFinder;
 import client.view.CLIHandler;
 import client.view.DynamicCLIGameView;
 import client.view.GameManagerView;
 import client.view.GameOutput;
+import client.view.MapVisualizationType;
 import client.controller.network.service.NetworkCenter;
 import client.model.mapper.GameMap;
 import messagesbase.UniquePlayerIdentifier;
@@ -37,6 +41,10 @@ public class GameManager {
     }
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode, GameOutput output){
+        this(state, serverBaseUrl, GameMode.fromCliValue(gameMode), output);
+    }
+
+    public GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){
         // // logger.debug("Creating GameManager with gameId: {}, server: {}, mode: {}", state.getGameStateID(), serverBaseUrl, gameMode);
         this.gameState = state;
         this.networkCenter = new NetworkCenter(serverBaseUrl, state.getGameStateID());
@@ -194,6 +202,10 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for making moves.
      */
     public void makeMove(String gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
+        makeMove(GameMode.fromCliValue(gameMode));
+    }
+
+    public void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
         // // logger.debug("Making move for player: {}", playerId);
         
         // Validate game state before making move
@@ -214,7 +226,7 @@ public class GameManager {
                     networkCenter.sendMove(nextMoveDirection);
                     // // logger.info("Move {} sent successfully for player {}", nextMoveDirection, playerId);
                     
-                    if (gameMode.equals("TRR")) {
+                    if (gameMode != null && gameMode.isReduced()) {
                         // // logger.info("Player {} (TRR mode) moved to: {}", playerId, gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
                         output.showMoveSent(nextMoveDirection);
                     }
@@ -225,8 +237,8 @@ public class GameManager {
                     throw new GameCommunicationException(
                         "Failed to send move to server: " + e.getMessage(),
                         e,
-                        networkCenter != null ? "unknown" : "no_network",
-                        "SEND_MOVE",
+                        networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                        Operation.SEND_MOVE,
                         -1
                     );
                 }
@@ -247,8 +259,8 @@ public class GameManager {
                 "Unexpected error during move making: " + e.getMessage(),
                 e,
                 gameState.getGameStateID(),
-                "MAKE_MOVE",
-                "error",
+                Operation.MAKE_MOVE,
+                FailureReason.ERROR,
                 null
             );
         }
@@ -291,6 +303,10 @@ public class GameManager {
      * @throws GameStateException If game state becomes invalid.
      */
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
+        gameLoopService.startGameLoop(gameMode);
+    }
+
+    public void startGameLoop(GameMode gameMode) throws GameCommunicationException, GameStateException {
         gameLoopService.startGameLoop(gameMode);
     }
 
@@ -367,6 +383,10 @@ public class GameManager {
 
     public void visualizeMap(String mapType) {
         // // logger.debug("Visualizing map type: {}", mapType);
+        cliHandler.visualizeMap(mapType);
+    }
+
+    public void visualizeMap(MapVisualizationType mapType) {
         cliHandler.visualizeMap(mapType);
     }
 

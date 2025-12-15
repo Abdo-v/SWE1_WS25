@@ -1,5 +1,7 @@
 package client.exception;
 
+import java.util.Objects;
+
 /**
  * Checked exception for game communication failures.
  * 
@@ -80,6 +82,14 @@ public class GameCommunicationException extends Exception {
         this.serverUrl = serverUrl;
         this.operation = operation;
         this.httpStatusCode = httpStatusCode;
+    }
+
+    public GameCommunicationException(String message, String serverUrl, Operation operation, int httpStatusCode) {
+        this(message, serverUrl, operation != null ? operation.code() : null, httpStatusCode);
+    }
+
+    public GameCommunicationException(String message, Throwable cause, String serverUrl, Operation operation, int httpStatusCode) {
+        this(message, cause, serverUrl, operation != null ? operation.code() : null, httpStatusCode);
     }
     
     /**

@@ -1,8 +1,10 @@
 package client.controller;
 
 import client.controller.network.service.NetworkCenter;
+import client.exception.FailureReason;
 import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
+import client.exception.Operation;
 
 public class GameStateQueryService {
 
@@ -22,8 +24,8 @@ public class GameStateQueryService {
             throw new GameCommunicationException(
                 "Failed to check full map availability: " + e.getMessage(),
                 e,
-                networkCenter != null ? "unknown" : "no_network",
-                "FULL_MAP_CHECK",
+                networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                Operation.FULL_MAP_CHECK,
                 -1
             );
         }
@@ -38,8 +40,8 @@ public class GameStateQueryService {
             throw new GameCommunicationException(
                 "Failed to poll game state from server: " + e.getMessage(),
                 e,
-                networkCenter != null ? "unknown" : "no_network",
-                "POLL_GAME_STATE",
+                networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                Operation.POLL_GAME_STATE,
                 -1
             );
         }
@@ -55,8 +57,8 @@ public class GameStateQueryService {
             throw new GameCommunicationException(
                 "Failed to check if server map is empty: " + e.getMessage(),
                 e,
-                networkCenter != null ? "unknown" : "no_network",
-                "CHECK_SERVER_MAP_EMPTY",
+                networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                Operation.CHECK_SERVER_MAP_EMPTY,
                 -1
             );
         }
@@ -77,9 +79,9 @@ public class GameStateQueryService {
             throw new GameStateException(
                 "Player not found in server game state",
                 gameStateId,
-                "POLL_PLAYER_STATUS",
-                "player_not_found",
-                "player_present"
+                Operation.POLL_PLAYER_STATUS,
+                FailureReason.PLAYER_NOT_FOUND,
+                FailureReason.PLAYER_PRESENT
             );
 
         } catch (GameCommunicationException | GameStateException e) {
@@ -89,8 +91,8 @@ public class GameStateQueryService {
                 "Unexpected error polling player status: " + e.getMessage(),
                 e,
                 gameStateId,
-                "POLL_PLAYER_STATUS",
-                "error",
+                Operation.POLL_PLAYER_STATUS,
+                FailureReason.ERROR,
                 null
             );
         }

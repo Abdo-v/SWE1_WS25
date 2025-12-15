@@ -1,8 +1,10 @@
 package client.controller;
 
 import client.controller.network.service.NetworkCenter;
+import client.exception.FailureReason;
 import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
+import client.exception.Operation;
 import client.model.common.Notification;
 import client.model.mapper.HalfMapDimensions;
 import client.model.mapper.MapGenerator;
@@ -33,8 +35,8 @@ public class HalfMapService {
             throw new GameStateException(
                 "Cannot generate half map: player ID is not set",
                 gameStateId != null ? gameStateId : "unknown",
-                "GENERATE_HALF_MAP",
-                "no_player_id"
+                Operation.GENERATE_HALF_MAP,
+                FailureReason.NO_PLAYER_ID
             );
         }
 
@@ -49,8 +51,8 @@ public class HalfMapService {
                 "Failed to generate or send half map: " + e.getMessage(),
                 e,
                 gameStateId,
-                "GENERATE_HALF_MAP",
-                "error",
+                Operation.GENERATE_HALF_MAP,
+                FailureReason.ERROR,
                 null
             );
         }
@@ -86,8 +88,8 @@ public class HalfMapService {
             throw new GameCommunicationException(
                 "Failed to send half map to server: " + e.getMessage(),
                 e,
-                networkCenter != null ? "unknown" : "no_network",
-                "SEND_HALF_MAP",
+                networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                Operation.SEND_HALF_MAP,
                 -1
             );
         }

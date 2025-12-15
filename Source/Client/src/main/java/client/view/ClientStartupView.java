@@ -1,6 +1,7 @@
 package client.view;
 
 import client.exception.GameCommunicationException;
+import client.model.GameMode;
 
 public class ClientStartupView {
 
@@ -13,6 +14,10 @@ public class ClientStartupView {
     }
 
     public void showStartupBanner(String serverBaseUrl, String gameId, String gameMode) {
+        showStartupBanner(serverBaseUrl, gameId, GameMode.fromCliValue(gameMode));
+    }
+
+    public void showStartupBanner(String serverBaseUrl, String gameId, GameMode gameMode) {
         System.out.println("🎮 GAME CLIENT STARTING");
         System.out.println("========================");
         System.out.println("📡 Server: " + serverBaseUrl);
@@ -68,12 +73,15 @@ public class ClientStartupView {
         e.printStackTrace(System.err);
     }
 
-    private String describeMode(String gameMode) {
+    private String describeMode(GameMode gameMode) {
+        if (gameMode == null) {
+            return "Unknown";
+        }
         return switch (gameMode) {
-            case "TR" -> "Terminal";
-            case "TRR" -> "Terminal Reduced";
-            case "ATTR" -> "Auto-Fetch Terminal";
-            default -> gameMode;
+            case TR -> "Terminal";
+            case TRR -> "Terminal Reduced";
+            case ATTR -> "Auto-Fetch Terminal";
+            default -> gameMode.cliValue();
         };
     }
 }

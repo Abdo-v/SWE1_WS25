@@ -1,9 +1,12 @@
 package client.controller;
 
 import client.exception.AIDecisionException;
+import client.exception.FailureReason;
+import client.exception.Operation;
 import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
 import client.exception.MapProcessingException;
+import client.model.GameMode;
 import client.model.PlayerStatus;
 import client.view.GameOutput;
 
@@ -22,7 +25,11 @@ public class GameLoopService {
     }
 
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
-        boolean dynamicMode = "TR".equals(gameMode) || "ATTR".equals(gameMode);
+        startGameLoop(GameMode.fromCliValue(gameMode));
+    }
+
+    public void startGameLoop(GameMode gameMode) throws GameCommunicationException, GameStateException {
+        boolean dynamicMode = gameMode != null && gameMode.isDynamicVisualization();
         if (dynamicMode) {
             output.showDynamicModeStarting();
             try {
@@ -49,7 +56,7 @@ public class GameLoopService {
                     case MUST_ACT:
                         try {
                             gameManager.makeMove(gameMode);
-                            if (gameMode.equals("TRR")) {
+                            if (gameMode != null && gameMode.isReduced()) {
                                 output.showPosition(gameManager.getGameState().getCurrentPlayerState().getCurrentPosition().printCoordinates());
                             }
                             acted = true;
@@ -80,7 +87,7 @@ public class GameLoopService {
                 }
 
                 loops++;
-                if (gameMode.equals("TRR")) {
+                if (gameMode != null && gameMode.isReduced()) {
                     output.showLoops(loops);
                 }
 
@@ -91,8 +98,8 @@ public class GameLoopService {
                         "Fatal map processing error: " + e.getMessage(),
                         e,
                         gameManager.getGameState().getGameStateID(),
-                        "GAME_LOOP",
-                        "map_error",
+                        Operation.GAME_LOOP,
+                        FailureReason.MAP_ERROR,
                         null
                     );
                 }
@@ -103,8 +110,8 @@ public class GameLoopService {
                     "Unexpected error in game loop: " + e.getMessage(),
                     e,
                     gameManager.getGameState().getGameStateID(),
-                    "GAME_LOOP",
-                    "unexpected_error",
+                    Operation.GAME_LOOP,
+                    FailureReason.UNEXPECTED_ERROR,
                     null
                 );
             }
