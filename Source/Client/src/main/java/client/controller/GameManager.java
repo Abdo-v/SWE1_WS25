@@ -447,8 +447,9 @@ public class GameManager {
      * @throws GameStateException If game state becomes invalid.
      */
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
-        if (gameMode.equals("TR")) {
-            // // logger.info("Starting game with dynamic visualization (TR mode)");
+        boolean dynamicMode = "TR".equals(gameMode) || "ATTR".equals(gameMode);
+        if (dynamicMode) {
+            // // logger.info("Starting game with dynamic visualization (TR/ATTR mode)");
             System.out.println("\n🎮 Starting game with dynamic visualization...");
             try {
                 Thread.sleep(1000);
@@ -502,7 +503,7 @@ public class GameManager {
                         System.out.println("🎉🎉🎉======= = = YOU WON! = = =======🎉🎉🎉");
                         // // logger.info("Final player state: {}", gameState.getCurrentPlayerState().toString());
                         System.out.println(gameState.getCurrentPlayerState().toString());
-                        if (gameMode.equals("TR")) System.out.println(" loops: " + loops);
+                        if (dynamicMode) System.out.println(" loops: " + loops);
                         gameIsRunning = false;
                         break;
                     case LOST:
@@ -511,7 +512,7 @@ public class GameManager {
                         System.out.println("💀💀💀======= = = YOU LOST! = = =======💀💀💀");
                         // // logger.info("Final player state: {}", gameState.getCurrentPlayerState().toString());
                         System.out.println(gameState.getCurrentPlayerState().toString());
-                        if (gameMode.equals("TR")) System.out.println(" loops: " + loops);
+                        if (dynamicMode) System.out.println(" loops: " + loops);
                         gameIsRunning = false;
                         break;
                     default:
