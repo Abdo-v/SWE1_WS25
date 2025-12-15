@@ -28,6 +28,7 @@ public class GameManager {
     private DynamicCLIGameView dynamicView = new DynamicCLIGameView();
     private final GameOutput output;
     private final HalfMapService halfMapService;
+    private final GameStateSynchronizer gameStateSynchronizer;
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
         this(state, serverBaseUrl, gameMode, new GameManagerView());
@@ -41,6 +42,7 @@ public class GameManager {
         this.cliHandler = new CLIHandler(gameMode);
         this.output = output;
         this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
+        this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         state.addObserver(cliHandler);
         state.addObserver(wayFinder);
         state.addObserver(dynamicView);
@@ -65,6 +67,7 @@ public class GameManager {
         this.gameState = new client.model.GameState(gameId);
         this.output = output;
         this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
+        this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
     }
 
     /**
@@ -82,6 +85,7 @@ public class GameManager {
         this.gameState = new client.model.GameState(gameId);
         this.output = output;
         this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
+        this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
     }
 
     /**
@@ -167,49 +171,7 @@ public class GameManager {
      * @throws MapProcessingException If the received data cannot be processed.
      */
     public void updateGameState() throws GameCommunicationException, MapProcessingException {
-        try {
-            // // logger.trace("Updating game state from server");
-            long startPollGameState = System.nanoTime();
-            messagesbase.messagesfromserver.GameState serverState = networkCenter.pollGameState();
-            long polt = (System.nanoTime() - startPollGameState) / 1_000_000;
-            
-            // Validate server state before processing
-            if (serverState == null) {
-                throw new MapProcessingException(
-                    "Received null game state from server",
-                    "GameState",
-                    "server_response_validation"
-                );
-            }
-            
-            GameState polledState = networkCenter.convertServerGamestate(serverState);
-            
-            // Validate converted state before updating
-            if (polledState == null) {
-                throw new MapProcessingException(
-                    "Failed to convert server game state to client format",
-                    "GameState",
-                    "state_conversion"
-                );
-            }
-            
-            this.gameState.updateGameState(polledState);
-            // // logger.trace("Game state update completed (poll: {}ms)", polt);
-            
-        } catch (GameCommunicationException | MapProcessingException e) {
-            throw e; // Re-throw our custom exceptions
-        } catch (Exception e) {
-            // // logger.error("Unexpected error updating game state: {}", e.getMessage(), e);
-            throw new MapProcessingException(
-                "Unexpected error during game state update: " + e.getMessage(),
-                e,
-                "GameState",
-                "update_process",
-                -1,
-                -1,
-                null
-            );
-        }
+        gameStateSynchronizer.synchronize(this.gameState);
     }
 
     /**
