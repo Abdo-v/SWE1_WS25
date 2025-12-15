@@ -8,7 +8,10 @@ import client.exception.AIDecisionException;
 import client.exception.MapProcessingException;
 import client.model.*;
 import client.model.ai.WayFinder;
-import client.view.*;
+import client.view.CLIHandler;
+import client.view.DynamicCLIGameView;
+import client.view.GameManagerView;
+import client.view.GameOutput;
 import client.controller.network.service.NetworkCenter;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapGenerator;
@@ -29,15 +32,19 @@ public class GameManager {
     private MapValidator mapValidator = new MapValidator();
     private CLIHandler cliHandler;
     private DynamicCLIGameView dynamicView = new DynamicCLIGameView();
-    private final GameManagerView view;
+    private final GameOutput output;
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
+        this(state, serverBaseUrl, gameMode, new GameManagerView());
+    }
+
+    public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode, GameOutput output){
         // // logger.debug("Creating GameManager with gameId: {}, server: {}, mode: {}", state.getGameStateID(), serverBaseUrl, gameMode);
         this.gameState = state;
         this.networkCenter = new NetworkCenter(serverBaseUrl, state.getGameStateID());
         this.gameMap = state.getMap();
         this.cliHandler = new CLIHandler(gameMode);
-        this.view = new GameManagerView();
+        this.output = output;
         state.addObserver(cliHandler);
         state.addObserver(wayFinder);
         state.addObserver(dynamicView);
@@ -53,10 +60,14 @@ public class GameManager {
      * @param playerId The unique player identifier.
      */
     public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId) {
+        this(gameId, serverBaseUrl, playerId, new GameManagerView());
+    }
+
+    public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId, GameOutput output) {
         // // logger.debug("Creating GameManager with gameId: {}, server: {}, playerId: {}", gameId, serverBaseUrl, playerId.getUniquePlayerID());
         this.networkCenter = new NetworkCenter(serverBaseUrl, gameId, playerId);
         this.gameState = new client.model.GameState(gameId);
-        this.view = new GameManagerView();
+        this.output = output;
     }
 
     /**
@@ -65,10 +76,14 @@ public class GameManager {
      * @param serverBaseUrl The base URL of the server.
      */
     public GameManager(String gameId, String serverBaseUrl) {
+        this(gameId, serverBaseUrl, new GameManagerView());
+    }
+
+    public GameManager(String gameId, String serverBaseUrl, GameOutput output) {
         // // logger.debug("Creating GameManager with gameId: {}, server: {}", gameId, serverBaseUrl);
         this.networkCenter = new NetworkCenter(serverBaseUrl, gameId);
         this.gameState = new client.model.GameState(gameId);
-        this.view = new GameManagerView();
+        this.output = output;
     }
 
     /**
@@ -158,11 +173,11 @@ public class GameManager {
         Notification validation = mapValidator.validate(halfMap);
         if (validation.hasErrors()) {
             // // logger.error("Map validation failed: {}", validation.getErrorMessages());
-            view.showMapValidationFailed(validation.getErrorMessages());
+            output.showMapValidationFailed(validation.getErrorMessages());
             throw new IllegalStateException("Generated map is invalid: " + validation.getErrorMessages());
         } else {
             // // logger.info("Map validation successful");
-            view.showMapValidationOk();
+            output.showMapValidationOk();
         }
     }
 
@@ -370,7 +385,7 @@ public class GameManager {
                     
                     if (gameMode.equals("TRR")) {
                         // // logger.info("Player {} (TRR mode) moved to: {}", playerId, gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
-                        view.showMoveSent(nextMoveDirection);
+                        output.showMoveSent(nextMoveDirection);
                     }
                 } catch (GameCommunicationException e) {
                     throw e; // Re-throw communication exceptions
@@ -448,7 +463,7 @@ public class GameManager {
         boolean dynamicMode = "TR".equals(gameMode) || "ATTR".equals(gameMode);
         if (dynamicMode) {
             // // logger.info("Starting game with dynamic visualization (TR/ATTR mode)");
-            view.showDynamicModeStarting();
+            output.showDynamicModeStarting();
             try {
                 Thread.sleep(1000);
                 enableDynamicVisualization();
@@ -479,16 +494,16 @@ public class GameManager {
                         try {
                             makeMove(gameMode);
                             if(gameMode.equals("TRR")) {
-                                view.showPosition(gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
+                                output.showPosition(gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
                             }
                             acted = true;
                         } catch (AIDecisionException e) {
                             // // logger.error("AI Decision Error for player {}: {}", playerId, e.getMessage());
-                            view.showAiError(e.getMessage());
+                            output.showAiError(e.getMessage());
                             // Continue game loop - AI errors shouldn't terminate the game
                         } catch (GameCommunicationException e) {
                             // // logger.error("Communication error during move for player {}: {}", playerId, e.getMessage());
-                            view.showNetworkError(e.getMessage());
+                            output.showNetworkError(e.getMessage());
                             if (!e.isRecoverable()) {
                                 throw e; // Fatal communication error
                             }
@@ -498,19 +513,19 @@ public class GameManager {
                     case WON:
                         disableDynamicVisualization();
                         // // logger.info("PLAYER {} WON THE GAME! Loops: {}", playerId, loops);
-                        view.showWon(gameState.getCurrentPlayerState(), loops, dynamicMode);
+                        output.showWon(gameState.getCurrentPlayerState(), loops, dynamicMode);
                         gameIsRunning = false;
                         break;
                     case LOST:
                         disableDynamicVisualization();
                         // // logger.warn("PLAYER {} LOST THE GAME. Loops: {}", playerId, loops);
-                        view.showLost(gameState.getCurrentPlayerState(), loops, dynamicMode);
+                        output.showLost(gameState.getCurrentPlayerState(), loops, dynamicMode);
                         gameIsRunning = false;
                         break;
                     default:
                         disableDynamicVisualization();
                         // // logger.error("Unhandled player state: {}. Exiting game.", currentStatus);
-                        view.showUnhandledStatus(currentStatus);
+                        output.showUnhandledStatus(currentStatus);
                         gameIsRunning = false;
                         break;
                 }
@@ -523,12 +538,12 @@ public class GameManager {
                 }
                 if(gameMode.equals("TRR")) {
                     // // logger.debug("Loop {} completed (TRR mode).", loops);
-                    view.showLoops(loops);
+                    output.showLoops(loops);
                 }
                 
             } catch (MapProcessingException e) {
                 // // logger.error("Map processing error in game loop: {}", e.getMessage(), e);
-                view.showMapError(e.getRecoveryMessage());
+                output.showMapError(e.getRecoveryMessage());
                 if (!e.isRecoverable()) {
                     throw new GameStateException(
                         "Fatal map processing error: " + e.getMessage(),

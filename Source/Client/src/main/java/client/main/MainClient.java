@@ -4,6 +4,8 @@ import client.controller.network.GameIdFetcher;
 import client.exception.ConfigurationException;
 import client.exception.GameCommunicationException;
 import client.view.ClientStartupView;
+import client.view.GameManagerView;
+import client.view.GameOutput;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -17,6 +19,7 @@ public class MainClient {
 
     public static void main(String[] args) {
         ClientStartupView view = new ClientStartupView();
+        GameOutput gameOutput = new GameManagerView();
         try {
             // Set default logging configuration - file only, no console
             // System.setProperty("CONSOLE_LOGGING", "false");
@@ -63,7 +66,7 @@ public class MainClient {
 
             // logger.debug("Creating shared game state with gameId: {}", gameId);
             client.model.GameState sharedGameState = new client.model.GameState(gameId);
-            GameManager gameManager = new GameManager(sharedGameState, serverBaseUrl, gameMode);
+            GameManager gameManager = new GameManager(sharedGameState, serverBaseUrl, gameMode, gameOutput);
             // logger.debug("GameManager initialized successfully");
 
             view.showRegisteringPlayer();
