@@ -7,7 +7,11 @@ import client.exception.MapProcessingException;
 import client.model.PlayerStatus;
 import client.view.GameOutput;
 
+import java.time.Duration;
+
 public class GameLoopService {
+
+    private static final Duration DYNAMIC_VISUALIZATION_START_DELAY = Duration.ofSeconds(1);
 
     private final GameManager gameManager;
     private final GameOutput output;
@@ -22,7 +26,7 @@ public class GameLoopService {
         if (dynamicMode) {
             output.showDynamicModeStarting();
             try {
-                Thread.sleep(1000);
+                Thread.sleep(DYNAMIC_VISUALIZATION_START_DELAY.toMillis());
                 gameManager.enableDynamicVisualization();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
