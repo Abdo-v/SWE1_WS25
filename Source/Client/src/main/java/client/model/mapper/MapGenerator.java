@@ -1,16 +1,13 @@
 package client.model.mapper;
 
-<<<<<<< HEAD
-import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.Objects;
-=======
 import client.model.common.Notification;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
->>>>>>> master
+import java.util.Objects;
 import java.util.Random;
 
 public class MapGenerator {
@@ -100,21 +97,14 @@ public class MapGenerator {
                     halfMap.addMapNode(node);
                 }
             }
-<<<<<<< HEAD
-            
-            if (checkBorderWalkability(terrainGrid, width, height) && 
-                checkConnectivity(terrainGrid, width, height)) {
-                validMap = true;
-                return halfMap;
-            }
-=======
-
             MapValidator validator = new MapValidator();
             Notification result = (existingHalfMap == null)
                     ? validator.validate(halfMap)
                     : validator.validate(halfMap, existingHalfMap);
             validMap = !result.hasErrors();
->>>>>>> master
+            if (validMap) {
+                return halfMap;
+            }
         }
 
         throw new IllegalStateException("Map generation failed unexpectedly");
@@ -209,13 +199,7 @@ public class MapGenerator {
         }
 
         int attempts = 0;
-<<<<<<< HEAD
-        int maxAttempts = count * config.waterPlacementAttemptMultiplier();
-        
-=======
         int maxAttempts = Math.max(100, count * 50);
-
->>>>>>> master
         while (placed < count && attempts < maxAttempts) {
             attempts++;
             int x = random.nextInt(width);
@@ -368,16 +352,6 @@ public class MapGenerator {
                 grid[x][y] = original;
             }
         }
-
-<<<<<<< HEAD
-        int requiredWidth = (int) Math.ceil(width * config.minBorderWalkableRatio());
-        int requiredHeight = (int) Math.ceil(height * config.minBorderWalkableRatio());
-        
-        return (walkableBottom >= requiredWidth &&
-                walkableTop >= requiredWidth &&
-                walkableLeft >= requiredHeight &&
-                walkableRight >= requiredHeight);
-=======
         return currentWater >= minWaterNeeded;
     }
 
@@ -419,7 +393,6 @@ public class MapGenerator {
         }
         // BOTTOM
         return existingHalfMap.getMapNode(x, 0);
->>>>>>> master
     }
 
     /**
