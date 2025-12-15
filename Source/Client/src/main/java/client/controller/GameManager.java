@@ -30,6 +30,7 @@ public class GameManager {
     private final HalfMapService halfMapService;
     private final GameStateSynchronizer gameStateSynchronizer;
     private final GameStateQueryService gameStateQueryService;
+    private final GameLoopService gameLoopService;
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
         this(state, serverBaseUrl, gameMode, new GameManagerView());
@@ -45,6 +46,7 @@ public class GameManager {
         this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
+        this.gameLoopService = new GameLoopService(this, this.output);
         state.addObserver(cliHandler);
         state.addObserver(wayFinder);
         state.addObserver(dynamicView);
@@ -71,6 +73,7 @@ public class GameManager {
         this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
+        this.gameLoopService = new GameLoopService(this, this.output);
     }
 
     /**
@@ -90,6 +93,7 @@ public class GameManager {
         this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
+        this.gameLoopService = new GameLoopService(this, this.output);
     }
 
     /**
@@ -287,118 +291,7 @@ public class GameManager {
      * @throws GameStateException If game state becomes invalid.
      */
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
-        boolean dynamicMode = "TR".equals(gameMode) || "ATTR".equals(gameMode);
-        if (dynamicMode) {
-            // // logger.info("Starting game with dynamic visualization (TR/ATTR mode)");
-            output.showDynamicModeStarting();
-            try {
-                Thread.sleep(1000);
-                enableDynamicVisualization();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                // // logger.warn("Game loop initialization interrupted");
-            }
-        }
-        
-        // // logger.info("Entering main game loop with mode: {}", gameMode);
-        int loops = 0;
-        boolean gameIsRunning = true;
-        client.model.PlayerStatus currentStatus;
-        
-        while (gameIsRunning) {
-            try {
-                boolean acted = false;
-                updateGameState();
-                currentStatus = getCurrentPlayerStatus();
-                // // logger.trace("Game loop iteration: {}, Player status: {}", loops, currentStatus);
-                
-                switch (currentStatus) {
-                    case MUST_WAIT:
-                        // // logger.debug("Player {} must wait.", playerId);
-                        break;
-                    case MUST_ACT:
-                        // // logger.debug("Player {} must act.", playerId);
-                        try {
-                            makeMove(gameMode);
-                            if(gameMode.equals("TRR")) {
-                                output.showPosition(gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
-                            }
-                            acted = true;
-                        } catch (AIDecisionException e) {
-                            // // logger.error("AI Decision Error for player {}: {}", playerId, e.getMessage());
-                            output.showAiError(e.getMessage());
-                            // Continue game loop - AI errors shouldn't terminate the game
-                        } catch (GameCommunicationException e) {
-                            // // logger.error("Communication error during move for player {}: {}", playerId, e.getMessage());
-                            output.showNetworkError(e.getMessage());
-                            if (!e.isRecoverable()) {
-                                throw e; // Fatal communication error
-                            }
-                            // For recoverable errors, continue and try again next loop
-                        }
-                        break;
-                    case WON:
-                        disableDynamicVisualization();
-                        // // logger.info("PLAYER {} WON THE GAME! Loops: {}", playerId, loops);
-                        output.showWon(gameState.getCurrentPlayerState(), loops, dynamicMode);
-                        gameIsRunning = false;
-                        break;
-                    case LOST:
-                        disableDynamicVisualization();
-                        // // logger.warn("PLAYER {} LOST THE GAME. Loops: {}", playerId, loops);
-                        output.showLost(gameState.getCurrentPlayerState(), loops, dynamicMode);
-                        gameIsRunning = false;
-                        break;
-                    default:
-                        disableDynamicVisualization();
-                        // // logger.error("Unhandled player state: {}. Exiting game.", currentStatus);
-                        output.showUnhandledStatus(currentStatus);
-                        gameIsRunning = false;
-                        break;
-                }
-                
-                loops++;
-                if (acted) {
-                    // // logger.trace("Loop {} completed with action", loops);
-                } else {
-                    // // logger.trace("Loop {} completed (no action taken)", loops);
-                }
-                if(gameMode.equals("TRR")) {
-                    // // logger.debug("Loop {} completed (TRR mode).", loops);
-                    output.showLoops(loops);
-                }
-                
-            } catch (MapProcessingException e) {
-                // // logger.error("Map processing error in game loop: {}", e.getMessage(), e);
-                output.showMapError(e.getRecoveryMessage());
-                if (!e.isRecoverable()) {
-                    throw new GameStateException(
-                        "Fatal map processing error: " + e.getMessage(),
-                        e,
-                        gameState.getGameStateID(),
-                        "GAME_LOOP",
-                        "map_error",
-                        null
-                    );
-                }
-                // For recoverable map errors, continue and try again
-            } catch (GameCommunicationException | GameStateException e) {
-                throw e; // Re-throw fatal exceptions
-            } catch (Exception e) {
-                // // logger.error("Unexpected error in game loop: {}", e.getMessage(), e);
-                throw new GameStateException(
-                    "Unexpected error in game loop: " + e.getMessage(),
-                    e,
-                    gameState.getGameStateID(),
-                    "GAME_LOOP",
-                    "unexpected_error",
-                    null
-                );
-            }
-        }
-        
-        disableDynamicVisualization();
-        // // logger.info("Game loop completed after {} iterations", loops);
+        gameLoopService.startGameLoop(gameMode);
     }
 
     /**
