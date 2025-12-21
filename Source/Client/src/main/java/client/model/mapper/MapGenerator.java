@@ -13,10 +13,9 @@ import java.util.Random;
 public class MapGenerator {
     private static final int[][] CARDINAL_DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
-    private final MapGenerationConfig config;
+    private static final int MIN_WATER_PLACEMENT_ATTEMPTS = 100;
 
-    private static final double MIN_EDGE_WALKABLE_PERCENTAGE = 0.40;
-    private static final double MIN_EDGE_BLOCKED_PERCENTAGE = 0.20;
+    private final MapGenerationConfig config;
 
     /**
      * Constructs a MapGenerator.
@@ -48,7 +47,8 @@ public class MapGenerator {
     /**
      * Generates a half map with the specified width, height, and player ID.
      * If an existing half map is provided (for the "second" client), generation also tries to ensure
-     * that edge transitions are possible on at least 40% of each edge (walkable on both sides).
+        * that edge transitions are possible on at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of each edge
+        * (walkable on both sides).
      */
     public PlayerHalfMap generateMap(int width, int height, String playerID, PlayerHalfMap existingHalfMap) {
         if (width <= 0 || height <= 0) {
@@ -171,8 +171,8 @@ public class MapGenerator {
                                           int height,
                                           Random random,
                                           PlayerHalfMap existingHalfMap) {
-        int minEdgeWaterTopBottom = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * width);
-        int minEdgeWaterLeftRight = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * height);
+        int minEdgeWaterTopBottom = (int) Math.ceil(MapRules.MIN_EDGE_BLOCKED_RATIO * width);
+        int minEdgeWaterLeftRight = (int) Math.ceil(MapRules.MIN_EDGE_BLOCKED_RATIO * height);
 
         // Place minimum required water on each edge first (to satisfy the >=20% non-walkable rule).
         if (!placeMinimumWaterOnEdge(grid, fort, width, height, random, existingHalfMap, Edge.TOP, minEdgeWaterTopBottom)) {
@@ -199,7 +199,7 @@ public class MapGenerator {
         }
 
         int attempts = 0;
-        int maxAttempts = Math.max(100, count * 50);
+        int maxAttempts = Math.max(MIN_WATER_PLACEMENT_ATTEMPTS, count * config.waterPlacementAttemptMultiplier());
         while (placed < count && attempts < maxAttempts) {
             attempts++;
             int x = random.nextInt(width);
@@ -234,10 +234,10 @@ public class MapGenerator {
      * Checks edge constraints: per edge at least 40% walkable (non-water) and at least 20% blocked (water).
      */
     private boolean checkBorderConstraints(Terrain[][] grid, int width, int height) {
-        int requiredTopBottomWalkable = (int) Math.ceil(MIN_EDGE_WALKABLE_PERCENTAGE * width);
-        int requiredTopBottomBlocked = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * width);
-        int requiredLeftRightWalkable = (int) Math.ceil(MIN_EDGE_WALKABLE_PERCENTAGE * height);
-        int requiredLeftRightBlocked = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * height);
+        int requiredTopBottomWalkable = (int) Math.ceil(MapRules.MIN_EDGE_WALKABLE_RATIO * width);
+        int requiredTopBottomBlocked = (int) Math.ceil(MapRules.MIN_EDGE_BLOCKED_RATIO * width);
+        int requiredLeftRightWalkable = (int) Math.ceil(MapRules.MIN_EDGE_WALKABLE_RATIO * height);
+        int requiredLeftRightBlocked = (int) Math.ceil(MapRules.MIN_EDGE_BLOCKED_RATIO * height);
 
         int topWalkable = 0;
         int topBlocked = 0;
@@ -285,7 +285,7 @@ public class MapGenerator {
                                         Edge edge,
                                         int minWaterNeeded) {
         int edgeLen = (edge == Edge.TOP || edge == Edge.BOTTOM) ? width : height;
-        int requiredWalkable = (int) Math.ceil(MIN_EDGE_WALKABLE_PERCENTAGE * edgeLen);
+        int requiredWalkable = (int) Math.ceil(MapRules.MIN_EDGE_WALKABLE_RATIO * edgeLen);
         int maxWaterAllowed = edgeLen - requiredWalkable;
 
         int currentWater = countWaterOnEdge(grid, width, height, edge);

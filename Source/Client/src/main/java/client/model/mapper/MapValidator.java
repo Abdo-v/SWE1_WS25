@@ -16,9 +16,6 @@ public class MapValidator {
     private static final double MIN_GRASS_PERCENTAGE = 0.48;
     private static final double MIN_WATER_PERCENTAGE = 0.14;
     private static final double CASTLE_PERCENTAGE = 0.02; // 1 castle
-    private static final double MIN_EDGE_WALKABLE_PERCENTAGE = 0.40;
-    private static final double MIN_EDGE_BLOCKED_PERCENTAGE = 0.20;
-    private static final double MIN_EDGE_CROSSABLE_PERCENTAGE = 0.40;
 
     /**
      * Validates a PlayerHalfMap according to game rules and structural requirements.
@@ -342,24 +339,24 @@ public class MapValidator {
         }
         if (totalEdgeNodes == 0) return; // Edge has no length (e.g. startVarCoord > endVarCoord)
 
-        int requiredWalkableNodes = (int) Math.ceil(MIN_EDGE_WALKABLE_PERCENTAGE * totalEdgeNodes);
-        int requiredBlockedNodes = (int) Math.ceil(MIN_EDGE_BLOCKED_PERCENTAGE * totalEdgeNodes);
+        int requiredWalkableNodes = (int) Math.ceil(MapRules.MIN_EDGE_WALKABLE_RATIO * totalEdgeNodes);
+        int requiredBlockedNodes = (int) Math.ceil(MapRules.MIN_EDGE_BLOCKED_RATIO * totalEdgeNodes);
 
         if (walkableEdgeNodes < requiredWalkableNodes) {
             notification.addError(String.format(
                     "%s walkability below threshold. Required: >=%.0f%% (%d nodes), Found: %d/%d nodes.",
-                    edgeName, MIN_EDGE_WALKABLE_PERCENTAGE * 100, requiredWalkableNodes, walkableEdgeNodes, totalEdgeNodes));
+                    edgeName, MapRules.MIN_EDGE_WALKABLE_RATIO * 100, requiredWalkableNodes, walkableEdgeNodes, totalEdgeNodes));
         }
         if (blockedEdgeNodes < requiredBlockedNodes) {
             notification.addError(String.format(
                     "%s non-walkable fields below threshold. Required: >=%.0f%% (%d nodes), Found: %d/%d nodes.",
-                    edgeName, MIN_EDGE_BLOCKED_PERCENTAGE * 100, requiredBlockedNodes, blockedEdgeNodes, totalEdgeNodes));
+                    edgeName, MapRules.MIN_EDGE_BLOCKED_RATIO * 100, requiredBlockedNodes, blockedEdgeNodes, totalEdgeNodes));
         }
     }
 
     /**
      * Validates that all four edges of the map meet the minimum walkability requirement.
-     * Each edge (top, bottom, left, right) must have at least 51% walkable nodes.
+        * Each edge (top, bottom, left, right) must have at least {@link MapRules#MIN_EDGE_WALKABLE_RATIO} walkable nodes.
      * This ensures the map can be properly connected to adjacent maps in the full game.
      * 
      * @param halfMap The PlayerHalfMap to validate
@@ -425,11 +422,11 @@ public class MapValidator {
             }
         }
 
-        int required = (int) Math.ceil(MIN_EDGE_CROSSABLE_PERCENTAGE * total);
+        int required = (int) Math.ceil(MapRules.MIN_EDGE_CROSSABLE_RATIO * total);
         if (crossable < required) {
             notification.addError(String.format(
                     "Crossing compatibility below threshold for %s. Required: >=%.0f%% (%d fields), Found: %d/%d fields.",
-                    label, MIN_EDGE_CROSSABLE_PERCENTAGE * 100, required, crossable, total));
+                    label, MapRules.MIN_EDGE_CROSSABLE_RATIO * 100, required, crossable, total));
         }
     }
 
@@ -454,11 +451,11 @@ public class MapValidator {
             }
         }
 
-        int required = (int) Math.ceil(MIN_EDGE_CROSSABLE_PERCENTAGE * total);
+        int required = (int) Math.ceil(MapRules.MIN_EDGE_CROSSABLE_RATIO * total);
         if (crossable < required) {
             notification.addError(String.format(
                     "Crossing compatibility below threshold for %s. Required: >=%.0f%% (%d fields), Found: %d/%d fields.",
-                    label, MIN_EDGE_CROSSABLE_PERCENTAGE * 100, required, crossable, total));
+                    label, MapRules.MIN_EDGE_CROSSABLE_RATIO * 100, required, crossable, total));
         }
     }
 }

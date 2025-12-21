@@ -44,8 +44,8 @@ public record MapGenerationConfig(
                 7,
                 7,
                 1,
-                0.51,
-                10
+                MapRules.MIN_EDGE_WALKABLE_RATIO,
+                50
         );
     }
 }
