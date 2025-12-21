@@ -2,11 +2,11 @@ package client.model.mapper;
 
 import client.model.common.Notification;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Collections;
 import java.util.Deque;
-import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
