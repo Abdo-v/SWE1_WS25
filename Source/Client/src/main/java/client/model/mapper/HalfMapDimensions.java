@@ -7,4 +7,6 @@ public final class HalfMapDimensions {
 
     public static final int WIDTH = 10;
     public static final int HEIGHT = 5;
+
+    public static final int TOTAL_NODES = WIDTH * HEIGHT;
 }

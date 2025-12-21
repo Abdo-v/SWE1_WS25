@@ -1,11 +1,11 @@
 package client.model.mapper;
+
 import java.util.ArrayList;
+import java.util.Objects;
 
 public class GameMap {
-    private ArrayList<MapNode> gameMapNodes;
+    private final MapEssentials map;
     private OwnToOppMapOrientation orientation;
-    private int maxX = 0;
-    private int maxY = 0;
 
     /**
      * Constructs a GameMap with the given parameters.
@@ -14,15 +14,21 @@ public class GameMap {
      * @param orientation The orientation of the map.
      */
     public GameMap(ArrayList<MapNode> nodes, OwnToOppMapOrientation orientation) {
-        this.gameMapNodes = nodes;
-        this.orientation = orientation;
-        if(orientation == OwnToOppMapOrientation.UP_DOWN || orientation == OwnToOppMapOrientation.DOWN_UP) {
-            this.maxX = 9; 
-            this.maxY = 9; 
+        this.orientation = Objects.requireNonNull(orientation, "orientation");
+
+        int width;
+        int height;
+        if (orientation == OwnToOppMapOrientation.UP_DOWN || orientation == OwnToOppMapOrientation.DOWN_UP) {
+            width = HalfMapDimensions.WIDTH;
+            height = HalfMapDimensions.HEIGHT * 2;
         } else {
-            this.maxX = 19;
-            this.maxY = 4;
+            width = HalfMapDimensions.WIDTH * 2;
+            height = HalfMapDimensions.HEIGHT;
         }
+
+        int maxX = width - 1;
+        int maxY = height - 1;
+        this.map = new MapEssentials(Objects.requireNonNull(nodes, "nodes"), maxX, maxY);
     }
 
     /**
@@ -34,20 +40,16 @@ public class GameMap {
      * @param maxY The maximum Y coordinate.
      */
     public GameMap(ArrayList<MapNode> nodes, OwnToOppMapOrientation orientation, int maxX, int maxY) {
-        this.gameMapNodes = nodes;
-        this.orientation = orientation;
-        this.maxX = maxX;
-        this.maxY = maxY;
+        this.orientation = Objects.requireNonNull(orientation, "orientation");
+        this.map = new MapEssentials(Objects.requireNonNull(nodes, "nodes"), maxX, maxY);
     }
 
     /**
      * Default constructor for GameMap.
      */
     public GameMap() {
-        this.gameMapNodes = new ArrayList<>();
+        this.map = new MapEssentials(new ArrayList<>(), 0, 0);
         this.orientation = null;
-        this.maxX = 0;
-        this.maxY = 0;
     }
 
     /**
@@ -56,31 +58,34 @@ public class GameMap {
      */
     public PlayerHalfMap getOwnHalfMap() {
         PlayerHalfMap ownHalfMap = new PlayerHalfMap();
-        if(this.gameMapNodes.size() == 50){
-            for(MapNode node : gameMapNodes) {
+        if (map.size() == HalfMapDimensions.TOTAL_NODES) {
+            for (MapNode node : map.getNodes()) {
                 ownHalfMap.addMapNode(node);
             }
         }
         else{
-            for (MapNode node : gameMapNodes) {
+            if (orientation == null) {
+                throw new IllegalStateException("Map orientation must be set to derive own half map");
+            }
+            for (MapNode node : map.getNodes()) {
                 switch (orientation) {
                     case UP_DOWN:
-                        if (node.getY() <= 4) {
+                        if (node.getY() <= HalfMapDimensions.HEIGHT - 1) {
                             ownHalfMap.addMapNode(node);
                         }
                         break;
                     case DOWN_UP:
-                        if (node.getY() >= 5) {
+                        if (node.getY() >= HalfMapDimensions.HEIGHT) {
                             ownHalfMap.addMapNode(node);
                         }
                         break;
                     case LEFT_RIGHT:
-                        if (node.getX() <= 9) {
+                        if (node.getX() <= HalfMapDimensions.WIDTH - 1) {
                             ownHalfMap.addMapNode(node);
                         }
                         break;
                     case RIGHT_LEFT:
-                        if (node.getX() >= 10) {
+                        if (node.getX() >= HalfMapDimensions.WIDTH) {
                             ownHalfMap.addMapNode(node);
                         }
                         break;
@@ -97,25 +102,28 @@ public class GameMap {
      */
     public PlayerHalfMap getOpponentHalfMap() {
         PlayerHalfMap opponentHalfMap = new PlayerHalfMap();
-        for (MapNode node : gameMapNodes) {
+        if (orientation == null) {
+            throw new IllegalStateException("Map orientation must be set to derive opponent half map");
+        }
+        for (MapNode node : map.getNodes()) {
             switch (orientation) {
                 case UP_DOWN:
-                    if (node.getY() >= 5) {
+                    if (node.getY() >= HalfMapDimensions.HEIGHT) {
                         opponentHalfMap.addMapNode(node);
                     }
                     break;
                 case DOWN_UP:
-                    if (node.getY() <= 4) {
+                    if (node.getY() <= HalfMapDimensions.HEIGHT - 1) {
                         opponentHalfMap.addMapNode(node);
                     }
                     break;
                 case LEFT_RIGHT:
-                    if (node.getX() >= 10) {
+                    if (node.getX() >= HalfMapDimensions.WIDTH) {
                         opponentHalfMap.addMapNode(node);
                     }
                     break;
                 case RIGHT_LEFT:
-                    if (node.getX() <= 9) {
+                    if (node.getX() <= HalfMapDimensions.WIDTH - 1) {
                         opponentHalfMap.addMapNode(node);
                     }
                     break;
@@ -146,7 +154,7 @@ public class GameMap {
      * @return The maximum X coordinate.
      */
     public int getMaxX() {
-        return maxX;
+        return map.getMaxX();
     }
 
     /**
@@ -154,7 +162,7 @@ public class GameMap {
      * @param maxX The maximum X coordinate.
      */
     public void setMaxX(int maxX) {
-        this.maxX = maxX;
+        map.setMaxX(maxX);
     }
 
     /**
@@ -162,7 +170,7 @@ public class GameMap {
      * @return The maximum Y coordinate.
      */
     public int getMaxY() {
-        return maxY;
+        return map.getMaxY();
     }
 
     /**
@@ -170,7 +178,7 @@ public class GameMap {
      * @param maxY The maximum Y coordinate.
      */
     public void setMaxY(int maxY) {
-        this.maxY = maxY;
+        map.setMaxY(maxY);
     }
 
     /**
@@ -178,7 +186,7 @@ public class GameMap {
      * @return The total number of nodes in the map.
      */
     public int getContentSize() {
-        return gameMapNodes.size();
+        return map.size();
     }
 
     /**
@@ -189,7 +197,7 @@ public class GameMap {
      * @throws IllegalArgumentException if coordinates are invalid.
      */
     public MapNode getNode(int x, int y) {
-        for (MapNode node : gameMapNodes) {
+        for (MapNode node : map.getNodes()) {
             if (node.getX() == x && node.getY() == y) {
                 return node;
             }
@@ -211,7 +219,7 @@ public class GameMap {
      * @return An ArrayList of MapNode objects representing the game map nodes.
      */
     public ArrayList<MapNode> getGameMapNodes() {
-        return gameMapNodes;
+        return map.getNodes();
     }
     /**
      * Checks if the given node is in the player's own half of the map.
@@ -223,15 +231,18 @@ public class GameMap {
         if (node == null) {
             throw new IllegalArgumentException("gameMap Half finder :Node cannot be null");
         }
+        if (orientation == null) {
+            throw new IllegalStateException("Map orientation must be set to check halves");
+        }
         switch (orientation) {
             case UP_DOWN:
-                return node.getY() <= 4;
+                return node.getY() <= HalfMapDimensions.HEIGHT - 1;
             case DOWN_UP:
-                return node.getY() >= 5;
+                return node.getY() >= HalfMapDimensions.HEIGHT;
             case LEFT_RIGHT:
-                return node.getX() <= 9;
+                return node.getX() <= HalfMapDimensions.WIDTH - 1;
             case RIGHT_LEFT:
-                return node.getX() >= 10;
+                return node.getX() >= HalfMapDimensions.WIDTH;
             default:
                 throw new IllegalArgumentException("Invalid orientation: " + orientation);
         }
@@ -243,10 +254,10 @@ public class GameMap {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("GameMap{orientation=").append(orientation)
-          .append(", maxX=").append(maxX)
-          .append(", maxY=").append(maxY)
+                    .append(", maxX=").append(getMaxX())
+                    .append(", maxY=").append(getMaxY())
           .append(", nodes=[");
-        for (MapNode node : gameMapNodes) {
+                for (MapNode node : map.getNodes()) {
             sb.append(node.toString()).append(", ");
         }
         sb.append("]}");

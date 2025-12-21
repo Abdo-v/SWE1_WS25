@@ -30,3 +30,8 @@ No Magic Numbers: Replace literal numbers in code with named constants (static f
 Small Methods: Keep methods short (ideally <10–15 lines) to improve focus and testability.
 
 Self-Documenting Code: Write code that is clear enough to minimize the need for comments; use comments only for the "Why" (intent/algorithms) rather than the "What".
+
+no magic numbers 
+
+
+
