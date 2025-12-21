@@ -15,7 +15,7 @@ public class MapValidator {
     private static final double MIN_MOUNTAIN_PERCENTAGE = 0.10;
     private static final double MIN_GRASS_PERCENTAGE = 0.48;
     private static final double MIN_WATER_PERCENTAGE = 0.14;
-    private static final double CASTLE_PERCENTAGE = 0.02; // 1 castle
+    private static final double FORT_PERCENTAGE = 0.02; // Default: 1 fort (castle)
 
     /**
      * Validates a PlayerHalfMap according to game rules and structural requirements.
@@ -23,7 +23,7 @@ public class MapValidator {
      * - Structural integrity (null checks, node count, coordinates)
     * - Map dimensions (WIDTHxHEIGHT or HEIGHTxWIDTH)
      * - Terrain distribution (minimum percentages for each terrain type)
-     * - Castle placement and count
+    * - Fort placement and count
      * - Reachability of all walkable nodes
      * - Edge walkability requirements
      * 
@@ -106,7 +106,7 @@ public class MapValidator {
         if (notification.hasErrors()) return notification;
 
 
-        validateTerrainAndCastle(halfMap, notification);
+        validateTerrainAndFort(halfMap, notification);
         
         // Only proceed with complex validations if basic structure and terrain are okay
         if (!notification.hasErrors()) {
@@ -173,20 +173,20 @@ public class MapValidator {
     }
 
     /**
-     * Validates terrain distribution, castle placement, and terrain-related rules.
+     * Validates terrain distribution, fort placement, and terrain-related rules.
      * Checks that the map contains the required minimum percentages of each terrain type
-     * and that exactly one castle is placed on a grass field.
+     * and that exactly one fort is placed on a grass field.
      * 
      * @param halfMap The PlayerHalfMap to validate
      * @param notification The Notification object to add errors to
      */
-    private void validateTerrainAndCastle(PlayerHalfMap halfMap, Notification notification) {
+    private void validateTerrainAndFort(PlayerHalfMap halfMap, Notification notification) {
         List<MapNode> nodes = halfMap.getMapNodes();
         int mountainCount = 0;
         int grassCount = 0;
         int waterCount = 0;
-        int castleCount = 0;
-        MapNode castleNode = null;
+        int fortCount = 0;
+        MapNode fortNode = null;
 
         for (MapNode node : nodes) {
             if (node.getTerrain() == null) {
@@ -203,8 +203,8 @@ public class MapValidator {
             }
 
             if (node.isFortPresent()) {
-                castleCount++;
-                castleNode = node;
+                fortCount++;
+                fortNode = node;
             }
         }
         if (notification.hasErrors()) return; // Stop if null terrains found
@@ -212,7 +212,7 @@ public class MapValidator {
         int minMountains = (int) Math.round(MIN_MOUNTAIN_PERCENTAGE * HALF_MAP_TOTAL_NODES);
         int minGrass = (int) Math.round(MIN_GRASS_PERCENTAGE * HALF_MAP_TOTAL_NODES);
         int minWater = (int) Math.round(MIN_WATER_PERCENTAGE * HALF_MAP_TOTAL_NODES);
-        int expectedCastles = (int) (CASTLE_PERCENTAGE * HALF_MAP_TOTAL_NODES); // Default: 1
+        int expectedForts = (int) (FORT_PERCENTAGE * HALF_MAP_TOTAL_NODES); // Default: 1
 
         if (mountainCount < minMountains) {
             notification.addError(String.format("Insufficient mountains. Required: >=%d (%.0f%%), Found: %d", minMountains, MIN_MOUNTAIN_PERCENTAGE * 100, mountainCount));
@@ -229,14 +229,14 @@ public class MapValidator {
                                    ") does not match total nodes (" + HALF_MAP_TOTAL_NODES + "). Check for unassigned or miscounted terrains.");
         }
 
-        if (castleCount != expectedCastles) {
-            notification.addError("Incorrect number of castles. Required: " + expectedCastles + ", Found: " + castleCount);
-        } else if (castleNode != null) { // castleCount == 1
-            if (castleNode.getTerrain() != Terrain.GRASS) {
-                notification.addError("Castle must be placed on a GRASS field. Found on: " + castleNode.getTerrain() + " at X=" + castleNode.getX() + ", Y=" + castleNode.getY());
+        if (fortCount != expectedForts) {
+            notification.addError("Incorrect number of forts. Required: " + expectedForts + ", Found: " + fortCount);
+        } else if (fortNode != null) { // fortCount == expectedForts
+            if (fortNode.getTerrain() != Terrain.GRASS) {
+                notification.addError("Fort must be placed on a GRASS field. Found on: " + fortNode.getTerrain() + " at X=" + fortNode.getX() + ", Y=" + fortNode.getY());
             }
-        } else if (expectedCastles > 0) { // castleCount is 0 but expected > 0
-             notification.addError("Expected " + expectedCastles + " castle(s) but none found.");
+        } else if (expectedForts > 0) { // fortCount is 0 but expected > 0
+             notification.addError("Expected " + expectedForts + " fort(s) but none found.");
         }
     }
 
