@@ -2,10 +2,13 @@ package client.model.mapper;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public class GameMap {
     private final MapEssentials map;
     private OwnToOppMapOrientation orientation;
+
+    private static final String ORIENTATION_REQUIRED_MESSAGE = "Map orientation must be set";
 
     /**
      * Constructs a GameMap with the given parameters.
@@ -57,43 +60,11 @@ public class GameMap {
      * @return The player's own half map.
      */
     public PlayerHalfMap getOwnHalfMap() {
-        PlayerHalfMap ownHalfMap = new PlayerHalfMap();
         if (map.size() == HalfMapDimensions.TOTAL_NODES) {
-            for (MapNode node : map.getNodes()) {
-                ownHalfMap.addMapNode(node);
-            }
+            return buildHalfMap(node -> true);
         }
-        else{
-            if (orientation == null) {
-                throw new IllegalStateException("Map orientation must be set to derive own half map");
-            }
-            for (MapNode node : map.getNodes()) {
-                switch (orientation) {
-                    case UP_DOWN:
-                        if (node.getY() <= HalfMapDimensions.HEIGHT - 1) {
-                            ownHalfMap.addMapNode(node);
-                        }
-                        break;
-                    case DOWN_UP:
-                        if (node.getY() >= HalfMapDimensions.HEIGHT) {
-                            ownHalfMap.addMapNode(node);
-                        }
-                        break;
-                    case LEFT_RIGHT:
-                        if (node.getX() <= HalfMapDimensions.WIDTH - 1) {
-                            ownHalfMap.addMapNode(node);
-                        }
-                        break;
-                    case RIGHT_LEFT:
-                        if (node.getX() >= HalfMapDimensions.WIDTH) {
-                            ownHalfMap.addMapNode(node);
-                        }
-                        break;
-                }
-            }
-        }
-        return ownHalfMap;
-            
+
+        return buildHalfMap(ownHalfPredicate());
     }
 
     /**
@@ -101,35 +72,7 @@ public class GameMap {
      * @return The opponent's half map.
      */
     public PlayerHalfMap getOpponentHalfMap() {
-        PlayerHalfMap opponentHalfMap = new PlayerHalfMap();
-        if (orientation == null) {
-            throw new IllegalStateException("Map orientation must be set to derive opponent half map");
-        }
-        for (MapNode node : map.getNodes()) {
-            switch (orientation) {
-                case UP_DOWN:
-                    if (node.getY() >= HalfMapDimensions.HEIGHT) {
-                        opponentHalfMap.addMapNode(node);
-                    }
-                    break;
-                case DOWN_UP:
-                    if (node.getY() <= HalfMapDimensions.HEIGHT - 1) {
-                        opponentHalfMap.addMapNode(node);
-                    }
-                    break;
-                case LEFT_RIGHT:
-                    if (node.getX() >= HalfMapDimensions.WIDTH) {
-                        opponentHalfMap.addMapNode(node);
-                    }
-                    break;
-                case RIGHT_LEFT:
-                    if (node.getX() <= HalfMapDimensions.WIDTH - 1) {
-                        opponentHalfMap.addMapNode(node);
-                    }
-                    break;
-            }
-        }
-        return opponentHalfMap;
+        return buildHalfMap(ownHalfPredicate().negate());
     }
 
 
@@ -228,24 +171,33 @@ public class GameMap {
      * @return True if the node is in the player's own half, false otherwise.
      */
     public boolean isNodeInOwnHalf(MapNode node) {
-        if (node == null) {
-            throw new IllegalArgumentException("gameMap Half finder :Node cannot be null");
+        Objects.requireNonNull(node, "node");
+        return ownHalfPredicate().test(node);
+    }
+
+    private PlayerHalfMap buildHalfMap(Predicate<MapNode> includeNode) {
+        Objects.requireNonNull(includeNode, "includeNode");
+
+        PlayerHalfMap halfMap = new PlayerHalfMap();
+        for (MapNode node : map.getNodes()) {
+            if (includeNode.test(node)) {
+                halfMap.addMapNode(node);
+            }
         }
+        return halfMap;
+    }
+
+    private Predicate<MapNode> ownHalfPredicate() {
         if (orientation == null) {
-            throw new IllegalStateException("Map orientation must be set to check halves");
+            throw new IllegalStateException(ORIENTATION_REQUIRED_MESSAGE);
         }
-        switch (orientation) {
-            case UP_DOWN:
-                return node.getY() <= HalfMapDimensions.HEIGHT - 1;
-            case DOWN_UP:
-                return node.getY() >= HalfMapDimensions.HEIGHT;
-            case LEFT_RIGHT:
-                return node.getX() <= HalfMapDimensions.WIDTH - 1;
-            case RIGHT_LEFT:
-                return node.getX() >= HalfMapDimensions.WIDTH;
-            default:
-                throw new IllegalArgumentException("Invalid orientation: " + orientation);
-        }
+
+        return switch (orientation) {
+            case UP_DOWN -> node -> node.getY() <= HalfMapDimensions.HEIGHT - 1;
+            case DOWN_UP -> node -> node.getY() >= HalfMapDimensions.HEIGHT;
+            case LEFT_RIGHT -> node -> node.getX() <= HalfMapDimensions.WIDTH - 1;
+            case RIGHT_LEFT -> node -> node.getX() >= HalfMapDimensions.WIDTH;
+        };
     }
     /**
      * Returns a string representation of the GameMap.
@@ -257,7 +209,7 @@ public class GameMap {
                     .append(", maxX=").append(getMaxX())
                     .append(", maxY=").append(getMaxY())
           .append(", nodes=[");
-                for (MapNode node : map.getNodes()) {
+        for (MapNode node : map.getNodes()) {
             sb.append(node.toString()).append(", ");
         }
         sb.append("]}");

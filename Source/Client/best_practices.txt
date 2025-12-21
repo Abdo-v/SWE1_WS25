@@ -33,5 +33,5 @@ Self-Documenting Code: Write code that is clear enough to minimize the need for 
 
 no magic numbers 
 
-
+avoid duplicate code
 
