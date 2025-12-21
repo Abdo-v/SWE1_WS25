@@ -1,0 +1,32 @@
+1. Core Architectural & Design Principles
+
+    Separation of Concerns (SoC): Divide the system into distinct sections (e.g., Map Logic, Pathfinding, Network Communication) where each handles a specific concern.
+
+Single Responsibility Principle (SRP): Ensure every class or component has exactly one task.
+
+Composition over Inheritance: Prioritize building complex behavior by combining simple objects (composition) rather than using deep class hierarchies; utilize "Blackbox" structures where components are plugged in.
+
+Dependency Injection (DI): Do not hardcode dependencies within classes; pass them (e.g., via constructor) to decouple construction from logic and allow for easier testing with mocks.
+
+
+KISS (Keep It Simple, Stupid): Avoid over-engineering; choose the simplest algorithm that solves the problem (e.g., basic BFS/A* before complex variants).
+
+DRY (Don't Repeat Yourself): Abstract repetitive logic into shared components or utility methods.
+
+    YAGNI (You Ain't Gonna Need It): Do not implement functionality or "future-proofing" until it is actually required for a feature.
+
+2. Coding Standards & Readability
+
+    Naming Conventions: Use CamelCase; Classes as Nouns, Methods as Verbs.
+
+Explicit Naming: Names must clearly and completely reflect behavior; if a name becomes too long, the method likely does too much and should be split.
+
+Avoid Null: Never give null a meaning; use Default Values, Empty Collections (e.g., Collections.emptyList()), or Optionals to represent missing data.
+
+Command-Query Separation (CQS): A method should either be a Command (performs an action/changes state) or a Query (returns data without side effects), never both.
+
+No Magic Numbers: Replace literal numbers in code with named constants (static final) to provide context (e.g., MAP_HEIGHT = 10 instead of 10).
+
+Small Methods: Keep methods short (ideally <10–15 lines) to improve focus and testability.
+
+Self-Documenting Code: Write code that is clear enough to minimize the need for comments; use comments only for the "Why" (intent/algorithms) rather than the "What".
