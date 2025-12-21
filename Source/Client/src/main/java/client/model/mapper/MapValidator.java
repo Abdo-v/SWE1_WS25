@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class MapValidator {
 
-    private static final int HALF_MAP_TOTAL_NODES = 50;
+    private static final int HALF_MAP_TOTAL_NODES = HalfMapDimensions.TOTAL_NODES;
     private static final double MIN_MOUNTAIN_PERCENTAGE = 0.10;
     private static final double MIN_GRASS_PERCENTAGE = 0.48;
     private static final double MIN_WATER_PERCENTAGE = 0.14;
@@ -75,11 +75,15 @@ public class MapValidator {
 
         // Check if the map forms a complete rectangle from (0,0) to (maxX, maxY)
         // and if all nodes within this rectangle are present.
-        // Valid half-map dimensions are 10x5 (maxX=9, maxY=4) or 5x10 (maxX=4, maxY=9).
-        boolean dimensionsValid = ((maxX + 1 == 10 && maxY + 1 == 5) || (maxX + 1 == 5 && maxY + 1 == 10));
+        // Valid half-map dimensions are WIDTHxHEIGHT or HEIGHTxWIDTH (depending on orientation).
+        int inferredWidth = maxX + 1;
+        int inferredHeight = maxY + 1;
+        boolean dimensionsValid =
+                (inferredWidth == HalfMapDimensions.WIDTH && inferredHeight == HalfMapDimensions.HEIGHT)
+                        || (inferredWidth == HalfMapDimensions.HEIGHT && inferredHeight == HalfMapDimensions.WIDTH);
         if (!dimensionsValid) {
              notification.addError(String.format("Invalid map dimensions. Expected 10x5 or 5x10, but got %dx%d (maxX=%d, maxY=%d).",
-                                                maxX + 1, maxY + 1, maxX, maxY));
+                                                inferredWidth, inferredHeight, maxX, maxY));
         } else {
             // Check for missing nodes within the inferred rectangle
             for (int x = 0; x <= maxX; x++) {
@@ -200,7 +204,7 @@ public class MapValidator {
         int minMountains = (int) Math.round(MIN_MOUNTAIN_PERCENTAGE * HALF_MAP_TOTAL_NODES);
         int minGrass = (int) Math.round(MIN_GRASS_PERCENTAGE * HALF_MAP_TOTAL_NODES);
         int minWater = (int) Math.round(MIN_WATER_PERCENTAGE * HALF_MAP_TOTAL_NODES);
-        int expectedCastles = (int) (CASTLE_PERCENTAGE * HALF_MAP_TOTAL_NODES); // This will be 6
+        int expectedCastles = (int) (CASTLE_PERCENTAGE * HALF_MAP_TOTAL_NODES); // Default: 1
 
         if (mountainCount < minMountains) {
             notification.addError(String.format("Insufficient mountains. Required: >=%d (%.0f%%), Found: %d", minMountains, MIN_MOUNTAIN_PERCENTAGE * 100, mountainCount));
