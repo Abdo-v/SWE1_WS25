@@ -148,8 +148,8 @@ public class MapNode {
      */
 
     public MapNode localize(){
-        int localizedX = x % 10; // Assuming a grid size of 10 for localization
-        int localizedY = y % 10; // Assuming a grid size of 10 for localization
+        int localizedX = Math.floorMod(x, HalfMapDimensions.WIDTH);
+        int localizedY = Math.floorMod(y, HalfMapDimensions.HEIGHT);
         return new MapNode(localizedX, localizedY, terrain, fortPresent, treasurePresent);
     }
 

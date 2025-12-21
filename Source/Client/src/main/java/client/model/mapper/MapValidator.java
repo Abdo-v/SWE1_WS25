@@ -21,7 +21,7 @@ public class MapValidator {
      * Validates a PlayerHalfMap according to game rules and structural requirements.
      * Performs comprehensive validation including:
      * - Structural integrity (null checks, node count, coordinates)
-     * - Map dimensions (10x5 or 5x10)
+    * - Map dimensions (WIDTHxHEIGHT or HEIGHTxWIDTH)
      * - Terrain distribution (minimum percentages for each terrain type)
      * - Castle placement and count
      * - Reachability of all walkable nodes
@@ -82,8 +82,16 @@ public class MapValidator {
                 (inferredWidth == HalfMapDimensions.WIDTH && inferredHeight == HalfMapDimensions.HEIGHT)
                         || (inferredWidth == HalfMapDimensions.HEIGHT && inferredHeight == HalfMapDimensions.WIDTH);
         if (!dimensionsValid) {
-             notification.addError(String.format("Invalid map dimensions. Expected 10x5 or 5x10, but got %dx%d (maxX=%d, maxY=%d).",
-                                                inferredWidth, inferredHeight, maxX, maxY));
+             notification.addError(String.format(
+                 "Invalid map dimensions. Expected %dx%d or %dx%d, but got %dx%d (maxX=%d, maxY=%d).",
+                 HalfMapDimensions.WIDTH,
+                 HalfMapDimensions.HEIGHT,
+                 HalfMapDimensions.HEIGHT,
+                 HalfMapDimensions.WIDTH,
+                 inferredWidth,
+                 inferredHeight,
+                 maxX,
+                 maxY));
         } else {
             // Check for missing nodes within the inferred rectangle
             for (int x = 0; x <= maxX; x++) {
@@ -113,7 +121,7 @@ public class MapValidator {
      * Validates a PlayerHalfMap and also checks edge-crossing compatibility with an existing half-map.
      * This is intended for the client that generates the second half-map.
      *
-     * Rule: For each edge of the new half-map, at least 40% of edge fields must allow a successful
+    * Rule: For each edge of the new half-map, at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of edge fields must allow a successful
      * transition to the corresponding opposite edge of the existing half-map (walkable on both sides).
      *
      * Pairings checked:
