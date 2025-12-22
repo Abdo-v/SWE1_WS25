@@ -45,7 +45,7 @@ public class MapGenerator {
      * @throws IllegalArgumentException if width or height is not positive.
      */
     public PlayerHalfMap generateMap(int width, int height, String playerID) {
-        return generateMap(width, height, playerID, null);
+        return generateMap(width, height, playerID, Optional.empty());
     }
 
     /**
@@ -55,11 +55,23 @@ public class MapGenerator {
         * (walkable on both sides).
      */
     public PlayerHalfMap generateMap(int width, int height, String playerID, PlayerHalfMap existingHalfMap) {
+        return generateMap(width, height, playerID, Optional.ofNullable(existingHalfMap));
+    }
+
+    /**
+     * Generates a half map with the specified width, height, and player ID.
+     *
+     * <p>If an existing half map is present (for the "second" client), generation also tries to ensure
+     * that edge transitions are possible on at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of each edge
+     * (walkable on both sides).
+     */
+    public PlayerHalfMap generateMap(int width, int height, String playerID, Optional<PlayerHalfMap> existingHalfMap) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Width and height must be positive");
         }
 
         Objects.requireNonNull(playerID, "playerID");
+        Objects.requireNonNull(existingHalfMap, "existingHalfMap");
 
         boolean validMap = false;
         Random random = randomSupplier.get();
@@ -80,14 +92,14 @@ public class MapGenerator {
             
             TerrainGridPlacer.placeTerrain(terrainGrid, fortGrid, Terrain.MOUNTAIN, mountainCells, width, height, random);
             
-            if (!HalfMapWaterPlacer.placeWaterWithConstraints(
+                if (!HalfMapWaterPlacer.placeWaterWithConstraints(
                     terrainGrid,
                     fortGrid,
                     waterCells,
                     width,
                     height,
                     random,
-                    Optional.ofNullable(existingHalfMap),
+                    existingHalfMap,
                     config)) {
                 continue;
             }
@@ -105,9 +117,9 @@ public class MapGenerator {
                     halfMap.addMapNode(node);
                 }
             }
-            Notification result = (existingHalfMap == null)
-                    ? validator.validate(halfMap)
-                    : validator.validate(halfMap, existingHalfMap);
+                Notification result = existingHalfMap
+                    .map(existing -> validator.validate(halfMap, existing))
+                    .orElseGet(() -> validator.validate(halfMap));
             validMap = !result.hasErrors();
             if (validMap) {
                 return halfMap;

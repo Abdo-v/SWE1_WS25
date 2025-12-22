@@ -3,6 +3,8 @@ package client.model.mapper;
 import client.model.common.Notification;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 final class HalfMapTerrainValidator {
     private HalfMapTerrainValidator() {
@@ -22,14 +24,11 @@ final class HalfMapTerrainValidator {
         int grassCount = 0;
         int waterCount = 0;
         int fortCount = 0;
-        MapNode fortNode = null;
+        Optional<MapNode> fortNode = Optional.empty();
 
         for (MapNode node : nodes) {
-            if (node.getTerrain() == null) {
-                notification.addError("Node at X=" + node.getX() + ", Y=" + node.getY() + " has null terrain.");
-                continue;
-            }
-            switch (node.getTerrain()) {
+            Terrain terrain = Objects.requireNonNull(node.getTerrain(), "MapNode terrain must be set");
+            switch (terrain) {
                 case MOUNTAIN:
                     mountainCount++;
                     break;
@@ -46,7 +45,7 @@ final class HalfMapTerrainValidator {
 
             if (node.isFortPresent()) {
                 fortCount++;
-                fortNode = node;
+                fortNode = Optional.of(node);
             }
         }
 
@@ -79,13 +78,20 @@ final class HalfMapTerrainValidator {
 
         if (fortCount != expectedForts) {
             notification.addError("Incorrect number of forts. Required: " + expectedForts + ", Found: " + fortCount);
-        } else if (fortNode != null) {
-            if (fortNode.getTerrain() != Terrain.GRASS) {
-                notification.addError("Fort must be placed on a GRASS field. Found on: " + fortNode.getTerrain()
-                        + " at X=" + fortNode.getX() + ", Y=" + fortNode.getY());
-            }
-        } else if (expectedForts > 0) {
-            notification.addError("Expected " + expectedForts + " fort(s) but none found.");
+        } else {
+            fortNode.ifPresentOrElse(
+                    fort -> {
+                        if (fort.getTerrain() != Terrain.GRASS) {
+                            notification.addError("Fort must be placed on a GRASS field. Found on: " + fort.getTerrain()
+                                    + " at X=" + fort.getX() + ", Y=" + fort.getY());
+                        }
+                    },
+                    () -> {
+                        if (expectedForts > 0) {
+                            notification.addError("Expected " + expectedForts + " fort(s) but none found.");
+                        }
+                    }
+            );
         }
     }
 }

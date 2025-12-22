@@ -8,7 +8,7 @@ import java.util.List;
 
 public class GameMap {
     private final MapEssentials map;
-    private OwnToOppMapOrientation orientation;
+    private Optional<OwnToOppMapOrientation> orientation;
 
     private static final String ORIENTATION_REQUIRED_MESSAGE = "Map orientation must be set";
 
@@ -19,7 +19,7 @@ public class GameMap {
      * @param orientation The orientation of the map.
      */
     public GameMap(ArrayList<MapNode> nodes, OwnToOppMapOrientation orientation) {
-        this.orientation = Objects.requireNonNull(orientation, "orientation");
+        this.orientation = Optional.of(Objects.requireNonNull(orientation, "orientation"));
 
         int width;
         int height;
@@ -45,7 +45,7 @@ public class GameMap {
      * @param maxY The maximum Y coordinate.
      */
     public GameMap(ArrayList<MapNode> nodes, OwnToOppMapOrientation orientation, int maxX, int maxY) {
-        this.orientation = Objects.requireNonNull(orientation, "orientation");
+        this.orientation = Optional.of(Objects.requireNonNull(orientation, "orientation"));
         this.map = new MapEssentials(Objects.requireNonNull(nodes, "nodes"), maxX, maxY);
     }
 
@@ -54,7 +54,7 @@ public class GameMap {
      */
     public GameMap() {
         this.map = new MapEssentials(new ArrayList<>(), 0, 0);
-        this.orientation = null;
+        this.orientation = Optional.empty();
     }
 
     /**
@@ -83,7 +83,7 @@ public class GameMap {
      * @return The map orientation.
      */
     public OwnToOppMapOrientation getOrientation() {
-        return orientation;
+        return orientation.orElseThrow(() -> new IllegalStateException(ORIENTATION_REQUIRED_MESSAGE));
     }
 
     /**
@@ -91,7 +91,7 @@ public class GameMap {
      * @param orientation The map orientation.
      */
     public void setOrientation(OwnToOppMapOrientation orientation) {
-        this.orientation = orientation;
+        this.orientation = Optional.of(Objects.requireNonNull(orientation, "orientation"));
     }
 
     /**
@@ -191,11 +191,11 @@ public class GameMap {
     }
 
     private Predicate<MapNode> ownHalfPredicate() {
-        if (orientation == null) {
+        if (orientation.isEmpty()) {
             throw new IllegalStateException(ORIENTATION_REQUIRED_MESSAGE);
         }
 
-        return switch (orientation) {
+        return switch (orientation.get()) {
             case UP_DOWN -> node -> node.getY() <= HalfMapDimensions.HEIGHT - 1;
             case DOWN_UP -> node -> node.getY() >= HalfMapDimensions.HEIGHT;
             case LEFT_RIGHT -> node -> node.getX() <= HalfMapDimensions.WIDTH - 1;

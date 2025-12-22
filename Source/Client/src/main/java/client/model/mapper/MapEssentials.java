@@ -21,7 +21,11 @@ public final class MapEssentials {
     }
 
     public MapEssentials(List<MapNode> initialNodes, int maxX, int maxY) {
-        this.nodes = new ArrayList<>(Objects.requireNonNull(initialNodes, "initialNodes"));
+        Objects.requireNonNull(initialNodes, "initialNodes");
+        for (MapNode node : initialNodes) {
+            Objects.requireNonNull(node, "node");
+        }
+        this.nodes = new ArrayList<>(initialNodes);
         this.maxX = maxX;
         this.maxY = maxY;
     }
@@ -45,8 +49,12 @@ public final class MapEssentials {
     }
 
     public void setNodes(List<MapNode> newNodes) {
+        Objects.requireNonNull(newNodes, "newNodes");
+        for (MapNode node : newNodes) {
+            Objects.requireNonNull(node, "node");
+        }
         nodes.clear();
-        nodes.addAll(Objects.requireNonNull(newNodes, "newNodes"));
+        nodes.addAll(newNodes);
         recomputeBoundsFromNodes();
     }
 
@@ -74,9 +82,6 @@ public final class MapEssentials {
         int computedMaxX = 0;
         int computedMaxY = 0;
         for (MapNode node : nodes) {
-            if (node == null) {
-                continue;
-            }
             computedMaxX = Math.max(computedMaxX, node.getX());
             computedMaxY = Math.max(computedMaxY, node.getY());
         }

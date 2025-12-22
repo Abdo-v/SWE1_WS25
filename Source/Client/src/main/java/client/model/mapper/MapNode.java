@@ -1,5 +1,7 @@
 package client.model.mapper;
 
+import java.util.Objects;
+
 public class MapNode {
     private int x;
     private int y;
@@ -18,7 +20,7 @@ public class MapNode {
     public MapNode(int x, int y, Terrain terrain, boolean fortPresent, boolean treasurePresent) {
         this.x = x;
         this.y = y;
-        this.terrain = terrain;
+        this.terrain = Objects.requireNonNull(terrain, "terrain");
         this.fortPresent = fortPresent;
         this.treasurePresent = treasurePresent;
     }
@@ -81,7 +83,7 @@ public class MapNode {
      * @param terrain The terrain type of the node.
      */
     public void setTerrain(Terrain terrain) {
-        this.terrain = terrain;
+        this.terrain = Objects.requireNonNull(terrain, "terrain");
     }
 
     /**
@@ -136,7 +138,7 @@ public class MapNode {
      * @return true if the coordinates are the same, false otherwise.
      */
     public boolean equalsByCoordinates(MapNode other) {
-        if (other == null) throw new IllegalArgumentException("Other MapNode cannot be null");
+        Objects.requireNonNull(other, "other");
         if (this == other) return true;
         return this.getX() == other.getX() && this.getY() == other.getY();
     }
@@ -180,14 +182,7 @@ public class MapNode {
     }
     @Override
     public int hashCode() {
-        int result = Integer.hashCode(x);
-        result = 31 * result + Integer.hashCode(y);
-        result = 31 * result + (terrain != null ? terrain.hashCode() : 0);
-        result = 31 * result + Boolean.hashCode(fortPresent);
-        result = 31 * result + Boolean.hashCode(treasurePresent);
-        return result;
-        // if performance not important:
-        // return Objects.hash(x, y, terrain, fortPresent, treasurePresent);
+        return Objects.hash(x, y, terrain, fortPresent, treasurePresent);
     }
 
 }

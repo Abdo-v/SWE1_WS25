@@ -15,7 +15,7 @@ public class MapValidator {
     /**
      * Validates a PlayerHalfMap according to game rules and structural requirements.
      * Performs comprehensive validation including:
-     * - Structural integrity (null checks, node count, coordinates)
+        * - Structural integrity (presence checks, node count, coordinates)
     * - Map dimensions (WIDTHxHEIGHT or HEIGHTxWIDTH)
      * - Terrain distribution (minimum percentages for each terrain type)
     * - Fort placement and count
@@ -27,8 +27,8 @@ public class MapValidator {
      */
     public Notification validate(PlayerHalfMap halfMap) {
         Notification notification = new Notification();
-        if (halfMap == null) {
-            notification.addError("PlayerHalfMap cannot be null.");
+        if (Optional.ofNullable(halfMap).isEmpty()) {
+            notification.addError("PlayerHalfMap must be provided.");
             return notification;
         }
 
@@ -87,12 +87,16 @@ public class MapValidator {
         if (notification.hasErrors()) {
             return notification;
         }
-        if (existingHalfMap == null) {
+
+        Optional<PlayerHalfMap> existingHalfMapOpt = Optional.ofNullable(existingHalfMap);
+        if (existingHalfMapOpt.isEmpty()) {
             return notification;
         }
 
+        PlayerHalfMap existing = existingHalfMapOpt.get();
+
         int[] newDims = HalfMapDimensionUtil.determineDimensions(newHalfMap);
-        int[] existingDims = HalfMapDimensionUtil.determineDimensions(existingHalfMap);
+        int[] existingDims = HalfMapDimensionUtil.determineDimensions(existing);
 
         if (newDims[0] != existingDims[0] || newDims[1] != existingDims[1]) {
             notification.addError(String.format(
@@ -103,7 +107,7 @@ public class MapValidator {
 
         int maxX = newDims[0] - 1;
         int maxY = newDims[1] - 1;
-        HalfMapEdgeValidator.validateEdgeCrossingCompatibility(newHalfMap, existingHalfMap, notification, maxX, maxY);
+        HalfMapEdgeValidator.validateEdgeCrossingCompatibility(newHalfMap, existing, notification, maxX, maxY);
         return notification;
     }
 }

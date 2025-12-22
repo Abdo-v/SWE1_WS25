@@ -2,6 +2,7 @@ package client.model.mapper;
 
 import client.model.common.Notification;
 
+import java.util.Objects;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -12,11 +13,7 @@ final class HalfMapStructureValidator {
     }
 
     static Optional<HalfMapBounds> validateAndGetBounds(PlayerHalfMap halfMap, Notification notification, int expectedTotalNodes) {
-        List<MapNode> nodes = halfMap.getMapNodes();
-        if (nodes == null) {
-            notification.addError("MapNode list in PlayerHalfMap cannot be null.");
-            return Optional.empty();
-        }
+        List<MapNode> nodes = Objects.requireNonNull(halfMap, "halfMap").getMapNodes();
 
         if (nodes.size() != expectedTotalNodes) {
             notification.addError("Map must contain exactly " + expectedTotalNodes + " nodes. Found: " + nodes.size());
@@ -29,10 +26,7 @@ final class HalfMapStructureValidator {
         int minY = Integer.MAX_VALUE;
         Set<String> uniqueCoords = new HashSet<>();
         for (MapNode node : nodes) {
-            if (node == null) {
-                notification.addError("Map contains a null MapNode.");
-                return Optional.empty();
-            }
+            Objects.requireNonNull(node, "MapNode list contains a missing node entry");
             maxX = Math.max(maxX, node.getX());
             maxY = Math.max(maxY, node.getY());
             minX = Math.min(minX, node.getX());
