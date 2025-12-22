@@ -2,6 +2,8 @@ package client.model.mapper;
 
 import client.model.common.Notification;
 
+import java.util.Optional;
+
 final class HalfMapEdgeCrossingValidator {
     private HalfMapEdgeCrossingValidator() {
     }
@@ -38,13 +40,13 @@ final class HalfMapEdgeCrossingValidator {
         int total = maxY + 1;
         int crossable = 0;
         for (int y = 0; y <= maxY; y++) {
-            MapNode n1 = newHalfMap.getMapNode(newX, y).orElse(null);
-            MapNode n2 = existingHalfMap.getMapNode(existingX, y).orElse(null);
-            if (n1 == null || n2 == null) {
+            Optional<MapNode> n1Opt = newHalfMap.getMapNode(newX, y);
+            Optional<MapNode> n2Opt = existingHalfMap.getMapNode(existingX, y);
+            if (n1Opt.isEmpty() || n2Opt.isEmpty()) {
                 notification.addError("Missing node(s) while checking crossing: " + label + " at y=" + y);
                 return;
             }
-            if (n1.isWalkable() && n2.isWalkable()) {
+            if (n1Opt.get().isWalkable() && n2Opt.get().isWalkable()) {
                 crossable++;
             }
         }
@@ -69,13 +71,13 @@ final class HalfMapEdgeCrossingValidator {
         int total = maxX + 1;
         int crossable = 0;
         for (int x = 0; x <= maxX; x++) {
-            MapNode n1 = newHalfMap.getMapNode(x, newY).orElse(null);
-            MapNode n2 = existingHalfMap.getMapNode(x, existingY).orElse(null);
-            if (n1 == null || n2 == null) {
+            Optional<MapNode> n1Opt = newHalfMap.getMapNode(x, newY);
+            Optional<MapNode> n2Opt = existingHalfMap.getMapNode(x, existingY);
+            if (n1Opt.isEmpty() || n2Opt.isEmpty()) {
                 notification.addError("Missing node(s) while checking crossing: " + label + " at x=" + x);
                 return;
             }
-            if (n1.isWalkable() && n2.isWalkable()) {
+            if (n1Opt.get().isWalkable() && n2Opt.get().isWalkable()) {
                 crossable++;
             }
         }

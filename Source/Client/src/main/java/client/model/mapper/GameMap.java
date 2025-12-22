@@ -2,6 +2,7 @@ package client.model.mapper;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.List;
 
@@ -151,11 +152,12 @@ public class GameMap {
 
     /**
      * Gets the half map MapNode that contains the player's own fort.
-     * @return The MapNode containing the player's own fort.
+     *
+     * @return An {@link Optional} containing the MapNode with the player's own fort.
      */
-    public MapNode getOwnFortMapNode() {
+    public Optional<MapNode> getOwnFortMapNode() {
         PlayerHalfMap ownHalfMap = getOwnHalfMap();
-        return ownHalfMap.getFortNode().orElse(null);
+        return ownHalfMap.getFortNode();
     }
 
     /**

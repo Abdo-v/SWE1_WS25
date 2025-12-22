@@ -3,6 +3,7 @@ package client.model.mapper;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 final class HalfMapWaterPlacer {
@@ -18,7 +19,7 @@ final class HalfMapWaterPlacer {
             int width,
             int height,
             Random random,
-            PlayerHalfMap existingHalfMap,
+            Optional<PlayerHalfMap> existingHalfMap,
             MapGenerationConfig config
     ) {
         int minEdgeWaterTopBottom = (int) Math.ceil(MapRules.MIN_EDGE_BLOCKED_RATIO * width);
@@ -83,7 +84,7 @@ final class HalfMapWaterPlacer {
             int width,
             int height,
             Random random,
-            PlayerHalfMap existingHalfMap,
+            Optional<PlayerHalfMap> existingHalfMap,
             Edge edge,
             int minWaterNeeded
     ) {
@@ -117,12 +118,14 @@ final class HalfMapWaterPlacer {
         }
 
         Collections.shuffle(candidates, random);
-        if (existingHalfMap != null) {
+        if (existingHalfMap.isPresent()) {
             candidates.sort((a, b) -> {
-                MapNode oppositeA = getOppositeEdgeNode(existingHalfMap, edge, a[0], a[1], width, height);
-                MapNode oppositeB = getOppositeEdgeNode(existingHalfMap, edge, b[0], b[1], width, height);
-                boolean aBlocksCrossing = oppositeA != null && oppositeA.isWalkable();
-                boolean bBlocksCrossing = oppositeB != null && oppositeB.isWalkable();
+            boolean aBlocksCrossing = getOppositeEdgeNode(existingHalfMap.get(), edge, a[0], a[1], width, height)
+                .filter(MapNode::isWalkable)
+                .isPresent();
+            boolean bBlocksCrossing = getOppositeEdgeNode(existingHalfMap.get(), edge, b[0], b[1], width, height)
+                .filter(MapNode::isWalkable)
+                .isPresent();
                 return Boolean.compare(aBlocksCrossing, bBlocksCrossing);
             });
         }
@@ -179,19 +182,16 @@ final class HalfMapWaterPlacer {
         return !fort[x][y] && grid[x][y] != Terrain.WATER && grid[x][y] != Terrain.MOUNTAIN;
     }
 
-    private static MapNode getOppositeEdgeNode(PlayerHalfMap existingHalfMap, Edge newEdge, int x, int y, int width, int height) {
-        if (existingHalfMap == null) {
-            return null;
-        }
+    private static Optional<MapNode> getOppositeEdgeNode(PlayerHalfMap existingHalfMap, Edge newEdge, int x, int y, int width, int height) {
         if (newEdge == Edge.LEFT) {
-            return existingHalfMap.getMapNode(width - 1, y).orElse(null);
+            return existingHalfMap.getMapNode(width - 1, y);
         }
         if (newEdge == Edge.RIGHT) {
-            return existingHalfMap.getMapNode(0, y).orElse(null);
+            return existingHalfMap.getMapNode(0, y);
         }
         if (newEdge == Edge.TOP) {
-            return existingHalfMap.getMapNode(x, height - 1).orElse(null);
+            return existingHalfMap.getMapNode(x, height - 1);
         }
-        return existingHalfMap.getMapNode(x, 0).orElse(null);
+        return existingHalfMap.getMapNode(x, 0);
     }
 }

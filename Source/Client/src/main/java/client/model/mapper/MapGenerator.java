@@ -3,6 +3,7 @@ package client.model.mapper;
 import client.model.common.Notification;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Supplier;
 
@@ -79,7 +80,15 @@ public class MapGenerator {
             
             TerrainGridPlacer.placeTerrain(terrainGrid, fortGrid, Terrain.MOUNTAIN, mountainCells, width, height, random);
             
-            if (!HalfMapWaterPlacer.placeWaterWithConstraints(terrainGrid, fortGrid, waterCells, width, height, random, existingHalfMap, config)) {
+            if (!HalfMapWaterPlacer.placeWaterWithConstraints(
+                    terrainGrid,
+                    fortGrid,
+                    waterCells,
+                    width,
+                    height,
+                    random,
+                    Optional.ofNullable(existingHalfMap),
+                    config)) {
                 continue;
             }
 
