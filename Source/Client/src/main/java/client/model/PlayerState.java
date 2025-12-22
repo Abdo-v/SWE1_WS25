@@ -95,14 +95,6 @@ public class PlayerState {
     }
 
     /**
-     * Sets the current position of the player.
-     * @param currentPosition The current position of the player.
-     */
-    public void setCurrentPosition(MapNode currentPosition) {
-        this.currentPosition = Optional.ofNullable(currentPosition);
-    }
-
-    /**
      * Gets the player ID.
      * @return The player ID.
      */

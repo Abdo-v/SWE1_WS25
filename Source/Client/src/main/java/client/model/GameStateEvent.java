@@ -26,4 +26,20 @@ public record GameStateEvent(
         oldValue = Optional.ofNullable(oldValue).orElseGet(Optional::empty);
         newValue = Optional.ofNullable(newValue).orElseGet(Optional::empty);
     }
+
+    /**
+     * Type-safe accessor for {@link #oldValue()}.
+     */
+    public <T> Optional<T> oldValueAs(Class<T> type) {
+        Objects.requireNonNull(type, "type must not be null");
+        return oldValue.filter(type::isInstance).map(type::cast);
+    }
+
+    /**
+     * Type-safe accessor for {@link #newValue()}.
+     */
+    public <T> Optional<T> newValueAs(Class<T> type) {
+        Objects.requireNonNull(type, "type must not be null");
+        return newValue.filter(type::isInstance).map(type::cast);
+    }
 }

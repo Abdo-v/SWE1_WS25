@@ -3,6 +3,7 @@ package client.observer.util;
 import client.model.GameStateEvent;
 import client.model.GameState;
 
+@FunctionalInterface
 public interface Observer {
     void update(GameState gameState);
 

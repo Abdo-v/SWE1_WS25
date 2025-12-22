@@ -28,7 +28,11 @@ final class GameManagerWiring {
         Objects.requireNonNull(wayFinder, "wayFinder is required");
         Objects.requireNonNull(dynamicView, "dynamicView is required");
 
-        gameState.addObserver(cliHandler);
+        // Modern MVC wiring (composition): CLI only needs map updates.
+        // Keep the old behavior of setting the initial state once.
+        cliHandler.update(gameState);
+        gameState.mapChanges().subscribe(ignored -> cliHandler.update(gameState));
+
         gameState.addObserver(wayFinder);
         gameState.addObserver(dynamicView);
 
