@@ -75,7 +75,7 @@ public class Converter {
     /**
      * Gets the treasure position from the server map.
      * @param serverMap The server map.
-     * @return The treasure position as a MapNode, or null if not found.
+        * @return The treasure position as a MapNode, if available.
      */
     /**
      * Converts the internal half map to the Server message format.

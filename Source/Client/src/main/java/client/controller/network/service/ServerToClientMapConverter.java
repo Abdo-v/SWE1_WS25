@@ -9,6 +9,7 @@ import messagesbase.messagesfromserver.FullMapNode;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Converts a server full map to the client/internal game map.
@@ -27,7 +28,7 @@ public class ServerToClientMapConverter {
         }
 
         Collection<FullMapNode> serverMapNodes = serverMap.getMapNodes();
-        OwnToOppMapOrientation orientation = null;
+        Optional<OwnToOppMapOrientation> orientation = Optional.empty();
         boolean vertical = false;
         boolean horizontal = false;
         for (FullMapNode node : serverMapNodes) {
@@ -50,9 +51,9 @@ public class ServerToClientMapConverter {
             for (FullMapNode node : serverMapNodes) {
                 if (node.getFortState() == EFortState.MyFortPresent) {
                     if (node.getY() <= 4) {
-                        orientation = OwnToOppMapOrientation.UP_DOWN;
+                        orientation = Optional.of(OwnToOppMapOrientation.UP_DOWN);
                     } else {
-                        orientation = OwnToOppMapOrientation.DOWN_UP;
+                        orientation = Optional.of(OwnToOppMapOrientation.DOWN_UP);
                     }
                     break;
                 }
@@ -61,22 +62,24 @@ public class ServerToClientMapConverter {
             for (FullMapNode node : serverMapNodes) {
                 if (node.getFortState() == EFortState.MyFortPresent) {
                     if (node.getX() <= 9) {
-                        orientation = OwnToOppMapOrientation.LEFT_RIGHT;
+                        orientation = Optional.of(OwnToOppMapOrientation.LEFT_RIGHT);
                     } else {
-                        orientation = OwnToOppMapOrientation.RIGHT_LEFT;
+                        orientation = Optional.of(OwnToOppMapOrientation.RIGHT_LEFT);
                     }
                     break;
                 }
             }
         }
 
-        if (orientation == null) {
+        if (orientation.isEmpty()) {
             return new GameMap();
         }
 
+        OwnToOppMapOrientation resolvedOrientation = orientation.get();
+
         int maxX;
         int maxY;
-        if (orientation == OwnToOppMapOrientation.UP_DOWN || orientation == OwnToOppMapOrientation.DOWN_UP) {
+        if (resolvedOrientation == OwnToOppMapOrientation.UP_DOWN || resolvedOrientation == OwnToOppMapOrientation.DOWN_UP) {
             maxX = 9;
             maxY = 9;
         } else {
@@ -84,6 +87,6 @@ public class ServerToClientMapConverter {
             maxY = 4;
         }
 
-        return new GameMap(internalNodes, orientation, maxX, maxY);
+        return new GameMap(internalNodes, resolvedOrientation, maxX, maxY);
     }
 }

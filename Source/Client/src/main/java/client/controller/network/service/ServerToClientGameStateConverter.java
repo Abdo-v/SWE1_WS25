@@ -7,6 +7,9 @@ import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromserver.EPlayerPositionState;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 
 /**
  * Converts a server game state to the client/internal game state.
@@ -34,14 +37,16 @@ public class ServerToClientGameStateConverter {
         ArrayList<PlayerState> clientPlayers = new ArrayList<>();
         messagesbase.messagesfromserver.FullMap serverMap = serverGameState.getMap();
 
-        if (serverGameState.getPlayers() != null && !serverGameState.getPlayers().isEmpty()) {
-            String myPlayerUniqueId = null;
-            if (playerId != null) {
-                myPlayerUniqueId = playerId.getUniquePlayerID();
-            }
-            if (myPlayerUniqueId != null) {
-                for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverGameState.getPlayers()) {
-                    if (serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId)) {
+        Collection<messagesbase.messagesfromserver.PlayerState> serverPlayers =
+                Optional.ofNullable(serverGameState.getPlayers()).orElse(Collections.emptySet());
+
+        Optional<String> myPlayerUniqueId = Optional.ofNullable(playerId).map(UniquePlayerIdentifier::getUniquePlayerID);
+
+        if (!serverPlayers.isEmpty()) {
+            if (myPlayerUniqueId.isPresent()) {
+                String myId = myPlayerUniqueId.get();
+                for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverPlayers) {
+                    if (serverPlayer.getUniquePlayerID().equals(myId)) {
                         MapNode playerMapNode = new MapNode();
                         for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
                             if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition
@@ -57,8 +62,9 @@ public class ServerToClientGameStateConverter {
                     }
                 }
             }
-            for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverGameState.getPlayers()) {
-                if (myPlayerUniqueId == null || !serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId)) {
+
+            for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverPlayers) {
+                if (myPlayerUniqueId.isEmpty() || !serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId.get())) {
                     MapNode playerMapNode = new MapNode();
                     for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
                         if (node.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition
@@ -83,17 +89,11 @@ public class ServerToClientGameStateConverter {
         gameState.setTreasureCollected(clientPlayers.get(0).hasCollectedTreasure());
         gameState.setOpponentFortFound(mapQueries.serverMapHasEnemyFort(serverGameState.getMap()));
 
-        if (mapQueries.getTreasurePositionFromServerMap(serverGameState.getMap()) != null) {
-            gameState.setTreasurePosition(mapQueries.getTreasurePositionFromServerMap(serverGameState.getMap()));
-        } else {
-            gameState.setTreasurePosition(null);
-        }
+        mapQueries.getTreasurePositionFromServerMap(serverGameState.getMap())
+                .ifPresent(gameState::setTreasurePosition);
 
-        if (mapQueries.getEnemyFortMapNodeFromServerMap(serverGameState.getMap()) != null) {
-            gameState.setOpponentFortPosition(mapQueries.getEnemyFortMapNodeFromServerMap(serverGameState.getMap()));
-        } else {
-            gameState.setOpponentFortPosition(null);
-        }
+        mapQueries.getEnemyFortMapNodeFromServerMap(serverGameState.getMap())
+                .ifPresent(gameState::setOpponentFortPosition);
 
         return gameState;
     }

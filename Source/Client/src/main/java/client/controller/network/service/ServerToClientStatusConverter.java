@@ -3,15 +3,15 @@ package client.controller.network.service;
 import client.model.PlayerStatus;
 import messagesbase.messagesfromserver.EPlayerGameState;
 
+import java.util.Objects;
+
 /**
  * Converts network (messagesbase) player game state to client/internal player status.
  */
 public class ServerToClientStatusConverter {
 
     public PlayerStatus convert(EPlayerGameState serverStatus) {
-        if (serverStatus == null) {
-            throw new IllegalArgumentException("Server status cannot be null");
-        }
+        Objects.requireNonNull(serverStatus, "Server status must be provided");
         switch (serverStatus) {
             case MustAct:
                 return PlayerStatus.MUST_ACT;

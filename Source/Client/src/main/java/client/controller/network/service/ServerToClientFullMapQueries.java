@@ -6,6 +6,8 @@ import messagesbase.messagesfromserver.ETreasureState;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.FullMapNode;
 
+import java.util.Optional;
+
 /**
  * Queries and extracts information from server full maps/nodes.
  */
@@ -35,21 +37,21 @@ public class ServerToClientFullMapQueries {
         return false;
     }
 
-    public MapNode getTreasurePositionFromServerMap(FullMap serverMap) {
+    public Optional<MapNode> getTreasurePositionFromServerMap(FullMap serverMap) {
         for (FullMapNode node : serverMap.getMapNodes()) {
             if (node.getTreasureState() == ETreasureState.MyTreasureIsPresent) {
-                return new MapNode(node.getX(), node.getY(), terrainConverter.convert(node.getTerrain()), isFortOnServerNode(node), true);
+                return Optional.of(new MapNode(node.getX(), node.getY(), terrainConverter.convert(node.getTerrain()), isFortOnServerNode(node), true));
             }
         }
-        return null;
+        return Optional.empty();
     }
 
-    public MapNode getEnemyFortMapNodeFromServerMap(FullMap serverMap) {
+    public Optional<MapNode> getEnemyFortMapNodeFromServerMap(FullMap serverMap) {
         for (FullMapNode node : serverMap.getMapNodes()) {
             if (node.getFortState() == EFortState.EnemyFortPresent) {
-                return new MapNode(node.getX(), node.getY(), terrainConverter.convert(node.getTerrain()), true, false);
+                return Optional.of(new MapNode(node.getX(), node.getY(), terrainConverter.convert(node.getTerrain()), true, false));
             }
         }
-        return null;
+        return Optional.empty();
     }
 }

@@ -18,7 +18,7 @@ public class ClientToServerMoveConverter {
         } else if (direction == Direction.RIGHT) {
             return EMove.Right;
         } else {
-            return null;
+            throw new IllegalArgumentException("Unsupported direction: " + direction);
         }
     }
 }

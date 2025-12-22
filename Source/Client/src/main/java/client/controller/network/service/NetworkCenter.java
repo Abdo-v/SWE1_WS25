@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 public class NetworkCenter {
      // private static final Logger logger = LoggerFactory.getLogger(NetworkCenter.class);
@@ -32,7 +33,7 @@ public class NetworkCenter {
     private final String gameId;
     private final String serverBaseUrl;
     private final NetworkCenterConfig config;
-    private UniquePlayerIdentifier playerId = null;
+    private Optional<UniquePlayerIdentifier> playerId = Optional.empty();
     private final ClientToServerConverter clientToServerConverter = new ClientToServerConverter();
     private final ServerToClientConverter serverToClientConverter = new ServerToClientConverter();
 
@@ -50,7 +51,7 @@ public class NetworkCenter {
      // logger.debug("Creating NetworkCenter with server: {}, gameId: {}, playerId: {}", serverBaseUrl, gameId, playerId.getUniquePlayerID());
         this.gameId = gameId;
         this.serverBaseUrl = serverBaseUrl;
-        this.playerId = playerId;
+        this.playerId = Optional.of(playerId);
         this.config = config;
         this.webClient = WebClient.builder()
                 .baseUrl(serverBaseUrl + "/games")
@@ -115,9 +116,9 @@ public class NetworkCenter {
                 );
             }
             
-            this.playerId = resultReg.getData().get();
+                this.playerId = Optional.of(resultReg.getData().get());
          // logger.info("Player registration successful: {} {} assigned ID: {}", firstName, lastName, this.playerId.getUniquePlayerID());
-            return this.playerId;
+                return this.playerId.get();
             
         } catch (WebClientResponseException e) {
          // logger.error("HTTP error during player registration: {}", e.getMessage(), e);
@@ -149,7 +150,7 @@ public class NetworkCenter {
      * @throws GameCommunicationException If sending the half map fails due to network or server issues.
      */
     public void sendHalfMap(PlayerHalfMap halfMap) throws GameCommunicationException {
-        if (playerId == null) {
+        if (playerId.isEmpty()) {
          // logger.error("Attempted to send half map without player registration");
             throw new GameCommunicationException(
                 "Player must be registered before sending a half map",
@@ -163,7 +164,7 @@ public class NetworkCenter {
          // logger.info("Sending half map for player: {} in game: {}", playerId.getUniquePlayerID(), gameId);
          // logger.debug("Converting client half map to server format");
                 messagesbase.messagesfromclient.PlayerHalfMap clientHalfMap =
-                    clientToServerConverter.convertClientHalfMap(halfMap, this.playerId);
+                    clientToServerConverter.convertClientHalfMap(halfMap, this.playerId.get());
             
          // logger.debug("Transmitting half map to server");
             Mono<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>> webAccess = webClient
@@ -217,7 +218,7 @@ public class NetworkCenter {
      * @throws GameCommunicationException If sending the move fails due to network or server issues.
      */
     public void sendMove(Direction direction) throws GameCommunicationException {
-        if (playerId == null) {
+        if (playerId.isEmpty()) {
          // logger.error("Attempted to send move without player registration");
             throw new GameCommunicationException(
                 "Player must be registered before sending a move",
@@ -226,26 +227,26 @@ public class NetworkCenter {
                 -1
             );
         }
-        if (direction == null) {
-         // logger.warn("Attempted to send a null move for player {}. Skipping.", playerId.getUniquePlayerID());
-            System.err.println("Attempted to send a null move. Skipping.");
-            return;
-        }
-        
+
+        Optional.ofNullable(direction).ifPresentOrElse(
+                d -> {
+                    try {
+                        sendMoveInternal(d);
+                    } catch (GameCommunicationException e) {
+                        throw new RuntimeException(e);
+                    }
+                },
+                () -> {
+                    System.err.println("Attempted to send a missing move. Skipping.");
+                }
+        );
+    }
+
+    private void sendMoveInternal(Direction direction) throws GameCommunicationException {
         try {
-         // logger.debug("Sending move {} for player: {}", direction, playerId.getUniquePlayerID());
             messagesbase.messagesfromclient.EMove networkMove = convertClientDirection(direction);
-            if (networkMove == null) {
-             // logger.error("Invalid direction {} cannot be converted for player {}", direction, playerId.getUniquePlayerID());
-                throw new GameCommunicationException(
-                    "Invalid direction cannot be converted: " + direction,
-                    serverBaseUrl,
-                    "SEND_MOVE",
-                    -1
-                );
-            }
-            
-            messagesbase.messagesfromclient.PlayerMove playerMove = messagesbase.messagesfromclient.PlayerMove.of(this.playerId, networkMove);
+        
+            messagesbase.messagesfromclient.PlayerMove playerMove = messagesbase.messagesfromclient.PlayerMove.of(this.playerId.get(), networkMove);
             
          // logger.trace("Transmitting move {} to server for player {}", networkMove, playerId.getUniquePlayerID());
             Mono<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>> webAccess = webClient
@@ -269,6 +270,14 @@ public class NetworkCenter {
             
          // logger.debug("Move {} successfully sent for player: {}", direction, playerId.getUniquePlayerID());
             
+        } catch (IllegalArgumentException e) {
+            throw new GameCommunicationException(
+                    "Invalid direction cannot be converted: " + direction,
+                    e,
+                    serverBaseUrl,
+                    "SEND_MOVE",
+                    -1
+            );
         } catch (WebClientResponseException e) {
          // logger.error("HTTP error during move submission: {}", e.getMessage(), e);
             throw new GameCommunicationException(
@@ -279,8 +288,8 @@ public class NetworkCenter {
                 e.getStatusCode().value()
             );
         } catch (Exception e) {
-            if (e instanceof GameCommunicationException) {
-                throw e;
+            if (e instanceof RuntimeException) {
+                throw (RuntimeException) e;
             }
          // logger.error("Network error during move submission: {}", e.getMessage(), e);
             throw new GameCommunicationException(
@@ -300,9 +309,9 @@ public class NetworkCenter {
      * @throws MapProcessingException If the received game state cannot be processed.
      */
     public messagesbase.messagesfromserver.GameState pollGameState() throws GameCommunicationException, MapProcessingException {
-     // logger.trace("Polling game state for player: {} in game: {}", playerId != null ? playerId.getUniquePlayerID() : "unknown", gameId);
+    // logger.trace("Polling game state for player: {} in game: {}", playerId.map(UniquePlayerIdentifier::getUniquePlayerID).orElse("unknown"), gameId);
         
-        if (playerId == null) {
+        if (playerId.isEmpty()) {
          // logger.error("Attempted to poll game state without player registration");
             throw new GameCommunicationException(
                 "Player must be registered before polling game state",
@@ -317,7 +326,7 @@ public class NetworkCenter {
             
             Mono<ResponseEnvelope<GameState>> webAccess = webClient
                     .method(HttpMethod.GET)
-                    .uri("/" + gameId + "/states/" + playerId.getUniquePlayerID())
+                    .uri("/" + gameId + "/states/" + playerId.get().getUniquePlayerID())
                     .retrieve()
                     .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<GameState>>() {});
             
@@ -333,25 +342,26 @@ public class NetworkCenter {
                 );
             }
             
-            GameState gameState = response.getData().get();
-            
-            if (gameState == null) {
-                throw new MapProcessingException(
-                    "Received null game state from server",
+            GameState gameState = response.getData().orElseThrow(() -> new MapProcessingException(
+                    "Received game state missing from server response",
                     "GameState",
                     "server_response_validation"
-                );
-            }
-            
-            int nodeCount = gameState.getMap() != null ? gameState.getMap().getMapNodes().size() : 0;
+            ));
+
+            int nodeCount = Optional.ofNullable(gameState.getMap())
+                    .map(m -> m.getMapNodes())
+                    .map(Collection::size)
+                    .orElse(0);
          // logger.trace("Game state polled successfully for player: {}, map nodes: {}", playerId.getUniquePlayerID(), nodeCount);
             
-            if (gameState.getMap() != null && gameState.getMap().getMapNodes() != null) {
-                int expectedNodes = nodeCount == 50 ? 50 : (nodeCount == 100 ? 100 : -1);
-                if (expectedNodes > 0 && nodeCount != expectedNodes && nodeCount != 0) {
-                 // logger.warn("Unexpected map node count: expected {} or 0, got {}", expectedNodes, nodeCount);
-                }
-            }
+            Optional.ofNullable(gameState.getMap())
+                    .map(m -> m.getMapNodes())
+                    .ifPresent(nodes -> {
+                        int expectedNodes = nodeCount == 50 ? 50 : (nodeCount == 100 ? 100 : -1);
+                        if (expectedNodes > 0 && nodeCount != expectedNodes && nodeCount != 0) {
+                            // logger.warn("Unexpected map node count: expected {} or 0, got {}", expectedNodes, nodeCount);
+                        }
+                    });
             
             return gameState;
             
@@ -395,8 +405,8 @@ public class NetworkCenter {
      * @return A half map in the format expected by the server.
      */
     public messagesbase.messagesfromclient.PlayerHalfMap convertClientHalfMap(PlayerHalfMap halfMap) {
-     // logger.trace("Converting client half map to server format for player: {}", playerId != null ? playerId.getUniquePlayerID() : "unknown");
-        return clientToServerConverter.convertClientHalfMap(halfMap, this.playerId);
+    // logger.trace("Converting client half map to server format for player: {}", playerId.map(UniquePlayerIdentifier::getUniquePlayerID).orElse("unknown"));
+        return clientToServerConverter.convertClientHalfMap(halfMap, playerId.orElseThrow(() -> new IllegalStateException("Player must be registered before converting a half map")));
     }
 
     /**
@@ -432,8 +442,8 @@ public class NetworkCenter {
      * @return The internal game state.
      */
     public client.model.GameState convertServerGamestate(messagesbase.messagesfromserver.GameState serverGameState) {
-     // logger.trace("Converting server game state to client format for player: {}", playerId != null ? playerId.getUniquePlayerID() : "unknown");
-        return serverToClientConverter.convertServerGamestate(serverGameState, this.playerId);
+    // logger.trace("Converting server game state to client format for player: {}", playerId.map(UniquePlayerIdentifier::getUniquePlayerID).orElse("unknown"));
+        return serverToClientConverter.convertServerGamestate(serverGameState, playerId.orElseThrow(() -> new IllegalStateException("Player must be registered before converting game state")));
     }
 
     /**
@@ -452,7 +462,7 @@ public class NetworkCenter {
      * @return The internal game map.
      */
     public client.model.mapper.GameMap convertServerMap(messagesbase.messagesfromserver.FullMap serverMap) {
-     // logger.debug("Converting server map to client format, nodes: {}", serverMap != null ? serverMap.getMapNodes().size() : 0);
+    // logger.debug("Converting server map to client format, nodes: {}", Optional.ofNullable(serverMap).map(m -> m.getMapNodes().size()).orElse(0));
         return serverToClientConverter.convertServerMap(serverMap);
     }
 
@@ -501,7 +511,7 @@ public class NetworkCenter {
      * Gets the player ID.
      * @return The player ID.
      */
-    public UniquePlayerIdentifier getPlayerId() {
+    public Optional<UniquePlayerIdentifier> getPlayerId() {
         return playerId;
     }
 }
