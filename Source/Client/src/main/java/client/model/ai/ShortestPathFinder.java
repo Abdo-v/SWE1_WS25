@@ -1,11 +1,10 @@
 package client.model.ai;
 
-import java.util.*;
+import java.util.ArrayList;
 
 import client.model.Direction;
 import client.model.GameState;
 import client.model.mapper.MapNode;
-import client.model.mapper.Terrain;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -42,44 +41,21 @@ public class ShortestPathFinder implements client.observer.util.Observer {
         
         // logger.trace("Pathfinding from {} to {}", current.printCoordinates(), target.printCoordinates());
         ArrayList<MapNode> path = findShortestPath(current, target);
-        
-        if (path.isEmpty() || path == null) {
+
+        if (path == null || path.isEmpty()) {
             // logger.warn("No valid path found to target {}", target.printCoordinates());
             System.out.println("WayFinder: No valid path found to target node: path is empty.");
             return null; // No valid path to target
         }
-        
-        // logger.trace("Path found with {} nodes", path.size());
-        
-        for(MapNode node : path) {
-            if (node.equalsByCoordinates(target)) {
-                // logger.error("Already at target node {} - this should not happen during pathfinding", 
-                //            target.printCoordinates());
-                System.err.println("WayFinder: Reached target node: target should be updated before finding next move.");
-                //print own player state
-                System.out.println("WayFinder: Current Player State: " + gameState.getCurrentPlayerState().toString());
-                new Throwable("WayFinder: Reached target node, but companion should be updated before finding next move.").printStackTrace();
-            }
-            if( node.equalsByCoordinates(current)) {
-                // call getDirectionToNeighbor to get the direction to the next node in the path
-                if (path.indexOf(node) + 1 < path.size()) {
-                    MapNode nextNode = path.get(path.indexOf(node) + 1);
-                    // logger.debug("Next node in path: {}", nextNode.printCoordinates());
-                    //System.out.println(nextNode.toString()); // Commented out for debugging
-                    //updateCompaionNext(nextNode);
-                    //nextMapNode = nextNode;
-                    Direction direction = getDirectionToNeighbor(nextNode);
-                    // logger.info("Direction to next node: {}", direction);
-                    return direction;
-                } else {
-                    // logger.warn("Current node is the last in the path, no next node to move towards");
-                    System.out.println("WayFinder: Current node is the last in the path, no next node to move towards.");
-                    return null; // No next node to move towards
-                }
-            }
+
+        // Path includes start at index 0; the next step is index 1.
+        if (path.size() < 2) {
+            System.out.println("WayFinder: Current node is the last in the path, no next node to move towards.");
+            return null;
         }
-        // logger.warn("Current position {} not found in calculated path", current.printCoordinates());
-        return null; // If we reach here, something went wrong
+
+        MapNode nextNode = path.get(1);
+        return getDirectionToNeighbor(nextNode);
     }
 
     /**
@@ -113,124 +89,12 @@ public class ShortestPathFinder implements client.observer.util.Observer {
             return path;
         }
 
-        Map<MapNode, Integer> distances = new HashMap<>();
-        Map<MapNode, MapNode> predecessors = new HashMap<>();
-        Set<MapNode> settledNodes = new HashSet<>();
-
-        // Comparator for the PriorityQueue based on current known distances
-        Comparator<MapNode> nodeComparator = Comparator.comparingInt(node -> distances.getOrDefault(node, Integer.MAX_VALUE));
-        PriorityQueue<MapNode> pq = new PriorityQueue<>(nodeComparator);
-
-        // Initialize distances: 0 for start, infinity for others
-        distances.put(start, 0);
-        pq.add(start);
-        // All other nodes will implicitly have infinity distance via getOrDefault
-
-        MapNode pathEndNode = null;
-        int exploredNodes = 0;
-        int settledNodesCount = 0;
-
-        while (!pq.isEmpty()) {
-            MapNode u = pq.poll();
-            exploredNodes++;
-
-            if (u.equalsByCoordinates(target)) {
-                pathEndNode = u; // Target found
-                // logger.debug("Target reached after exploring {} nodes, settled {} nodes", 
-                //            exploredNodes, settledNodesCount);
-                break;
-            }
-
-            // If already settled (shortest path found), skip.
-            // Or if distance is MAX_VALUE, it means it's unreachable from processed nodes.
-            if (settledNodes.contains(u) || distances.getOrDefault(u, Integer.MAX_VALUE) == Integer.MAX_VALUE) {
-                continue;
-            }
-            settledNodes.add(u);
-            settledNodesCount++;
-
-            // Explore neighbors (Up, Down, Left, Right)
-            for (Direction dir : Direction.values()) {
-                MapNode v = getNodeInDirection(u, dir); // Helper to get node from GameMap
-
-                if (v != null && !settledNodes.contains(v)) { // Neighbor exists and not yet settled
-                    int costUV = getMovementCost(u, v);
-                    if (costUV == Integer.MAX_VALUE) { // Impassable neighbor
-                        continue;
-                    }
-
-                    int distanceU = distances.getOrDefault(u, Integer.MAX_VALUE);
-                    int newDistToV = distanceU + costUV;
-
-                    if (newDistToV < distances.getOrDefault(v, Integer.MAX_VALUE)) {
-                        distances.put(v, newDistToV);
-                        predecessors.put(v, u);
-                        
-                        // logger.trace("Updated distance to {} from {} to {} (via {})", 
-                        //            v.printCoordinates(), 
-                        //            distances.getOrDefault(v, Integer.MAX_VALUE), 
-                        //            newDistToV, u.printCoordinates());
-                        
-                        // Remove and re-add to update priority in PQ if it was already there
-                        // (or rely on PQ handling updates if it supports decrease-key,
-                        // standard Java PQ doesn't directly, so remove/add is a common workaround)
-                        pq.remove(v); // Remove if it exists
-                        pq.add(v);    // Add with updated distance for correct prioritization
-                    }
-                }
-            }
-        }
-
-        if (pathEndNode == null) {
-            // logger.warn("No path found from {} to {} after exploring {} nodes", 
-            //            start.printCoordinates(), target.printCoordinates(), exploredNodes);
+        ArrayList<MapNode> computed = GridDijkstra.shortestPath(gameState.getMap(), start, target, MovementCostProfile.SHORTEST_PATH);
+        if (computed.isEmpty()) {
             System.out.println("WayFinder.findShortestPath (Dijkstra): No path found from (" + start.getX() + "," + start.getY() +
                                ") to (" + target.getX() + "," + target.getY() + ").");
-            return path; // Return empty path if target not reached
         }
-
-        // Reconstruct the path by backtracking from the target using predecessors
-        MapNode currentTrace = pathEndNode;
-        int pathLength = 0;
-        while (currentTrace != null) {
-            path.add(currentTrace);
-            currentTrace = predecessors.get(currentTrace);
-            pathLength++;
-        }
-        Collections.reverse(path); // Reverse to get path from start to target
-
-        int totalCost = distances.get(pathEndNode);
-        // logger.info("Shortest path found: {} nodes, total cost: {}, explored {} nodes", 
-        //            pathLength, totalCost, exploredNodes);
-        // logger.trace("Path: {}", path.stream()
-        //         .map(MapNode::printCoordinates)
-        //         .collect(java.util.stream.Collectors.joining(" -> ")));
-
-        return path;
-    }
-    /**
-     * Calculates the movement cost between two adjacent MapNodes based on their terrain types.
-     * @param from The starting MapNode.
-     * @param to The target MapNode.
-     * @return The movement cost as an integer.
-     */
-    private int getMovementCost(MapNode from, MapNode to) {
-        if (to.getTerrain() == Terrain.WATER) {
-            return Integer.MAX_VALUE; // Impassable
-        }
-
-        Terrain fromTerrain = from.getTerrain();
-        Terrain toTerrain = to.getTerrain();
-
-        if (fromTerrain == Terrain.GRASS && toTerrain == Terrain.GRASS) return 2;
-        if (fromTerrain == Terrain.GRASS && toTerrain == Terrain.MOUNTAIN) return 3;
-        if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.GRASS) return 3;
-        if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.MOUNTAIN) return 4;
-
-        // Fallback for unhandled transitions (e.g., if 'from' was somehow Water)
-        // This should ideally not be reached in normal operation if 'from' is always a valid standing point.
-        System.err.println("WayFinder.getMovementCost: Unhandled terrain transition from " + fromTerrain + " to " + toTerrain);
-        return Integer.MAX_VALUE;
+        return computed;
     }
 
     /**
@@ -244,22 +108,7 @@ public class ShortestPathFinder implements client.observer.util.Observer {
             return null;
         }
 
-        int x = startNode.getX();
-        int y = startNode.getY();
-
-        switch (direction) {
-            case UP: y--; break;
-            case DOWN: y++; break;
-            case LEFT: x--; break;
-            case RIGHT: x++; break;
-        }
-
-        try {
-            return gameState.getMap().getNode(x, y);
-        } catch (IllegalArgumentException e) {
-            // Out of bounds
-            return null;
-        }
+        return GridNavigation.getNodeInDirection(gameState.getMap(), startNode, direction);
     }
 
     /**
@@ -272,26 +121,14 @@ public class ShortestPathFinder implements client.observer.util.Observer {
             System.err.println("WayFinder: Neighbor node is null, cannot determine direction.");
             throw new IllegalArgumentException("Neighbor node cannot be null.");
         }
-        int currentX = gameState.getCurrentPlayerState().getCurrentPosition().getX();
-        int currentY = gameState.getCurrentPlayerState().getCurrentPosition().getY();
-        int neighborX = neighbor.getX();
-        int neighborY = neighbor.getY();
-        // Only allow direct neighbors (one step in x or y, not both, and not diagonal)
-        if ((Math.abs(currentX - neighborX) + Math.abs(currentY - neighborY)) != 1) {
+        MapNode current = gameState.getCurrentPlayerState().getCurrentPosition();
+        Direction direction = GridNavigation.getDirectionToNeighbor(current, neighbor);
+        if (direction == null) {
             System.err.println("Neighbor: "+ neighbor.toString());
             new Throwable("Neighbor node is not a valid neighbor of the current position.").printStackTrace(System.err);
             return null;
         }
-        if (neighborX > currentX) {
-            return Direction.RIGHT;
-        } else if (neighborX < currentX) {
-            return Direction.LEFT;
-        } else if (neighborY > currentY) {
-            return Direction.DOWN;
-        } else if (neighborY < currentY) {
-            return Direction.UP;
-        }
-        return null;
+        return direction;
     }
     /**
      * Calculates the total cost to reach a target node from a starting node.
@@ -327,26 +164,8 @@ public class ShortestPathFinder implements client.observer.util.Observer {
             return -1;
         }
 
-        ArrayList<MapNode> path = findShortestPath(start, target);
-        if (path.isEmpty()) {
-            // logger.warn("No path found from {} to {}, returning -1", 
-            //            start.printCoordinates(), target.printCoordinates());
-            return -1;
-        }
-
-        int totalCost = 0;
-        for (int i = 0; i < path.size() - 1; i++) {
-            int segmentCost = getMovementCost(path.get(i), path.get(i + 1));
-            totalCost += segmentCost;
-            // logger.trace("Segment {} -> {}: cost {}", 
-            //             path.get(i).printCoordinates(), 
-            //             path.get(i + 1).printCoordinates(), 
-            //             segmentCost);
-        }
-        
-        // logger.debug("Total cost from {} to {}: {}", 
-        //             start.printCoordinates(), target.printCoordinates(), totalCost);
-        return totalCost;
+        int cost = GridDijkstra.shortestPathCost(gameState.getMap(), start, target, MovementCostProfile.SHORTEST_PATH);
+        return cost == Integer.MAX_VALUE ? -1 : cost;
     }
 
     @Override
