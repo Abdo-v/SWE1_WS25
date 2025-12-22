@@ -8,10 +8,28 @@ import client.model.mapper.MapNode;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 public class DynamicCLIGameView implements client.observer.util.Observer {
 
+    private static final long RENDER_DEBOUNCE_MILLIS = 15L;
+    private static final ScheduledExecutorService RENDER_EXECUTOR = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable runnable) {
+            Thread t = new Thread(runnable, "DynamicCLIGameView-render");
+            t.setDaemon(true);
+            return t;
+        }
+    });
+
     private GameState currentGameState;
+    private final Object renderLock = new Object();
+    private ScheduledFuture<?> pendingRender;
     private boolean dynamicModeActive = false;
     private boolean firstRenderDone = false; // To manage clearing strategy
     private int linesRenderedInPreviousFrame = 0; // New field
@@ -53,8 +71,28 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
     
     @Override
     public void update(GameState gameState) {
-        this.currentGameState = gameState;
-        // Ensure dynamicModeActive is checked before rendering
+        this.currentGameState = Objects.requireNonNull(gameState, "gameState must not be null");
+        requestRender();
+    }
+
+    /**
+     * Schedules a render shortly in the future.
+     * If multiple updates arrive quickly (e.g., during bulk model updates), renders are coalesced.
+     */
+    public void requestRender() {
+        if (!this.dynamicModeActive || this.currentGameState == null) {
+            return;
+        }
+
+        synchronized (renderLock) {
+            if (pendingRender != null) {
+                pendingRender.cancel(false);
+            }
+            pendingRender = RENDER_EXECUTOR.schedule(this::renderIfActive, RENDER_DEBOUNCE_MILLIS, TimeUnit.MILLISECONDS);
+        }
+    }
+
+    private void renderIfActive() {
         if (this.dynamicModeActive && this.currentGameState != null) {
             render();
         }
