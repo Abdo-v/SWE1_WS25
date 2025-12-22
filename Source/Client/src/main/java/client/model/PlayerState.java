@@ -1,10 +1,13 @@
 package client.model;
+
 import client.model.mapper.MapNode;
 
 /**
  * Class representing the state of a player in the game.
  */
 public class PlayerState {
+
+    private static final PlayerStatus DEFAULT_STATUS = PlayerStatus.MUST_WAIT;
 
     private String playerID;
     private String firstName;
@@ -22,11 +25,7 @@ public class PlayerState {
      * @param acc The player's university account.
      */
     public PlayerState(String ID, String firstName, String lastName, String acc) {
-        this.playerID = ID;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.uAccount = acc;
-        this.status = PlayerStatus.MUST_WAIT;
+        this(ID, firstName, lastName, acc, false, null, DEFAULT_STATUS);
     }
 
     /**
@@ -38,12 +37,7 @@ public class PlayerState {
      * @param collectedTreasure Whether the player has collected the treasure.
      */
     public PlayerState(String ID, String firstName, String lastName, String acc, boolean collectedTreasure) {
-        this.playerID = ID;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.uAccount = acc;
-        this.collectedTreasure = collectedTreasure;
-        this.status = PlayerStatus.MUST_WAIT;
+        this(ID, firstName, lastName, acc, collectedTreasure, null, DEFAULT_STATUS);
     }
 
     /**
@@ -56,13 +50,7 @@ public class PlayerState {
      * @param playerMapNode The player's map node.
      */
     public PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, MapNode playerMapNode) {
-        this.playerID = uniquePlayerID;
-        this.firstName = firstName2;
-        this.lastName = lastName2;
-        this.uAccount = uAccount2;
-        this.collectedTreasure = hasCollectedTreasure;
-        this.status = PlayerStatus.MUST_WAIT;
-        this.currentPosition = playerMapNode;
+        this(uniquePlayerID, firstName2, lastName2, uAccount2, hasCollectedTreasure, playerMapNode, DEFAULT_STATUS);
     }
 
     public PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, MapNode playerMapNode, PlayerStatus status) {

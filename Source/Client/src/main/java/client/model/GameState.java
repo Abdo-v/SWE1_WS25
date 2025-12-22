@@ -1,10 +1,7 @@
 package client.model;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
-import client.model.mapper.Terrain;
 
 import java.util.ArrayList;
 
@@ -12,66 +9,33 @@ import java.util.ArrayList;
  * Class representing the current state of the game.
  */
 public class GameState implements client.observer.util.Observable {
-    // private static final Logger logger = LoggerFactory.getLogger(GameState.class);
-    
+
     private final String gameStateID;
     private ArrayList<PlayerState> players;
     private GameMap map;
-    private ArrayList<client.observer.util.Observer> observers = new ArrayList<>();
     private boolean treasureCollected = false;
     private boolean opponentFortFound = false;
     private MapNode treasurePosition = null;
     private MapNode opponentFortPosition = null; 
 
+    private final GameStateObservers observerSupport;
+    private final GameStateVisionProcessor visionProcessor;
+    private final GameStateQueries queries;
+
 
     @Override
     public void addObserver(client.observer.util.Observer observer) {
-        if (!observers.contains(observer)) {
-            observers.add(observer);
-            // logger.debug("Observer {} added to GameState. Total observers: {}", 
-            //             observer.getClass().getSimpleName(), observers.size());
-            // Notify the newly added observer immediately with current state
-            try {
-                observer.update(this);
-                // logger.trace("Newly added observer {} notified of current state", 
-                //            observer.getClass().getSimpleName());
-            } catch (Exception e) {
-                // logger.error("Exception occurred while notifying newly added observer {}: {}", 
-                //            observer.getClass().getSimpleName(), e.getMessage(), e);
-            }
-        } else {
-            // logger.trace("Observer {} already registered, skipping duplicate", 
-            //             observer.getClass().getSimpleName());
-        }
+        observerSupport.addObserver(observer);
     }
 
     @Override
     public void removeObserver(client.observer.util.Observer observer) {
-        boolean removed = observers.remove(observer);
-        if (removed) {
-            // logger.debug("Observer {} removed from GameState. Total observers: {}", 
-            //             observer.getClass().getSimpleName(), observers.size());
-        } else {
-            // logger.trace("Observer {} was not found for removal", 
-            //             observer.getClass().getSimpleName());
-        }
+        observerSupport.removeObserver(observer);
     }
 
     @Override
     public void notifyObservers() {
-        // logger.trace("Notifying {} observers of GameState change", observers.size());
-        // Use a copy to avoid ConcurrentModificationException if observers modify the list
-        for (client.observer.util.Observer observer : new ArrayList<>(observers)) {
-            try {
-                // logger.trace("Notifying observer: {}", observer.getClass().getSimpleName());
-                observer.update(this);
-            } catch (Exception e) {
-                // logger.error("Exception occurred while notifying observer {}: {}", 
-                //            observer.getClass().getSimpleName(), e.getMessage(), e);
-                // Continue notifying other observers despite this exception
-            }
-        }
-        // logger.trace("All observers notified successfully");
+        observerSupport.notifyObservers();
     }
     
     /**
@@ -81,10 +45,7 @@ public class GameState implements client.observer.util.Observable {
      * @param players Array of player states
      */
     public GameState(String ID, ArrayList<PlayerState> players) {
-        this.gameStateID = ID;
-        this.players = players;
-        this.treasureCollected = false;
-        this.opponentFortFound = false;
+        this(ID, players, null);
     }
 
     /**
@@ -93,9 +54,7 @@ public class GameState implements client.observer.util.Observable {
      * @param ID The game state ID
      */
     public GameState(String ID) {
-        this.gameStateID = ID;
-        this.treasureCollected = false;
-        this.opponentFortFound = false;
+        this(ID, null, null);
     }
 
     /**
@@ -111,14 +70,14 @@ public class GameState implements client.observer.util.Observable {
         this.map = map;
         this.treasureCollected = false;
         this.opponentFortFound = false;
+
+        this.observerSupport = new GameStateObservers(this);
+        this.visionProcessor = new GameStateVisionProcessor();
+        this.queries = new GameStateQueries();
     }
 
     public GameState() {
-        this.gameStateID = "default";
-        this.players = new ArrayList<>();
-        this.map = null;
-        this.treasureCollected = false;
-        this.opponentFortFound = false;
+        this("default", new ArrayList<>(), null);
     }
 
     
@@ -128,25 +87,15 @@ public class GameState implements client.observer.util.Observable {
      * @param gameState The game state to update from
      */
     public void updateGameState(GameState gameState) {
-        // logger.debug("Updating GameState with new data");
-        //System.out.print("notify called: ");
         if (gameState != null) {
             this.players = gameState.getPlayers();
-            
             this.map = gameState.getMap();
             this.treasureCollected = gameState.isTreasureCollected();
             this.opponentFortFound = gameState.isOpponentFortFound();
             this.treasurePosition = gameState.getTreasurePosition();
             this.opponentFortPosition = gameState.getOpponentFortPosition();
-            // logger.trace("GameState updated - treasure collected: {}, opponent fort found: {}", 
-            //             treasureCollected, opponentFortFound);
-        } else {
-            // logger.warn("Attempted to update GameState with null gameState");
         }
-
-        // logger.debug("GameState update complete, notifying {} observers", observers.size());
         notifyObservers();
-        //System.out.println();
     }
     
     /**
@@ -156,59 +105,12 @@ public class GameState implements client.observer.util.Observable {
      * @param currentPosition The current position of the player
      */
     public void processVision(MapNode currentPosition) {
-        if (currentPosition == null || map == null) return;
-        
-        Terrain terrain = currentPosition.getTerrain();
-        checkForDiscoveries(currentPosition);
-        
-        if (terrain == Terrain.MOUNTAIN) {
-            processExtendedVision(currentPosition);
-        }
+        visionProcessor.processVision(this, currentPosition);
     }
-    
-    /**
-     * Process extended vision provided by mountain tiles
-     * 
-     * @param center The center tile (mountain) from which to process vision
-     */
-    private void processExtendedVision(MapNode center) {
-        int x = center.getX();
-        int y = center.getY();
-        
-        for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = -1; dy <= 1; dy++) {
-                try {
-                    MapNode node = map.getNode(x + dx, y + dy);
-                    if (node != null) {
-                        checkForDiscoveries(node);
-                    }
-                } catch (IllegalArgumentException e) {
-                }
-            }
-        }
-    }
-    
-    /**
-     * Check a specific map node for treasure or fort
-     * 
-     * @param node The map node to check
-     */
-    private void checkForDiscoveries(MapNode node) {
-        if (!opponentFortFound && isOpponentFortAtNode(node)) {
-            opponentFortFound = true;
-            opponentFortPosition = node;
-        }
-    }
-    
-    /**
-     * Check if a node contains the opponent's fort
-     * This is a placeholder and should be implemented based on the game's logic
-     */
-    private boolean isOpponentFortAtNode(MapNode node) {
-        if (node != null && node.isFortPresent()) {
-            return true;
-        }
-        return false;
+
+    void discoverOpponentFortAt(MapNode node) {
+        this.opponentFortFound = true;
+        this.opponentFortPosition = node;
     }
 
     /**
@@ -250,7 +152,6 @@ public class GameState implements client.observer.util.Observable {
         this.opponentFortPosition = opponentFortPosition;
         if (opponentFortPosition != null) {
             this.opponentFortFound = true;
-            // logger.info("Opponent fort position set at: {}", opponentFortPosition.printCoordinates());
         }
         notifyObservers();
     }
@@ -271,7 +172,6 @@ public class GameState implements client.observer.util.Observable {
      */
     public void setPlayers(ArrayList<PlayerState> players) {
         this.players = players;
-        // logger.debug("Players list updated with {} players", players != null ? players.size() : 0);
         notifyObservers();
     }
 
@@ -305,7 +205,6 @@ public class GameState implements client.observer.util.Observable {
      */
     public void setMap(GameMap map) {
         this.map = map;
-        // logger.debug("Game map updated - size: {}", map != null ? map.getContentSize() : 0);
         notifyObservers();
     }
     
@@ -325,7 +224,6 @@ public class GameState implements client.observer.util.Observable {
      */
     public void setTreasureCollected(boolean treasureCollected) {
         this.treasureCollected = treasureCollected;
-        // logger.info("Treasure collected status changed to: {}", treasureCollected);
         notifyObservers();
     }
     
@@ -345,7 +243,6 @@ public class GameState implements client.observer.util.Observable {
      */
     public void setOpponentFortFound(boolean opponentFortFound) {
         this.opponentFortFound = opponentFortFound;
-        // logger.info("Opponent fort found status changed to: {}", opponentFortFound);
         notifyObservers();
     }
     
@@ -365,11 +262,6 @@ public class GameState implements client.observer.util.Observable {
      */
     public void setTreasurePosition(MapNode treasurePosition) {
         this.treasurePosition = treasurePosition;
-        if (treasurePosition != null) {
-            // logger.info("Treasure position set at: {}", treasurePosition.printCoordinates());
-        } else {
-            // logger.debug("Treasure position cleared");
-        }
         notifyObservers();
     }
     
@@ -396,12 +288,7 @@ public class GameState implements client.observer.util.Observable {
      * @return The player's own fort position.
      */
     public MapNode getOwnFortPosition(){
-        for (MapNode node : map.getOwnHalfMap().getMapNodes()) {
-            if (node.isFortPresent()) {
-                return node;
-            }
-        }
-        return null;
+        return queries.getOwnFortPosition(map);
     }
 
     /**
@@ -410,26 +297,15 @@ public class GameState implements client.observer.util.Observable {
      * @return The opponent's fort position.
      */
     public MapNode getEnemyFortPosition(){
-        for (MapNode node : map.getOpponentHalfMap().getMapNodes()) {
-            if (node.isFortPresent()) {
-                return node;
-            }
-        }
-        return null;
+        return queries.getEnemyFortPosition(map);
     }
 
     public MapNode getEnemyCurrentPosition(){
-        if (getPlayers() == null || getPlayers().size() < 2) {
-            return null; // No enemy player available
-        }
-        return getPlayers().get(1).getCurrentPosition();
+        return queries.getEnemyCurrentPosition(this);
     }
 
     public PlayerState getEnemyPlayerState(){
-        if (getPlayers() == null || getPlayers().size() < 2) {
-            return null;
-        }
-        return getPlayers().get(1);
+        return queries.getEnemyPlayerState(this);
     }
 
     /**
@@ -440,19 +316,7 @@ public class GameState implements client.observer.util.Observable {
 
     public boolean isPlayerInOwnHalfMap(){
         MapNode currentNode = getCurrentPlayerState().getCurrentPosition();
-        switch (map.getOrientation())
-        {
-            case UP_DOWN:
-                return currentNode.getY() <= 4;
-            case DOWN_UP:
-                return currentNode.getY() >= 5;
-            case LEFT_RIGHT:
-                return currentNode.getX() <= 9;
-            case RIGHT_LEFT:
-                return currentNode.getX() >= 10;
-            default:
-                return false;
-        }
+        return queries.isPlayerInOwnHalfMap(map, currentNode);
     }
 
     /**
