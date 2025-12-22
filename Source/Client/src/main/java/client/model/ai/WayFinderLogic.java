@@ -42,7 +42,7 @@ final class WayFinderLogic {
         this.explorationTarget = new ExplorationTargetUseCase(wayHelper, treasureSeeker, visionCostScorer);
     }
 
-    Direction moveBasedOnStrategy(GameState gameState, MapNode currentMapNode, boolean strategy) throws AIDecisionException {
+    Direction moveBasedOnStrategy(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
         try {
             if (currentMapNode == null) {
                 throw new AIDecisionException(
@@ -62,17 +62,17 @@ final class WayFinderLogic {
                 }
             }
 
-            Direction treasureDirection = treasureTargeting.tryGetDirection(gameState, currentMapNode, strategy);
+            Direction treasureDirection = treasureTargeting.tryGetDirection(gameState, currentMapNode, objective);
             if (treasureDirection != null) {
                 return treasureDirection;
             }
 
-            Direction fortDirection = fortTargeting.tryGetDirection(gameState, currentMapNode, strategy);
+            Direction fortDirection = fortTargeting.tryGetDirection(gameState, currentMapNode, objective);
             if (fortDirection != null) {
                 return fortDirection;
             }
 
-            MapNode bestNode = explorationTarget.selectBestNode(gameState, currentMapNode, strategy);
+            MapNode bestNode = explorationTarget.selectBestNode(gameState, currentMapNode, objective);
             if (bestNode == null) {
                 throw new AIDecisionException(
                         "No valid target node found for traversal",
@@ -117,8 +117,8 @@ final class WayFinderLogic {
         }
     }
 
-    float getCostToVisionRatio(GameState gameState, MapNode currentMapNode, MapNode node, boolean strategy) {
-        return visionCostScorer.score(gameState, currentMapNode, node, strategy);
+    float getCostToVisionRatio(GameState gameState, MapNode currentMapNode, MapNode node, Objective objective) {
+        return visionCostScorer.score(gameState, currentMapNode, node, objective);
     }
 
 

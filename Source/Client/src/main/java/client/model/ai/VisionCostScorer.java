@@ -23,14 +23,14 @@ final class VisionCostScorer {
         this.strategyGuide = strategyGuide;
     }
 
-    float score(GameState gameState, MapNode currentMapNode, MapNode node, boolean treasureHunting) {
+    float score(GameState gameState, MapNode currentMapNode, MapNode node, Objective objective) {
         if (node == null || gameState == null || gameState.getMap() == null) {
             System.err.println("WayFinder.getCostToVisionRatio: Node, gameState, or map is null.");
             return -1;
         }
 
         ArrayList<MapNode> visitedGrassNodes = new ArrayList<>();
-        if (treasureHunting) {
+        if (objective == Objective.TREASURE) {
             for (MapNode grassNode : wayHelper.getHalfMapVisitedGrassFields().keySet()) {
                 if (Boolean.TRUE.equals(wayHelper.getHalfMapVisitedGrassFields().get(grassNode))) {
                     visitedGrassNodes.add(grassNode);

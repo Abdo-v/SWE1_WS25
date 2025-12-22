@@ -148,12 +148,12 @@ public class WayFinder implements client.observer.util.Observer{
         }
         
         try {
-            boolean strategy = !gameState.isTreasureCollected();
-            Direction nextDirection = logic().moveBasedOnStrategy(gameState, currentMapNode, strategy);
+            Objective objective = gameState.isTreasureCollected() ? Objective.FORT : Objective.TREASURE;
+            Direction nextDirection = logic().moveBasedOnStrategy(gameState, currentMapNode, objective);
             
             if (nextDirection != null) {
                 movesMade++;
-             // logger.info("WayFinder selected direction: {} (move #{}, strategy: {})", nextDirection, movesMade, strategy ? "treasure hunting" : "fort seeking");
+                 // logger.info("WayFinder selected direction: {} (move #{}, objective: {})", nextDirection, movesMade, objective);
                 return nextDirection;
             } else {
                 throw new AIDecisionException(
@@ -184,7 +184,11 @@ public class WayFinder implements client.observer.util.Observer{
      * @return The cost to vision ratio, or -1 if invalid.
      */
     public float getCostToVisionRatio(MapNode node, boolean strategy){
-        return logic().getCostToVisionRatio(gameState, currentMapNode, node, strategy);
+        return getCostToVisionRatio(node, strategy ? Objective.TREASURE : Objective.FORT);
+    }
+
+    public float getCostToVisionRatio(MapNode node, Objective objective) {
+        return logic().getCostToVisionRatio(gameState, currentMapNode, node, objective);
     }
 
     private WayFinderLogic logic() {

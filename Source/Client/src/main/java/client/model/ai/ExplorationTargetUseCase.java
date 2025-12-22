@@ -24,11 +24,11 @@ final class ExplorationTargetUseCase {
         this.scorer = scorer;
     }
 
-    MapNode selectBestNode(GameState gameState, MapNode currentMapNode, boolean treasureHunting) throws AIDecisionException {
+    MapNode selectBestNode(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
         try {
             ArrayList<MapNode> visitedHalfMapNodes = new ArrayList<>();
 
-            if (treasureHunting && (wayHelper.getHalfMapVisitedGrassFields() == null || wayHelper.getAllMountainFieldsMap() == null)) {
+            if (objective == Objective.TREASURE && (wayHelper.getHalfMapVisitedGrassFields() == null || wayHelper.getAllMountainFieldsMap() == null)) {
                 throw new AIDecisionException(
                         "Cannot traverse half map: required data structures not initialized for treasure hunting",
                         "WayFinder",
@@ -37,7 +37,7 @@ final class ExplorationTargetUseCase {
                 );
             }
 
-            if (!treasureHunting && (wayHelper.getOppHalfMapVisitedGrassFields() == null || wayHelper.getAllMountainFieldsMap() == null)) {
+            if (objective == Objective.FORT && (wayHelper.getOppHalfMapVisitedGrassFields() == null || wayHelper.getAllMountainFieldsMap() == null)) {
                 throw new AIDecisionException(
                         "Cannot traverse half map: required data structures not initialized for fort seeking",
                         "WayFinder",
@@ -46,7 +46,7 @@ final class ExplorationTargetUseCase {
                 );
             }
 
-            if (treasureHunting) {
+            if (objective == Objective.TREASURE) {
                 visitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getHalfMapVisitedGrassFields()));
                 visitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getAllMountainFieldsMap()));
             } else {
@@ -58,7 +58,7 @@ final class ExplorationTargetUseCase {
             MapNode bestNode = null;
             int candidatesEvaluated = 0;
 
-            if (treasureHunting) {
+            if (objective == Objective.TREASURE) {
                 if (treasureSeeker == null) {
                     throw new AIDecisionException(
                             "Cannot execute treasure hunting strategy: TreasureSeeker is null",
@@ -72,7 +72,7 @@ final class ExplorationTargetUseCase {
                     if (tile.getTerrain() == Terrain.WATER) continue;
                     if (!visitedHalfMapNodes.contains(tile)) {
                         candidatesEvaluated++;
-                        float ratio = scorer.score(gameState, currentMapNode, tile, true);
+                        float ratio = scorer.score(gameState, currentMapNode, tile, objective);
                         if (ratio > bestValue) {
                             bestValue = ratio;
                             bestNode = tile;
@@ -84,7 +84,7 @@ final class ExplorationTargetUseCase {
                     if (tile.getTerrain() == Terrain.WATER) continue;
                     if (!visitedHalfMapNodes.contains(tile)) {
                         candidatesEvaluated++;
-                        float ratio = scorer.score(gameState, currentMapNode, tile, false);
+                        float ratio = scorer.score(gameState, currentMapNode, tile, objective);
                         if (ratio > bestValue) {
                             bestValue = ratio;
                             bestNode = tile;
@@ -94,7 +94,7 @@ final class ExplorationTargetUseCase {
                 for (MapNode tile : wayHelper.getAllMountainFieldsMap().keySet()) {
                     if (!visitedHalfMapNodes.contains(tile) && !gameState.getMap().isNodeInOwnHalf(tile)) {
                         candidatesEvaluated++;
-                        float ratio = scorer.score(gameState, currentMapNode, tile, false);
+                        float ratio = scorer.score(gameState, currentMapNode, tile, objective);
                         if (ratio > bestValue) {
                             bestValue = ratio;
                             bestNode = tile;
@@ -104,7 +104,7 @@ final class ExplorationTargetUseCase {
             }
 
             if (bestNode == null) {
-                String strategyName = treasureHunting ? "treasure hunting" : "fort seeking";
+                String strategyName = objective == Objective.TREASURE ? "treasure hunting" : "fort seeking";
                 throw new AIDecisionException(
                         String.format("No valid target found during %s (evaluated %d candidates, best value: %.2f)",
                                 strategyName, candidatesEvaluated, bestValue),

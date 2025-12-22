@@ -31,8 +31,8 @@ final class TreasureTargetingUseCase {
         this.nodeVisitTracker = nodeVisitTracker;
     }
 
-    Direction tryGetDirection(GameState gameState, MapNode currentMapNode, boolean treasureHunting) throws AIDecisionException {
-        if (!treasureHunting) {
+    Direction tryGetDirection(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
+        if (objective != Objective.TREASURE) {
             return null;
         }
 
