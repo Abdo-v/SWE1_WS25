@@ -11,16 +11,13 @@ public class MapGenerator {
     private final Supplier<Random> randomSupplier;
     private final MapValidator validator;
 
-    /**
-     * Constructs a MapGenerator.
-     */
     public MapGenerator() {
         this(MapGenerationConfig.defaultConfig(), Random::new, new MapValidator());
     }
 
     /**
      * Constructs a MapGenerator with custom generation parameters.
-     * @param config Generation configuration.
+     * @param config configuration object that contains generation values.
      */
     public MapGenerator(MapGenerationConfig config) {
         this(config, Random::new, new MapValidator());
