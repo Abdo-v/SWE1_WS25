@@ -9,6 +9,7 @@ import client.exception.Operation;
 import client.model.Direction;
 import client.model.GameMode;
 import client.model.GameState;
+import client.model.PlayerState;
 import client.model.ai.WayFinder;
 import client.view.GameOutput;
 
@@ -37,7 +38,7 @@ final class MoveExecutionService {
             "missing"
         ));
 
-        Optional.ofNullable(state.getCurrentPlayerState()).orElseThrow(() -> new GameStateException(
+        state.getCurrentPlayerState().orElseThrow(() -> new GameStateException(
             "Cannot make move: current player state is missing",
             state.getGameStateID(),
             "MAKE_MOVE",
@@ -51,7 +52,10 @@ final class MoveExecutionService {
                     "WayFinder failed to determine a valid move",
                     "WayFinder",
                     "findNext",
-                    state.getCurrentPlayerState().getCurrentPosition()
+                    state.getCurrentPlayerState()
+                            .flatMap(PlayerState::getCurrentPosition)
+                            .map(Object::toString)
+                            .orElse("<unknown_position>")
                 ));
 
             try {

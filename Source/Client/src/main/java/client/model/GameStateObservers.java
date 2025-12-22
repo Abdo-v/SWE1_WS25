@@ -4,6 +4,7 @@ import client.observer.util.Observer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Manages {@link Observer} registration and notification for a {@link GameState}.
@@ -21,16 +22,15 @@ final class GameStateObservers {
     }
 
     void addObserver(Observer observer) {
-        if (observer == null) {
-            return;
-        }
-        if (!observers.contains(observer)) {
-            observers.add(observer);
-            try {
-                observer.update(source);
-            } catch (Exception ignored) {
-            }
-        }
+        Optional.ofNullable(observer)
+                .filter(obs -> !observers.contains(obs))
+                .ifPresent(obs -> {
+                    observers.add(obs);
+                    try {
+                        obs.update(source);
+                    } catch (Exception ignored) {
+                    }
+                });
     }
 
     void removeObserver(Observer observer) {

@@ -2,6 +2,7 @@ package client.model.common;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Notification {
@@ -12,7 +13,7 @@ public class Notification {
     }
 
     public void addError(String info) {
-        errors.add(new Error(info, null));
+        errors.add(new Error(info, Optional.empty()));
     }
 
     public boolean hasErrors() {
@@ -34,16 +35,22 @@ public class Notification {
 
     public static class Error {
         public final String info;
-        public final Exception cause;
+        public final Optional<Exception> cause;
+
+        public Error(String info, Optional<Exception> cause) {
+            this.info = info;
+            this.cause = Optional.ofNullable(cause).orElseGet(Optional::empty);
+        }
 
         public Error(String info, Exception cause) {
-            this.info = info;
-            this.cause = cause;
+            this(info, Optional.ofNullable(cause));
         }
 
         @Override
         public String toString() {
-            return info + (cause != null ? " (Cause: " + cause.getMessage() + ")" : "");
+            return info + cause
+                    .map(ex -> " (Cause: " + ex.getMessage() + ")")
+                    .orElse("");
         }
     }
 }

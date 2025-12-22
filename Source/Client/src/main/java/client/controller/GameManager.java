@@ -243,7 +243,8 @@ public class GameManager {
      * @return The full game map.
      */
     public GameMap getMap() {
-        return Optional.ofNullable(gameState.getMap()).orElseGet(GameMap::new);
+        GameMap map = gameState.getMap().orElse(new GameMap());
+        return map;
     }
 
     /**

@@ -93,36 +93,42 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
             return lines;
         }
 
-        PlayerState myState = currentGameState.getCurrentPlayerState(); 
-        PlayerState opponentState = currentGameState.getEnemyPlayerState();
+        var myState = currentGameState.getCurrentPlayerState();
+        var opponentState = currentGameState.getEnemyPlayerState();
 
         out.println("--- Game State ---"); lines++;
 
-        if (myState != null) {
+        if (myState.isPresent()) {
             out.println(); lines++; // For the original behavior of println("\n" + ...)
-            out.println(PLAYER_ICON + " Your Player (" + myState.getPlayerID() + "):"); lines++;
+            out.println(PLAYER_ICON + " Your Player (" + myState.get().getPlayerID() + "):" ); lines++;
             //out.println("  Status: " + (myState.getStatus() != null ? myState.getStatus().toString() : "N/A")); lines++;
-            if (myState.getCurrentPosition() != null) {
-                out.println(StaticColors.CYAN  + "  Position: (" + myState.getCurrentPosition().getX() + "," + myState.getCurrentPosition().getY() + ")" + StaticColors.RESET); lines++;
-            } else {
-                out.println( "  Position: N/A" + StaticColors.RESET); lines++;
-            }
-            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (myState.hasCollectedTreasure() ? "Yes" : "No")); lines++;
+            myState.get().getCurrentPosition()
+                    .ifPresentOrElse(
+                            pos -> {
+                                out.println(StaticColors.CYAN  + "  Position: (" + pos.getX() + "," + pos.getY() + ")" + StaticColors.RESET);
+                            },
+                            () -> out.println("  Position: N/A" + StaticColors.RESET)
+                    );
+            lines++;
+            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (myState.get().hasCollectedTreasure() ? "Yes" : "No")); lines++;
         } else {
             out.println(); lines++;
             out.println(PLAYER_ICON + " Your Player: Data N/A"); lines++;
         }
 
-        if (opponentState != null) {
+        if (opponentState.isPresent()) {
             out.println(); lines++;
-            out.println(OPPONENT_ICON + " Opponent (" + opponentState.getPlayerID() + "):"); lines++;
+            out.println(OPPONENT_ICON + " Opponent (" + opponentState.get().getPlayerID() + "):" ); lines++;
             //out.println("  Status: " + (opponentState.getStatus() != null ? opponentState.getStatus().toString() : "N/A")); lines++;
-            if (opponentState.getCurrentPosition() != null) {
-                out.println(StaticColors.PURPLE + "  Position: (" + opponentState.getCurrentPosition().getX() + "," + opponentState.getCurrentPosition().getY() + ")" + StaticColors.RESET); lines++;
-            } else {
-                out.println("  Position: Unknown"); lines++;
-            }
-            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (opponentState.hasCollectedTreasure() ? "Yes" : "No")); lines++;
+            opponentState.get().getCurrentPosition()
+                    .ifPresentOrElse(
+                            pos -> {
+                                out.println(StaticColors.PURPLE + "  Position: (" + pos.getX() + "," + pos.getY() + ")" + StaticColors.RESET);
+                            },
+                            () -> out.println("  Position: Unknown")
+                    );
+            lines++;
+            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (opponentState.get().hasCollectedTreasure() ? "Yes" : "No")); lines++;
         } else {
             out.println(); lines++;
             out.println(OPPONENT_ICON + " Opponent: Data N/A"); lines++;
@@ -135,12 +141,13 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
         int lines = 0;
         if (currentGameState == null) return lines;
         
-        GameMap map = currentGameState.getMap(); 
-        
-        if (map == null) {
+        var mapOptional = currentGameState.getMap();
+        if (mapOptional.isEmpty()) {
             out.println("Map data not available."); lines++;
             return lines;
         }
+
+        GameMap map = mapOptional.orElseThrow();
         
         int mapHeight = map.getMaxY(); // Assuming getMaxY() is 0-indexed max row
         int mapWidth = map.getMaxX();   // Assuming getMaxX() is 0-indexed max col
@@ -152,8 +159,8 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
              return lines;
         }
 
-        PlayerState myPlayerState = currentGameState.getCurrentPlayerState();
-        PlayerState opponentState = currentGameState.getEnemyPlayerState();
+        var myPlayerState = currentGameState.getCurrentPlayerState();
+        var opponentState = currentGameState.getEnemyPlayerState();
 
         for (int r = 0; r <= mapHeight; r++) {
             StringBuilder line = new StringBuilder("|");
@@ -173,41 +180,43 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
         return lines;
     }
 
-    private String getCellRepresentation(int r, int c, GameMap gameMap, PlayerState myPlayerState, PlayerState opponentState, GameState fullGameState) {
+    private String getCellRepresentation(int r, int c, GameMap gameMap, java.util.Optional<PlayerState> myPlayerState, java.util.Optional<PlayerState> opponentState, GameState fullGameState) {
         MapNode currentCellNode = gameMap.getNode(c, r); // Get the MapNode object for comparison
 
+        var myPosition = myPlayerState.flatMap(PlayerState::getCurrentPosition);
+        var opponentPosition = opponentState.flatMap(PlayerState::getCurrentPosition);
+
         // Priority 1: Clash
-        if (myPlayerState != null && myPlayerState.getCurrentPosition() != null && myPlayerState.getCurrentPosition().equals(currentCellNode) &&
-            opponentState != null && opponentState.getCurrentPosition() != null && opponentState.getCurrentPosition().equals(currentCellNode)) {
+        if (myPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()
+                && opponentPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()) {
             return CLASH_ICON;
         }
 
         // Priority 2: Player
-        if (myPlayerState != null && myPlayerState.getCurrentPosition() != null && myPlayerState.getCurrentPosition().equals(currentCellNode)) {
+        if (myPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()) {
             return PLAYER_ICON;
         }
 
         // Priority 3: Opponent
-        if (opponentState != null && opponentState.getCurrentPosition() != null && opponentState.getCurrentPosition().equals(currentCellNode)) {
+        if (opponentPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()) {
             return OPPONENT_ICON;
         }
         
         MapNode node = currentCellNode; // We already fetched it
 
-        if (node == null) {
-            return UNKNOWN_ICON; 
-        }
-
         // Priority 4: Treasure
-        if (myPlayerState != null && !myPlayerState.hasCollectedTreasure() &&
-            fullGameState.getTreasurePosition() != null && 
-            fullGameState.getTreasurePosition().equals(node)) { // Compare with the MapNode
+        boolean treasureAlreadyCollected = myPlayerState
+            .map(PlayerState::hasCollectedTreasure)
+            .orElse(false);
+
+        if (!treasureAlreadyCollected
+            && fullGameState.getTreasurePosition().filter(tp -> tp.equals(node)).isPresent()) {
             return TREASURE_ICON;
         }
 
         // Priority 5: Forts
         if (node.isFortPresent()) {
-            if (myPlayerState != null && fullGameState.getOwnFortPosition() != null && fullGameState.getOwnFortPosition().equals(node)) { // Compare with the MapNode
+            if (myPlayerState.isPresent() && fullGameState.getOwnFortPosition().filter(fp -> fp.equals(node)).isPresent()) {
                 return OWN_FORT_ICON;
             } else {
                 return OPPONENT_FORT_ICON; 
@@ -215,14 +224,11 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
         }
         
         // Priority 6: Terrain
-        if (node.getTerrain() != null) {
-            switch (node.getTerrain()) {
-                case GRASS: return GRASS_ICON;
-                case MOUNTAIN: return MOUNTAIN_ICON;
-                case WATER: return WATER_ICON;
-                default: return UNKNOWN_ICON; 
-            }
+        switch (node.getTerrain()) {
+            case GRASS: return GRASS_ICON;
+            case MOUNTAIN: return MOUNTAIN_ICON;
+            case WATER: return WATER_ICON;
+            default: return UNKNOWN_ICON;
         }
-        return UNKNOWN_ICON;
     }
 }

@@ -50,7 +50,7 @@ public class FortSeeker implements client.observer.util.Observer {
 
     public Optional<MapNode> getEnemyFortNodeIfFound() {
         return gameState
-                .map(GameState::getMap)
+                .flatMap(GameState::getMap)
                 .map(GameMap::getOpponentHalfMap)
                 .map(PlayerHalfMap::getMapNodes)
                 .flatMap(nodes -> nodes.stream().filter(MapNode::isFortPresent).findFirst());
@@ -80,9 +80,9 @@ public class FortSeeker implements client.observer.util.Observer {
         this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         wayHelper.update(gameState);
 
-        Optional.ofNullable(gameState.getOpponentFortPosition())
-                .filter(pos -> !enemyFortFound)
-                .ifPresent(pos -> enemyFortFound = true);
+        gameState.getOpponentFortPosition()
+            .filter(ignored -> !enemyFortFound)
+            .ifPresent(ignored -> enemyFortFound = true);
     }
     // for testing purposes, TDD
 	public Optional<GameState> getGameState() {

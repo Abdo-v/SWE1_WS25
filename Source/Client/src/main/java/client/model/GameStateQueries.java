@@ -3,6 +3,9 @@ package client.model;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 
+import java.util.Objects;
+import java.util.Optional;
+
 /**
  * Read-only queries derived from {@link GameState} and its {@link GameMap}.
  */
@@ -13,45 +16,45 @@ final class GameStateQueries {
     private static final int OWN_HALF_MAX_X_LEFT_RIGHT = 9;
     private static final int OWN_HALF_MIN_X_RIGHT_LEFT = 10;
 
-    MapNode getOwnFortPosition(GameMap map) {
-        if (map == null || map.getOwnHalfMap() == null) {
-            return null;
-        }
+    Optional<MapNode> getOwnFortPosition(GameMap map) {
+        Objects.requireNonNull(map, "map");
         for (MapNode node : map.getOwnHalfMap().getMapNodes()) {
             if (node.isFortPresent()) {
-                return node;
+                return Optional.of(node);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
-    MapNode getEnemyFortPosition(GameMap map) {
-        if (map == null || map.getOpponentHalfMap() == null) {
-            return null;
-        }
+    Optional<MapNode> getEnemyFortPosition(GameMap map) {
+        Objects.requireNonNull(map, "map");
         for (MapNode node : map.getOpponentHalfMap().getMapNodes()) {
             if (node.isFortPresent()) {
-                return node;
+                return Optional.of(node);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
-    MapNode getEnemyCurrentPosition(GameState state) {
-        if (state == null || state.getPlayers() == null || state.getPlayers().size() < 2) {
-            return null;
+    Optional<MapNode> getEnemyCurrentPosition(GameState state) {
+        Objects.requireNonNull(state, "state");
+        if (state.getPlayers().size() < 2) {
+            return Optional.empty();
         }
         return state.getPlayers().get(1).getCurrentPosition();
     }
 
-    PlayerState getEnemyPlayerState(GameState state) {
-        if (state == null || state.getPlayers() == null || state.getPlayers().size() < 2) {
-            return null;
+    Optional<PlayerState> getEnemyPlayerState(GameState state) {
+        Objects.requireNonNull(state, "state");
+        if (state.getPlayers().size() < 2) {
+            return Optional.empty();
         }
-        return state.getPlayers().get(1);
+        return Optional.of(state.getPlayers().get(1));
     }
 
     boolean isPlayerInOwnHalfMap(GameMap map, MapNode currentNode) {
+        Objects.requireNonNull(map, "map");
+        Objects.requireNonNull(currentNode, "currentNode");
         switch (map.getOrientation()) {
             case UP_DOWN:
                 return currentNode.getY() <= OWN_HALF_MAX_Y_UP_DOWN;

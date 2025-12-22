@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import client.model.Direction;
 import client.model.GameState;
+import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
@@ -32,9 +33,9 @@ public class ShortestPathFinder implements client.observer.util.Observer {
 
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before pathfinding"));
         MapNode target = targetMapNode;
-        MapNode current = Optional.ofNullable(state.getCurrentPlayerState())
-                .map(ps -> ps.getCurrentPosition())
-                .orElseThrow(() -> new IllegalStateException("Current position must be set before finding next valid direction."));
+        MapNode current = state.getCurrentPlayerState()
+            .flatMap(player -> player.getCurrentPosition())
+            .orElseThrow(() -> new IllegalStateException("Current position must be set before finding next valid direction."));
         
         // logger.trace("Pathfinding from {} to {}", current.printCoordinates(), target.printCoordinates());
         ArrayList<MapNode> path = findShortestPath(current, target);
@@ -68,22 +69,31 @@ public class ShortestPathFinder implements client.observer.util.Observer {
      */
     public ArrayList<MapNode> findShortestPath(MapNode start, MapNode target) {
         ArrayList<MapNode> path = new ArrayList<>();
-        if (Objects.isNull(start) || Objects.isNull(target) || gameState.isEmpty() || gameState.map(GameState::getMap).isEmpty()) {
-            System.err.println("WayFinder.findShortestPath (Dijkstra): Start, target, gameState, or map is null.");
-            return path; // Return empty path
+        Optional<MapNode> startNode = Optional.ofNullable(start);
+        Optional<MapNode> targetNode = Optional.ofNullable(target);
+        Optional<GameState> stateOptional = gameState;
+        Optional<GameMap> mapOptional = gameState.flatMap(GameState::getMap);
+
+        if (startNode.isEmpty() || targetNode.isEmpty() || stateOptional.isEmpty() || mapOptional.isEmpty()) {
+            System.err.println("WayFinder.findShortestPath (Dijkstra): Start, target, gameState, or map is missing.");
+            return path;
         }
 
-        if (start.equalsByCoordinates(target)) {
+        MapNode safeStart = startNode.orElseThrow();
+        MapNode safeTarget = targetNode.orElseThrow();
+
+        if (safeStart.equalsByCoordinates(safeTarget)) {
             // logger.debug("Start and target are the same, returning single-node path");
-            path.add(start);
+            path.add(safeStart);
             return path;
         }
 
         GameState state = gameState.orElseThrow();
-        ArrayList<MapNode> computed = GridDijkstra.shortestPath(state.getMap(), start, target, MovementCostProfile.SHORTEST_PATH);
+        var map = state.getMap().orElseThrow(() -> new IllegalStateException("GameMap must be set before pathfinding"));
+        ArrayList<MapNode> computed = GridDijkstra.shortestPath(map, safeStart, safeTarget, MovementCostProfile.SHORTEST_PATH);
         if (computed.isEmpty()) {
-            System.out.println("WayFinder.findShortestPath (Dijkstra): No path found from (" + start.getX() + "," + start.getY() +
-                               ") to (" + target.getX() + "," + target.getY() + ").");
+            System.out.println("WayFinder.findShortestPath (Dijkstra): No path found from (" + safeStart.getX() + "," + safeStart.getY() +
+                               ") to (" + safeTarget.getX() + "," + safeTarget.getY() + ").");
         }
         return computed;
     }
@@ -99,7 +109,8 @@ public class ShortestPathFinder implements client.observer.util.Observer {
         Objects.requireNonNull(direction, "direction must not be null");
 
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before navigation"));
-        return GridNavigation.getNodeInDirection(state.getMap(), startNode, direction).orElseThrow(
+        var map = state.getMap().orElseThrow(() -> new IllegalStateException("GameMap must be set before navigation"));
+        return GridNavigation.getNodeInDirection(map, startNode, direction).orElseThrow(
                 () -> new IllegalArgumentException("Requested direction leads out of bounds")
         );
     }
@@ -112,7 +123,9 @@ public class ShortestPathFinder implements client.observer.util.Observer {
     public Optional<Direction> getDirectionToNeighbor(MapNode neighbor){
         Objects.requireNonNull(neighbor, "neighbor must not be null");
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before navigation"));
-        MapNode current = state.getCurrentPlayerState().getCurrentPosition();
+        MapNode current = state.getCurrentPlayerState()
+                .flatMap(player -> player.getCurrentPosition())
+                .orElseThrow(() -> new IllegalStateException("Current position must be initialized"));
         return GridNavigation.getDirectionToNeighbor(current, neighbor);
     }
     /**
@@ -124,26 +137,23 @@ public class ShortestPathFinder implements client.observer.util.Observer {
      * @return The total movement cost as an integer, or -1 if the path is not found.
      */
     public int getCostToReachNode(MapNode start, MapNode target) {
-        if (Objects.isNull(start) || gameState.isEmpty() || gameState.map(GameState::getMap).isEmpty()) {
-            System.err.println("WayFinder.getCostToReachNode: Node, gameState, or map is null.");
+        Optional<MapNode> startNode = Optional.ofNullable(start);
+        Optional<MapNode> targetNode = Optional.ofNullable(target);
+        Optional<GameState> stateOptional = gameState;
+
+        if (startNode.isEmpty() || targetNode.isEmpty() || stateOptional.isEmpty() || gameState.flatMap(GameState::getMap).isEmpty()) {
+            System.err.println("WayFinder.getCostToReachNode: Node, gameState, or map is missing.");
             return -1;
         }
 
         GameState state = gameState.orElseThrow();
-        MapNode currentPosition = state.getCurrentPlayerState().getCurrentPosition();
-        if (Objects.isNull(currentPosition)) {
-            // logger.error("Current position is null, cannot calculate cost");
-            System.err.println("WayFinder.getCostToReachNode: Current position is null.");
-            return -1;
-        }
+        MapNode currentPosition = state.getCurrentPlayerState()
+                .flatMap(player -> player.getCurrentPosition())
+                .orElseThrow(() -> new IllegalStateException("Current position must be initialized"));
 
-        if (Objects.isNull(target)) {
-            // logger.error("Target node is null, cannot calculate cost");
-            System.err.println("WayFinder.getCostToReachNode: Target node is null.");
-            return -1;
-        }
+        var map = state.getMap().orElseThrow(() -> new IllegalStateException("GameMap must be set before cost calculation"));
 
-        int cost = GridDijkstra.shortestPathCost(state.getMap(), start, target, MovementCostProfile.SHORTEST_PATH);
+        int cost = GridDijkstra.shortestPathCost(map, startNode.orElseThrow(), targetNode.orElseThrow(), MovementCostProfile.SHORTEST_PATH);
         return cost == Integer.MAX_VALUE ? -1 : cost;
     }
 

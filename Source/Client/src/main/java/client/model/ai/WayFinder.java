@@ -73,33 +73,29 @@ public class WayFinder implements client.observer.util.Observer{
         fortSeeker.update(state);
         strategyGuide.update(state);
 
-        this.currentMapNode = Optional.ofNullable(state.getPlayers())
-                .filter(players -> !players.isEmpty())
-                .map(players -> players.get(0))
-                .map(player -> player.getCurrentPosition())
-                .map(Optional::ofNullable)
-                .orElse(Optional.empty());
+        this.currentMapNode = state.getCurrentPlayerState()
+                .flatMap(player -> player.getCurrentPosition());
 
-        Optional.ofNullable(state.getMap())
+        state.getMap()
                 .filter(map -> map.getContentSize() >= HALF_MAP_TOTAL_NODES)
                 .filter(map -> wayHelper.getHalfMapVisitedGrassFields().isEmpty())
                 .ifPresent(map -> {
             wayHelper.setHalfMapVisitedGrassFields(treasureSeeker.getTraverseWay());
         });
 
-        Optional.ofNullable(state.getMap())
+        state.getMap()
                 .filter(map -> map.getContentSize() == FULL_MAP_TOTAL_NODES)
                 .filter(map -> wayHelper.getOppHalfMapVisitedGrassFields().isEmpty())
                 .ifPresent(map -> {
             wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getTraverseWay());
         });
         if(movesMade == MOVES_UNTIL_ENEMY_TRUE_POSITION) {
-            stateHolder.setEnemyFirstTruePosition(Optional.ofNullable(state.getEnemyCurrentPosition()));
+            stateHolder.setEnemyFirstTruePosition(state.getEnemyCurrentPosition());
             stateHolder.getEnemyFirstTruePosition().ifPresent(enemyPos ->
                     wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getFilteredTraverseWay(enemyPos))
             );
         }
-        Optional.ofNullable(state.getMap())
+        state.getMap()
             .filter(map -> map.getContentSize() == FULL_MAP_TOTAL_NODES)
             .filter(map -> wayHelper.getAllMountainFieldsMap().isEmpty())
             .ifPresent(map -> {
@@ -126,7 +122,7 @@ public class WayFinder implements client.observer.util.Observer{
                 "findNext"
         ));
 
-        if (Objects.isNull(state.getCurrentPlayerState())) {
+        if (state.getCurrentPlayerState().isEmpty()) {
             throw new AIDecisionException(
                     "Cannot determine next move: current player state is missing",
                     "WayFinder",

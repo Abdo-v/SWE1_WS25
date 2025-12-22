@@ -4,27 +4,25 @@ import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
 
+import java.util.Objects;
+
 /**
  * Encapsulates vision/discovery logic derived from player position and terrain.
  */
 final class GameStateVisionProcessor {
 
     void processVision(GameState state, MapNode currentPosition) {
-        if (state == null || currentPosition == null) {
-            return;
-        }
+        Objects.requireNonNull(state, "state");
+        Objects.requireNonNull(currentPosition, "currentPosition");
 
-        GameMap map = state.getMap();
-        if (map == null) {
-            return;
-        }
+        state.getMap().ifPresent(map -> {
+            Terrain terrain = currentPosition.getTerrain();
+            checkForDiscoveries(state, currentPosition);
 
-        Terrain terrain = currentPosition.getTerrain();
-        checkForDiscoveries(state, currentPosition);
-
-        if (terrain == Terrain.MOUNTAIN) {
-            processExtendedVision(state, map, currentPosition);
-        }
+            if (terrain == Terrain.MOUNTAIN) {
+                processExtendedVision(state, map, currentPosition);
+            }
+        });
     }
 
     private void processExtendedVision(GameState state, GameMap map, MapNode center) {
@@ -35,9 +33,7 @@ final class GameStateVisionProcessor {
             for (int dy = -1; dy <= 1; dy++) {
                 try {
                     MapNode node = map.getNode(x + dx, y + dy);
-                    if (node != null) {
-                        checkForDiscoveries(state, node);
-                    }
+                    checkForDiscoveries(state, node);
                 } catch (IllegalArgumentException ignored) {
                 }
             }
@@ -45,12 +41,8 @@ final class GameStateVisionProcessor {
     }
 
     private void checkForDiscoveries(GameState state, MapNode node) {
-        if (!state.isOpponentFortFound() && isOpponentFortAtNode(node)) {
+        if (!state.isOpponentFortFound() && node.isFortPresent()) {
             state.discoverOpponentFortAt(node);
         }
-    }
-
-    private boolean isOpponentFortAtNode(MapNode node) {
-        return node != null && node.isFortPresent();
     }
 }

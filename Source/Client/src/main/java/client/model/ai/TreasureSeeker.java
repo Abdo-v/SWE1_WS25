@@ -54,7 +54,7 @@ public class TreasureSeeker implements client.observer.util.Observer {
      */
     public Optional<MapNode> getTreasureNodeIfFound() {
         return gameState
-                .map(GameState::getMap)
+                .flatMap(GameState::getMap)
                 .map(GameMap::getOwnHalfMap)
                 .map(PlayerHalfMap::getMapNodes)
                 .flatMap(nodes -> nodes.stream().filter(MapNode::isTreasurePresent).findFirst());
@@ -77,9 +77,9 @@ public class TreasureSeeker implements client.observer.util.Observer {
         this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         wayHelper.update(gameState);
 
-        Optional.ofNullable(gameState.getTreasurePosition())
-                .filter(pos -> !treasureFound)
-                .ifPresent(pos -> treasureFound = true);
+        gameState.getTreasurePosition()
+            .filter(pos -> !treasureFound)
+            .ifPresent(pos -> treasureFound = true);
         
         //System.err.print(StaticColors.BLUE + "T" + StaticColors.RESET);
     }

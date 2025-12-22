@@ -42,12 +42,12 @@ public class StrategyGuide implements client.observer.util.Observer {
         wayHelper.update(gameState);
 
         Optional.of(gameState)
-                .map(GameState::getMap)
+                .flatMap(GameState::getMap)
                 .ifPresent(map -> {
                     int totalNodes = map.getGameMapNodes().size();
                     long mountainCount = map.getGameMapNodes().stream()
-                    .filter(node -> node.getTerrain() == Terrain.MOUNTAIN)
-                    .count();
+                            .filter(node -> node.getTerrain() == Terrain.MOUNTAIN)
+                            .count();
                     // logger.trace("Updated StrategyGuide - total nodes: {}, mountains: {}", totalNodes, mountainCount);
                 });
     }
@@ -90,7 +90,9 @@ public class StrategyGuide implements client.observer.util.Observer {
 
         if (gameState.isEmpty()) return nodes;
         GameState state = gameState.orElseThrow();
-        if (Objects.isNull(state.getMap())) return nodes;
+        var mapOptional = state.getMap();
+        if (mapOptional.isEmpty()) return nodes;
+        var map = mapOptional.orElseThrow();
         
         // get neighbors (also diagonal)
         int currentX = currentMapNode.getX();
@@ -98,17 +100,17 @@ public class StrategyGuide implements client.observer.util.Observer {
         int outOfBoundsCount = 0;
         
         for(int x = currentX - 1; x <= currentX + 1; x++) {
-            if (x < 0 || x > state.getMap().getMaxX()) {
+            if (x < 0 || x > map.getMaxX()) {
                 outOfBoundsCount++;
                 continue; // Skip out of bounds X coordinates
             }
             for(int y = currentY - 1; y <= currentY + 1; y++) {
-                if (y < 0 || y > state.getMap().getMaxY()) {
+                if (y < 0 || y > map.getMaxY()) {
                     outOfBoundsCount++;
                     continue; // Skip out of bounds Y coordinates
                 }
                 try {
-                    MapNode node = state.getMap().getNode(x, y);
+                    MapNode node = map.getNode(x, y);
                     if (!node.equalsByCoordinates(currentMapNode)) {
                         nodes.add(node);
                     }

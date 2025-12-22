@@ -51,24 +51,33 @@ public class CLIHandler implements client.observer.util.Observer {
         System.out.println("=================================");
         switch (mapType) {
             case OWN:
-                if (gameState.getMap() != null && gameState.getMap().getContentSize() != 0) {
-                    printHalfMap(gameState.getMap().getOwnHalfMap(), "Own Half Map");
-                } else {
-                    System.out.println("Own half map visual: gameMap null");
+                if (gameState != null) {
+                    gameState.getMap()
+                            .filter(map -> map.getContentSize() != 0)
+                            .ifPresentOrElse(
+                                    map -> printHalfMap(map.getOwnHalfMap(), "Own Half Map"),
+                                    () -> System.out.println("Own half map visual: map not available")
+                            );
                 }
                 break;
             case OPPONENT:
-                if (gameState.getMap() != null && gameState.getMap().getContentSize() == 100) {
-                    printHalfMap(gameState.getMap().getOpponentHalfMap(), "Opponent Half Map");
-                } else {
-                    System.out.println("Opponent half map visual gameMap null or not 100.");
+                if (gameState != null) {
+                    gameState.getMap()
+                            .filter(map -> map.getContentSize() == 100)
+                            .ifPresentOrElse(
+                                    map -> printHalfMap(map.getOpponentHalfMap(), "Opponent Half Map"),
+                                    () -> System.out.println("Opponent half map visual: map not available or incomplete")
+                            );
                 }
                 break;
             case FULL:
-                if (gameState.getMap() != null && gameState.getMap().getContentSize() == 100) {
-                    printFullMap(gameState.getMap());
-                } else {
-                    System.out.println("Full map visual: gameState.getMap() null or not 100.");
+                if (gameState != null) {
+                    gameState.getMap()
+                            .filter(map -> map.getContentSize() == 100)
+                            .ifPresentOrElse(
+                                    this::printFullMap,
+                                    () -> System.out.println("Full map visual: map not available or incomplete")
+                            );
                 }
                 break;
             default:

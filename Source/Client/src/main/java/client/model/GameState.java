@@ -4,16 +4,17 @@ import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 public class GameState implements client.observer.util.Observable {
 
     private final String gameStateID;
     private ArrayList<PlayerState> players;
-    private GameMap map;
+    private Optional<GameMap> map;
     private boolean treasureCollected = false;
     private boolean opponentFortFound = false;
-    private MapNode treasurePosition = null;
-    private MapNode opponentFortPosition = null; 
+    private Optional<MapNode> treasurePosition;
+    private Optional<MapNode> opponentFortPosition;
 
     private final GameStateObservers observerSupport;
     private final GameStateVisionProcessor visionProcessor;
@@ -42,7 +43,7 @@ public class GameState implements client.observer.util.Observable {
      * @param players Array of player states
      */
     public GameState(String ID, ArrayList<PlayerState> players) {
-        this(ID, players, null);
+        this(ID, players, Optional.empty());
     }
 
     /**
@@ -51,7 +52,7 @@ public class GameState implements client.observer.util.Observable {
      * @param ID The game state ID
      */
     public GameState(String ID) {
-        this(ID, null, null);
+        this(ID, new ArrayList<>(), Optional.empty());
     }
 
     /**
@@ -62,19 +63,25 @@ public class GameState implements client.observer.util.Observable {
      * @param map The game map
      */
     public GameState(String ID, ArrayList<PlayerState> players, GameMap map) {
+        this(ID, players, Optional.ofNullable(map));
+    }
+
+    public GameState() {
+        this("default", new ArrayList<>(), Optional.empty());
+    }
+
+    private GameState(String ID, ArrayList<PlayerState> players, Optional<GameMap> map) {
         this.gameStateID = ID;
-        this.players = players;
-        this.map = map;
+        this.players = new ArrayList<>(Optional.ofNullable(players).orElseGet(ArrayList::new));
+        this.map = Optional.ofNullable(map).orElseGet(Optional::empty);
         this.treasureCollected = false;
         this.opponentFortFound = false;
+        this.treasurePosition = Optional.empty();
+        this.opponentFortPosition = Optional.empty();
 
         this.observerSupport = new GameStateObservers(this);
         this.visionProcessor = new GameStateVisionProcessor();
         this.queries = new GameStateQueries();
-    }
-
-    public GameState() {
-        this("default", new ArrayList<>(), null);
     }
 
     
@@ -84,14 +91,15 @@ public class GameState implements client.observer.util.Observable {
      * @param gameState The game state to update from
      */
     public void updateGameState(GameState gameState) {
-        if (gameState != null) {
-            this.players = gameState.getPlayers();
-            this.map = gameState.getMap();
-            this.treasureCollected = gameState.isTreasureCollected();
-            this.opponentFortFound = gameState.isOpponentFortFound();
-            this.treasurePosition = gameState.getTreasurePosition();
-            this.opponentFortPosition = gameState.getOpponentFortPosition();
-        }
+        Optional.ofNullable(gameState)
+                .ifPresent(state -> {
+                    this.players = new ArrayList<>(state.getPlayers());
+                    this.map = state.getMap();
+                    this.treasureCollected = state.isTreasureCollected();
+                    this.opponentFortFound = state.isOpponentFortFound();
+                    this.treasurePosition = state.getTreasurePosition();
+                    this.opponentFortPosition = state.getOpponentFortPosition();
+                });
         notifyObservers();
     }
     
@@ -102,34 +110,30 @@ public class GameState implements client.observer.util.Observable {
      * @param currentPosition The current position of the player
      */
     public void processVision(MapNode currentPosition) {
-        visionProcessor.processVision(this, currentPosition);
+        Optional.ofNullable(currentPosition)
+                .ifPresent(position -> visionProcessor.processVision(this, position));
     }
 
     void discoverOpponentFortAt(MapNode node) {
         this.opponentFortFound = true;
-        this.opponentFortPosition = node;
+        this.opponentFortPosition = Optional.of(node);
     }
 
-    public PlayerState getCurrentPlayerState() {
-        if (players != null && !players.isEmpty()) {
-            return players.get(0);
-        }
-        return null;
+    public Optional<PlayerState> getCurrentPlayerState() {
+        return players.isEmpty() ? Optional.empty() : Optional.of(players.get(0));
     }
     
     public String getGameStateID() {
         return gameStateID;
     }
     
-    public MapNode getOpponentFortPosition() {
+    public Optional<MapNode> getOpponentFortPosition() {
         return opponentFortPosition;
     }
     
     public void setOpponentFortPosition(MapNode opponentFortPosition) {
-        this.opponentFortPosition = opponentFortPosition;
-        if (opponentFortPosition != null) {
-            this.opponentFortFound = true;
-        }
+        this.opponentFortPosition = Optional.ofNullable(opponentFortPosition);
+        this.opponentFortPosition.ifPresent(ignored -> this.opponentFortFound = true);
         notifyObservers();
     }
     
@@ -138,7 +142,7 @@ public class GameState implements client.observer.util.Observable {
     }
     
     public void setPlayers(ArrayList<PlayerState> players) {
-        this.players = players;
+        this.players = new ArrayList<>(Optional.ofNullable(players).orElseGet(ArrayList::new));
         notifyObservers();
     }
 
@@ -148,21 +152,16 @@ public class GameState implements client.observer.util.Observable {
      * @param player The player to add.
      */
     public void addPlayer(PlayerState player) {
-        if (players != null) {
-            this.players.add(player);
-        } else {
-            this.players = new ArrayList<PlayerState>();
-            this.players.add(player);
-        }
+        Optional.ofNullable(player).ifPresent(players::add);
     }
     
 
-    public GameMap getMap() {
+    public Optional<GameMap> getMap() {
         return map;
     }
     
     public void setMap(GameMap map) {
-        this.map = map;
+        this.map = Optional.ofNullable(map);
         notifyObservers();
     }
     
@@ -184,12 +183,12 @@ public class GameState implements client.observer.util.Observable {
         notifyObservers();
     }
 
-    public MapNode getTreasurePosition() {
+    public Optional<MapNode> getTreasurePosition() {
         return treasurePosition;
     }
     
     public void setTreasurePosition(MapNode treasurePosition) {
-        this.treasurePosition = treasurePosition;
+        this.treasurePosition = Optional.ofNullable(treasurePosition);
         notifyObservers();
     }
     
@@ -197,32 +196,27 @@ public class GameState implements client.observer.util.Observable {
      * Gets the player state for a specific player ID.
      * 
      * @param playerID The ID of the player to find.
-     * @return The player's state, or null if not found.
+     * @return The player's state, or empty if not found.
      */
-    public PlayerState getPlayerByID(String playerID) {
-        if (players != null) {
-            for (PlayerState player : players) {
-                if (player.getPlayerID().equals(playerID)) {
-                    return player;
-                }
-            }
-        }
-        return null;
+    public Optional<PlayerState> getPlayerByID(String playerID) {
+        return players.stream()
+                .filter(player -> player.getPlayerID().equals(playerID))
+                .findFirst();
     }
 
-    public MapNode getOwnFortPosition(){
-        return queries.getOwnFortPosition(map);
+    public Optional<MapNode> getOwnFortPosition(){
+        return map.flatMap(queries::getOwnFortPosition);
     }
 
-    public MapNode getEnemyFortPosition(){
-        return queries.getEnemyFortPosition(map);
+    public Optional<MapNode> getEnemyFortPosition(){
+        return map.flatMap(queries::getEnemyFortPosition);
     }
 
-    public MapNode getEnemyCurrentPosition(){
+    public Optional<MapNode> getEnemyCurrentPosition(){
         return queries.getEnemyCurrentPosition(this);
     }
 
-    public PlayerState getEnemyPlayerState(){
+    public Optional<PlayerState> getEnemyPlayerState(){
         return queries.getEnemyPlayerState(this);
     }
 
@@ -232,8 +226,10 @@ public class GameState implements client.observer.util.Observable {
      * @return true if the player is in their own half, false otherwise.
      */
     public boolean isPlayerInOwnHalfMap(){
-        MapNode currentNode = getCurrentPlayerState().getCurrentPosition();
-        return queries.isPlayerInOwnHalfMap(map, currentNode);
+        return getCurrentPlayerState()
+                .flatMap(PlayerState::getCurrentPosition)
+                .flatMap(node -> map.map(gameMap -> queries.isPlayerInOwnHalfMap(gameMap, node)))
+                .orElse(false);
     }
 
     /**
@@ -245,12 +241,12 @@ public class GameState implements client.observer.util.Observable {
     public String toString() {
         return "GameState{" +
                 "gameStateID='" + gameStateID + '\'' +
-                ", players=" + (players != null ? players.toString() : "null") +
-                ", map=" + map +
+                ", players=" + players +
+                ", map=" + map.map(Object::toString).orElse("<absent>") +
                 ", treasureCollected=" + treasureCollected +
                 ", opponentFortFound=" + opponentFortFound +
-                ", treasurePosition=" + treasurePosition +
-                ", opponentFortPosition=" + opponentFortPosition +
+                ", treasurePosition=" + treasurePosition.map(Object::toString).orElse("<absent>") +
+                ", opponentFortPosition=" + opponentFortPosition.map(Object::toString).orElse("<absent>") +
                 '}';
     }
 }

@@ -71,7 +71,11 @@ final class ExplorationTargetUseCase {
                     }
                 }
                 for (MapNode tile : wayHelper.getAllMountainFieldsMap().keySet()) {
-                    if (!visitedHalfMapNodes.contains(tile) && !gameState.getMap().isNodeInOwnHalf(tile)) {
+                    boolean isInOpponentHalf = gameState.getMap()
+                            .map(map -> !map.isNodeInOwnHalf(tile))
+                            .orElse(false);
+
+                    if (!visitedHalfMapNodes.contains(tile) && isInOpponentHalf) {
                         candidatesEvaluated++;
                         float ratio = scorer.score(gameState, currentMapNode, tile, objective);
                         if (ratio > bestValue) {

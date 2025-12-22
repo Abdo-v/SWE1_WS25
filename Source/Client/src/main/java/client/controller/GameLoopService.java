@@ -7,6 +7,7 @@ import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
 import client.exception.MapProcessingException;
 import client.model.GameMode;
+import client.model.PlayerState;
 import client.model.PlayerStatus;
 import client.view.GameOutput;
 
@@ -59,7 +60,10 @@ public class GameLoopService {
                         try {
                             gameManager.makeMove(effectiveMode);
                             if (effectiveMode.isReduced()) {
-                                output.showPosition(gameManager.getGameState().getCurrentPlayerState().getCurrentPosition().printCoordinates());
+                                gameManager.getGameState().getCurrentPlayerState()
+                                        .flatMap(PlayerState::getCurrentPosition)
+                                        .map(pos -> pos.printCoordinates())
+                                        .ifPresent(output::showPosition);
                             }
                             acted = true;
                         } catch (AIDecisionException e) {
@@ -73,12 +77,20 @@ public class GameLoopService {
                         break;
                     case WON:
                         gameManager.disableDynamicVisualization();
-                        output.showWon(gameManager.getGameState().getCurrentPlayerState(), loops, dynamicMode);
+                        output.showWon(
+                                gameManager.getGameState().getCurrentPlayerState().orElseThrow(),
+                                loops,
+                                dynamicMode
+                        );
                         gameIsRunning = false;
                         break;
                     case LOST:
                         gameManager.disableDynamicVisualization();
-                        output.showLost(gameManager.getGameState().getCurrentPlayerState(), loops, dynamicMode);
+                        output.showLost(
+                                gameManager.getGameState().getCurrentPlayerState().orElseThrow(),
+                                loops,
+                                dynamicMode
+                        );
                         gameIsRunning = false;
                         break;
                     default:

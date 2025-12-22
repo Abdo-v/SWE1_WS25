@@ -45,7 +45,9 @@ final class PlayerTurnService {
                 "SHOULD_ACT",
                 "missing"
         ));
-        return state.getCurrentPlayerState().getStatus() == PlayerStatus.MUST_ACT;
+        return state.getCurrentPlayerState()
+            .map(player -> player.getStatus() == PlayerStatus.MUST_ACT)
+            .orElse(false);
     }
 
     boolean shouldWait(GameState gameState) {
@@ -55,7 +57,9 @@ final class PlayerTurnService {
                 "SHOULD_WAIT",
                 "missing"
         ));
-        return state.getCurrentPlayerState().getStatus() == PlayerStatus.MUST_WAIT;
+        return state.getCurrentPlayerState()
+            .map(player -> player.getStatus() == PlayerStatus.MUST_WAIT)
+            .orElse(false);
     }
 }
 
