@@ -4,16 +4,12 @@ package client.controller;
 // import org.slf4j.LoggerFactory;
 import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
-import client.exception.FailureReason;
-import client.exception.Operation;
 import client.exception.AIDecisionException;
 import client.exception.MapProcessingException;
-import client.model.*;
 import client.model.GameMode;
+import client.model.PlayerStatus;
 import client.model.ai.WayFinder;
-import client.view.CLIHandler;
 import client.view.DynamicCLIGameView;
-import client.view.GameManagerView;
 import client.view.GameOutput;
 import client.view.MapVisualizationType;
 import client.controller.network.service.NetworkCenter;
@@ -24,20 +20,21 @@ public class GameManager {
     // private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     
     private client.model.GameState gameState;
-    private NetworkCenter networkCenter;
+    private final NetworkCenter networkCenter;
     private String playerId;
-    private GameMap gameMap;
-    private WayFinder wayFinder = new WayFinder();
-    private CLIHandler cliHandler;
-    private DynamicCLIGameView dynamicView = new DynamicCLIGameView();
+    private final WayFinder wayFinder = new WayFinder();
+    private final DynamicCLIGameView dynamicView = new DynamicCLIGameView();
     private final GameOutput output;
     private final HalfMapService halfMapService;
     private final GameStateSynchronizer gameStateSynchronizer;
     private final GameStateQueryService gameStateQueryService;
     private final GameLoopService gameLoopService;
+    private final PlayerRegistrationService playerRegistrationService;
+    private final MoveExecutionService moveExecutionService;
+    private final GameVisualizationService visualizationService;
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
-        this(state, serverBaseUrl, gameMode, new GameManagerView());
+        this(state, serverBaseUrl, gameMode, new client.view.GameManagerView());
     }
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode, GameOutput output){
@@ -45,22 +42,21 @@ public class GameManager {
     }
 
     public GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){
-        // // logger.debug("Creating GameManager with gameId: {}, server: {}, mode: {}", state.getGameStateID(), serverBaseUrl, gameMode);
         this.gameState = state;
         this.networkCenter = new NetworkCenter(serverBaseUrl, state.getGameStateID());
-        this.gameMap = state.getMap();
-        this.cliHandler = new CLIHandler(gameMode);
         this.output = output;
-        this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
+
+        var cliHandler = GameManagerWiring.createCliHandler(gameMode);
+        GameManagerWiring.wireObservers(state, cliHandler, wayFinder, dynamicView);
+
+        this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
         this.gameLoopService = new GameLoopService(this, this.output);
-        state.addObserver(cliHandler);
-        state.addObserver(wayFinder);
-        state.addObserver(dynamicView);
-        wayFinder.setGameState(state);
-        wayFinder.addSubObservers();
-        // // logger.debug("GameManager initialization completed successfully");
+
+        this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
+        this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
     }
 
     /**
@@ -70,18 +66,26 @@ public class GameManager {
      * @param playerId The unique player identifier.
      */
     public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId) {
-        this(gameId, serverBaseUrl, playerId, new GameManagerView());
+        this(gameId, serverBaseUrl, playerId, new client.view.GameManagerView());
     }
 
     public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId, GameOutput output) {
-        // // logger.debug("Creating GameManager with gameId: {}, server: {}, playerId: {}", gameId, serverBaseUrl, playerId.getUniquePlayerID());
         this.networkCenter = new NetworkCenter(serverBaseUrl, gameId, playerId);
         this.gameState = new client.model.GameState(gameId);
+        this.playerId = playerId != null ? playerId.getUniquePlayerID() : null;
         this.output = output;
-        this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
+
+        var cliHandler = GameManagerWiring.createCliHandler(GameMode.UNKNOWN);
+        GameManagerWiring.wireObservers(this.gameState, cliHandler, wayFinder, dynamicView);
+
+        this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
         this.gameLoopService = new GameLoopService(this, this.output);
+
+        this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
+        this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
     }
 
     /**
@@ -90,18 +94,25 @@ public class GameManager {
      * @param serverBaseUrl The base URL of the server.
      */
     public GameManager(String gameId, String serverBaseUrl) {
-        this(gameId, serverBaseUrl, new GameManagerView());
+        this(gameId, serverBaseUrl, new client.view.GameManagerView());
     }
 
     public GameManager(String gameId, String serverBaseUrl, GameOutput output) {
-        // // logger.debug("Creating GameManager with gameId: {}, server: {}", gameId, serverBaseUrl);
         this.networkCenter = new NetworkCenter(serverBaseUrl, gameId);
         this.gameState = new client.model.GameState(gameId);
         this.output = output;
-        this.halfMapService = new HalfMapService(this.networkCenter, this.cliHandler, this.output);
+
+        var cliHandler = GameManagerWiring.createCliHandler(GameMode.UNKNOWN);
+        GameManagerWiring.wireObservers(this.gameState, cliHandler, wayFinder, dynamicView);
+
+        this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
         this.gameLoopService = new GameLoopService(this, this.output);
+
+        this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
+        this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
     }
 
     /**
@@ -114,39 +125,8 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for player registration.
      */
     public String registerPlayer(String firstName, String lastName, String uAccount) throws GameCommunicationException, GameStateException {
-        // // logger.info("Attempting to register player: {} {}, uAccount: {}", firstName, lastName, uAccount);
-        
-        // Validate game state before registration
-        if (gameState == null) {
-            throw new GameStateException(
-                "Cannot register player: game state is not initialized",
-                null,
-                "PLAYER_REGISTRATION",
-                "uninitialized"
-            );
-        }
-        
-        try {
-            UniquePlayerIdentifier playerIdentifier = networkCenter.registerPlayer(firstName, lastName, uAccount);
-            this.playerId = playerIdentifier.getUniquePlayerID();
-            client.model.PlayerState playerState = new client.model.PlayerState(playerId, firstName, lastName, uAccount);
-            gameState.addPlayer(playerState);
-            // // logger.info("Successfully registered player {} with ID: {}", playerState.getLastName(), playerId);
-            return playerId;
-        } catch (GameCommunicationException e) {
-            // Re-throw communication exceptions as-is
-            throw e;
-        } catch (Exception e) {
-            // Wrap unexpected exceptions
-            throw new GameStateException(
-                "Unexpected error during player registration: " + e.getMessage(),
-                e,
-                gameState.getGameStateID(),
-                "PLAYER_REGISTRATION",
-                "unknown",
-                null
-            );
-        }
+        this.playerId = playerRegistrationService.registerPlayer(gameState, firstName, lastName, uAccount);
+        return this.playerId;
     }
     
     /**
@@ -206,64 +186,7 @@ public class GameManager {
     }
 
     public void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
-        // // logger.debug("Making move for player: {}", playerId);
-        
-        // Validate game state before making move
-        if (gameState == null || gameState.getCurrentPlayerState() == null) {
-            throw new GameStateException(
-                "Cannot make move: game state or player state is null",
-                gameState != null ? gameState.getGameStateID() : "unknown",
-                "MAKE_MOVE",
-                "invalid_state"
-            );
-        }
-        
-        try {
-            Direction nextMoveDirection = wayFinder.findNext();
-            if (nextMoveDirection != null) {
-                // // logger.debug("WayFinder suggested direction: {}", nextMoveDirection);
-                try {
-                    networkCenter.sendMove(nextMoveDirection);
-                    // // logger.info("Move {} sent successfully for player {}", nextMoveDirection, playerId);
-                    
-                    if (gameMode != null && gameMode.isReduced()) {
-                        // // logger.info("Player {} (TRR mode) moved to: {}", playerId, gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
-                        output.showMoveSent(nextMoveDirection);
-                    }
-                } catch (GameCommunicationException e) {
-                    throw e; // Re-throw communication exceptions
-                } catch (Exception e) {
-                    // // logger.error("Error making move for player {}: {}", playerId, e.getMessage(), e);
-                    throw new GameCommunicationException(
-                        "Failed to send move to server: " + e.getMessage(),
-                        e,
-                        networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
-                        Operation.SEND_MOVE,
-                        -1
-                    );
-                }
-            } else {
-                // // logger.warn("WayFinder did not suggest a valid move for player {}. This may indicate AI decision failure.", playerId);
-                throw new AIDecisionException(
-                    "WayFinder failed to determine a valid move",
-                    "WayFinder",
-                    "findNext",
-                    gameState.getCurrentPlayerState().getCurrentPosition()
-                );
-            }
-        } catch (AIDecisionException | GameCommunicationException e) {
-            throw e; // Re-throw our custom exceptions
-        } catch (Exception e) {
-            // // logger.error("Unexpected error during move making: {}", e.getMessage(), e);
-            throw new GameStateException(
-                "Unexpected error during move making: " + e.getMessage(),
-                e,
-                gameState.getGameStateID(),
-                Operation.MAKE_MOVE,
-                FailureReason.ERROR,
-                null
-            );
-        }
+        moveExecutionService.makeMove(gameState, playerId, gameMode);
     }
 
     /**
@@ -331,7 +254,7 @@ public class GameManager {
      * @return The full game map.
      */
     public GameMap getMap() {
-        return gameMap;
+        return gameState != null ? gameState.getMap() : null;
     }
 
     /**
@@ -356,51 +279,34 @@ public class GameManager {
      * @throws GameCommunicationException If polling fails due to network issues.
      */
     public boolean isServerMapEmpty() throws GameCommunicationException {
-        try {
-        } catch (Exception e) {
-            throw new GameCommunicationException(
-                "Failed to check if server map is empty: " + e.getMessage(),
-                e,
-                networkCenter != null ? "unknown" : "no_network",
-                "CHECK_SERVER_MAP_EMPTY",
-                -1
-            );
-        }
         return gameStateQueryService.isServerMapEmpty();
     }
 
     public boolean shouldAct() {
-        boolean mustAct = this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_ACT;
-        // // logger.trace("Should act check for player {}: {}", playerId, mustAct);
-        return mustAct;
+        return this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_ACT;
     }
 
     public boolean shouldWait() {
-        boolean mustWait = this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_WAIT;
-        // // logger.trace("Should wait check for player {}: {}", playerId, mustWait);
-        return mustWait;
+        return this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_WAIT;
     }
 
     public void visualizeMap(String mapType) {
-        // // logger.debug("Visualizing map type: {}", mapType);
-        cliHandler.visualizeMap(mapType);
+        visualizationService.visualizeMap(mapType);
     }
 
     public void visualizeMap(MapVisualizationType mapType) {
-        cliHandler.visualizeMap(mapType);
+        visualizationService.visualizeMap(mapType);
     }
 
     public void enableDynamicVisualization() {
-        // // logger.debug("Enabling dynamic visualization");
-        dynamicView.enableDynamicMode();
+        visualizationService.enableDynamicVisualization();
     }
 
     /**
      * Disable dynamic visualization
      */
     public void disableDynamicVisualization() {
-        // // logger.debug("Disabling dynamic visualization");
-        dynamicView.disableDynamicMode();
+        visualizationService.disableDynamicVisualization();
     }
 
 }
