@@ -1,7 +1,5 @@
 package client.exception;
 
-import java.util.Objects;
-
 /**
  * Checked exception for game communication failures.
  * 
