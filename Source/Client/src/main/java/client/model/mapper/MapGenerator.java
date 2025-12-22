@@ -9,6 +9,7 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.function.Supplier;
 
 public class MapGenerator {
     private static final int[][] CARDINAL_DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
@@ -16,12 +17,14 @@ public class MapGenerator {
     private static final int MIN_WATER_PLACEMENT_ATTEMPTS = 100;
 
     private final MapGenerationConfig config;
+    private final Supplier<Random> randomSupplier;
+    private final MapValidator validator;
 
     /**
      * Constructs a MapGenerator.
      */
     public MapGenerator() {
-        this(MapGenerationConfig.defaultConfig());
+        this(MapGenerationConfig.defaultConfig(), Random::new, new MapValidator());
     }
 
     /**
@@ -29,7 +32,19 @@ public class MapGenerator {
      * @param config Generation configuration.
      */
     public MapGenerator(MapGenerationConfig config) {
+        this(config, Random::new, new MapValidator());
+    }
+
+    /**
+     * Constructs a MapGenerator with injected dependencies.
+     *
+     * <p>Inject a deterministic {@link Random} supplier (e.g. {@code () -> new Random(123)})
+     * and a {@link MapValidator} to make generation predictable and easier to test.
+     */
+    public MapGenerator(MapGenerationConfig config, Supplier<Random> randomSupplier, MapValidator validator) {
         this.config = Objects.requireNonNull(config, "config");
+        this.randomSupplier = Objects.requireNonNull(randomSupplier, "randomSupplier");
+        this.validator = Objects.requireNonNull(validator, "validator");
     }
 
     /**
@@ -58,7 +73,7 @@ public class MapGenerator {
         Objects.requireNonNull(playerID, "playerID");
 
         boolean validMap = false;
-        Random random = new Random();
+    Random random = randomSupplier.get();
         
         while (!validMap) {
             PlayerHalfMap halfMap = new PlayerHalfMap(playerID);
@@ -97,7 +112,6 @@ public class MapGenerator {
                     halfMap.addMapNode(node);
                 }
             }
-            MapValidator validator = new MapValidator();
             Notification result = (existingHalfMap == null)
                     ? validator.validate(halfMap)
                     : validator.validate(halfMap, existingHalfMap);
