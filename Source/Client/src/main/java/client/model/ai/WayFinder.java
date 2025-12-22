@@ -3,11 +3,17 @@ import client.exception.AIDecisionException;
 import client.model.GameState;
 import client.model.Direction;
 import client.model.mapper.MapNode;
+import client.model.mapper.HalfMapDimensions;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
 public class WayFinder implements client.observer.util.Observer{
     // private static final Logger logger = LoggerFactory.getLogger(WayFinder.class);
+
+    private static final int HALF_MAP_TOTAL_NODES = HalfMapDimensions.TOTAL_NODES;
+    private static final int FULL_MAP_TOTAL_NODES = HALF_MAP_TOTAL_NODES * 2;
+    private static final int MOVES_UNTIL_ENEMY_TRUE_POSITION = 8;
+
     private GameState gameState;
     private WayHelper wayHelper;
     private StateHolder stateHolder;
@@ -84,23 +90,23 @@ public class WayFinder implements client.observer.util.Observer{
             // Keep the existing currentMapNode if players are not available yet
         }
         
-        if(gameState.getMap() != null && gameState.getMap().getContentSize() >= 50 && (wayHelper.getHalfMapVisitedGrassFields() == null || wayHelper.getHalfMapVisitedGrassFields().isEmpty())) {
+        if(gameState.getMap() != null && gameState.getMap().getContentSize() >= HALF_MAP_TOTAL_NODES && (wayHelper.getHalfMapVisitedGrassFields() == null || wayHelper.getHalfMapVisitedGrassFields().isEmpty())) {
             wayHelper.setHalfMapVisitedGrassFields(treasureSeeker.getTraverseWay());
             // logger.debug("Half map visited grass fields initialized with {} fields", 
             //             wayHelper.getHalfMapVisitedGrassFields() != null ? wayHelper.getHalfMapVisitedGrassFields().size() : 0);
         }
-        if (gameState.getMap() != null && (gameState.getMap().getContentSize() == 100) && (wayHelper.getOppHalfMapVisitedGrassFields() == null || wayHelper.getOppHalfMapVisitedGrassFields().isEmpty())) {
+        if (gameState.getMap() != null && (gameState.getMap().getContentSize() == FULL_MAP_TOTAL_NODES) && (wayHelper.getOppHalfMapVisitedGrassFields() == null || wayHelper.getOppHalfMapVisitedGrassFields().isEmpty())) {
             wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getTraverseWay());
             // logger.debug("Opponent half map visited grass fields initialized with {} fields", 
             //             wayHelper.getOppHalfMapVisitedGrassFields() != null ? wayHelper.getOppHalfMapVisitedGrassFields().size() : 0);
         }
-        if(movesMade == 8) {
+        if(movesMade == MOVES_UNTIL_ENEMY_TRUE_POSITION) {
             stateHolder.setEnemyFirstTruePosition(this.gameState.getEnemyCurrentPosition());
             wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getFilteredTraverseWay(stateHolder.getEnemyFirstTruePosition()));
             // logger.debug("Enemy first turn position detected: {}, filtered traverse way updated", 
             //             stateHolder.getEnemyFirstTruePosition() != null ? stateHolder.getEnemyFirstTruePosition().printCoordinates() : "null");
         }
-        if(gameState.getMap() != null && gameState.getMap().getContentSize() == 100 && (wayHelper.getAllMountainFieldsMap() == null || wayHelper.getAllMountainFieldsMap().isEmpty())) { // target M
+        if(gameState.getMap() != null && gameState.getMap().getContentSize() == FULL_MAP_TOTAL_NODES && (wayHelper.getAllMountainFieldsMap() == null || wayHelper.getAllMountainFieldsMap().isEmpty())) { // target M
             wayHelper.setAllMountainFields(strategyGuide.getAllMountainFields());
             // logger.debug("All mountain fields initialized with {} mountains", 
             //             wayHelper.getAllMountainFieldsMap() != null ? wayHelper.getAllMountainFieldsMap().size() : 0);

@@ -1,6 +1,7 @@
 package client.model.ai;
 
 import client.model.mapper.GameMap;
+import client.model.mapper.HalfMapDimensions;
 import client.model.mapper.MapNode;
 import client.model.mapper.OwnToOppMapOrientation;
 import client.model.mapper.PlayerHalfMap;
@@ -11,6 +12,13 @@ import client.model.mapper.PlayerHalfMap;
  * Package-private on purpose: extracted from WayHelper for SRP.
  */
 final class HalfMapSnakeArranger {
+
+    private static final int HALF_WIDTH = HalfMapDimensions.WIDTH;
+    private static final int HALF_HEIGHT = HalfMapDimensions.HEIGHT;
+
+    // Preserves the original "midpoint" behavior:
+    // for a half with HEIGHT=5 -> threshold = minY + 3 (splits rows 0-2 vs 3-4).
+    private static final int HALF_Y_MIDPOINT_OFFSET = HALF_HEIGHT - 2;
 
     private HalfMapSnakeArranger() {
         // utility
@@ -109,32 +117,81 @@ final class HalfMapSnakeArranger {
     }
 
     private static Bounds ownHalfBounds(OwnToOppMapOrientation orientation) {
+        int minX;
+        int maxX;
+        int minY;
+        int maxY;
+
+        // Note: For vertical orientations, width is HALF_WIDTH and height is 2*HALF_HEIGHT.
+        // For horizontal orientations, width is 2*HALF_WIDTH and height is HALF_HEIGHT.
         switch (orientation) {
-            case UP_DOWN:
-            case LEFT_RIGHT:
-                return new Bounds(0, 9, 5, 0, 4, 3);
-            case RIGHT_LEFT:
-                return new Bounds(10, 19, 15, 0, 4, 3);
-            case DOWN_UP:
-                return new Bounds(0, 9, 5, 5, 9, 8);
-            default:
-                throw new IllegalArgumentException("Invalid orientation: " + orientation);
+            case UP_DOWN, LEFT_RIGHT -> {
+                minX = 0;
+                maxX = HALF_WIDTH - 1;
+                minY = 0;
+                maxY = HALF_HEIGHT - 1;
+            }
+            case RIGHT_LEFT -> {
+                minX = HALF_WIDTH;
+                maxX = (HALF_WIDTH * 2) - 1;
+                minY = 0;
+                maxY = HALF_HEIGHT - 1;
+            }
+            case DOWN_UP -> {
+                minX = 0;
+                maxX = HALF_WIDTH - 1;
+                minY = HALF_HEIGHT;
+                maxY = (HALF_HEIGHT * 2) - 1;
+            }
+            default -> throw new IllegalArgumentException("Invalid orientation: " + orientation);
         }
+
+        int xMidPointThreshold = minX + (HALF_WIDTH / 2);
+        int yMidPointThreshold = minY + HALF_Y_MIDPOINT_OFFSET;
+        return new Bounds(minX, maxX, xMidPointThreshold, minY, maxY, yMidPointThreshold);
     }
 
     private static OpponentBounds opponentHalfBounds(OwnToOppMapOrientation orientation) {
+        Bounds own = ownHalfBounds(orientation);
+
+        int minX;
+        int maxX;
+        int minY;
+        int maxY;
+
         switch (orientation) {
-            case DOWN_UP:
-                return new OpponentBounds(0, 9, 0, 4, 5, 8);
-            case UP_DOWN:
-                return new OpponentBounds(0, 9, 5, 9, 5, 3);
-            case LEFT_RIGHT:
-                return new OpponentBounds(10, 19, 0, 4, 5, 3);
-            case RIGHT_LEFT:
-                return new OpponentBounds(0, 9, 0, 4, 15, 3);
-            default:
-                throw new IllegalArgumentException("Invalid orientation: " + orientation);
+            case DOWN_UP -> {
+                // opponent is top half
+                minX = 0;
+                maxX = HALF_WIDTH - 1;
+                minY = 0;
+                maxY = HALF_HEIGHT - 1;
+            }
+            case UP_DOWN -> {
+                // opponent is bottom half
+                minX = 0;
+                maxX = HALF_WIDTH - 1;
+                minY = HALF_HEIGHT;
+                maxY = (HALF_HEIGHT * 2) - 1;
+            }
+            case LEFT_RIGHT -> {
+                // opponent is right half
+                minX = HALF_WIDTH;
+                maxX = (HALF_WIDTH * 2) - 1;
+                minY = 0;
+                maxY = HALF_HEIGHT - 1;
+            }
+            case RIGHT_LEFT -> {
+                // opponent is left half
+                minX = 0;
+                maxX = HALF_WIDTH - 1;
+                minY = 0;
+                maxY = HALF_HEIGHT - 1;
+            }
+            default -> throw new IllegalArgumentException("Invalid orientation: " + orientation);
         }
+
+        return new OpponentBounds(minX, maxX, minY, maxY, own.xMidPointThreshold, own.yMidPointThreshold);
     }
 
     private record Bounds(int minX, int maxX, int xMidPointThreshold, int minY, int maxY, int yMidPointThreshold) {}
