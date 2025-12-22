@@ -1,10 +1,16 @@
 package client.model;
+
 import client.model.mapper.MapNode;
+
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Class representing the state of a player in the game.
  */
 public class PlayerState {
+
+    private static final PlayerStatus DEFAULT_STATUS = PlayerStatus.MUST_WAIT;
 
     private String playerID;
     private String firstName;
@@ -12,7 +18,7 @@ public class PlayerState {
     private String uAccount;
     private PlayerStatus status;
     private boolean collectedTreasure = false;
-    private MapNode currentPosition = null; //always assigned in converter
+    private Optional<MapNode> currentPosition = Optional.empty();
 
     /**
      * Constructs a new PlayerState with the given parameters.
@@ -22,11 +28,7 @@ public class PlayerState {
      * @param acc The player's university account.
      */
     public PlayerState(String ID, String firstName, String lastName, String acc) {
-        this.playerID = ID;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.uAccount = acc;
-        this.status = PlayerStatus.MUST_WAIT;
+        this(ID, firstName, lastName, acc, false, Optional.empty(), DEFAULT_STATUS);
     }
 
     /**
@@ -38,12 +40,7 @@ public class PlayerState {
      * @param collectedTreasure Whether the player has collected the treasure.
      */
     public PlayerState(String ID, String firstName, String lastName, String acc, boolean collectedTreasure) {
-        this.playerID = ID;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.uAccount = acc;
-        this.collectedTreasure = collectedTreasure;
-        this.status = PlayerStatus.MUST_WAIT;
+        this(ID, firstName, lastName, acc, collectedTreasure, Optional.empty(), DEFAULT_STATUS);
     }
 
     /**
@@ -56,23 +53,21 @@ public class PlayerState {
      * @param playerMapNode The player's map node.
      */
     public PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, MapNode playerMapNode) {
-        this.playerID = uniquePlayerID;
-        this.firstName = firstName2;
-        this.lastName = lastName2;
-        this.uAccount = uAccount2;
-        this.collectedTreasure = hasCollectedTreasure;
-        this.status = PlayerStatus.MUST_WAIT;
-        this.currentPosition = playerMapNode;
+        this(uniquePlayerID, firstName2, lastName2, uAccount2, hasCollectedTreasure, Optional.ofNullable(playerMapNode), DEFAULT_STATUS);
     }
 
     public PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, MapNode playerMapNode, PlayerStatus status) {
-        this.playerID = uniquePlayerID;
-        this.firstName = firstName2;
-        this.lastName = lastName2;
-        this.uAccount = uAccount2;
+        this(uniquePlayerID, firstName2, lastName2, uAccount2, hasCollectedTreasure, Optional.ofNullable(playerMapNode), status);
+    }
+
+    public PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, Optional<MapNode> playerMapNode, PlayerStatus status) {
+        this.playerID = Objects.requireNonNullElse(uniquePlayerID, "");
+        this.firstName = Objects.requireNonNullElse(firstName2, "");
+        this.lastName = Objects.requireNonNullElse(lastName2, "");
+        this.uAccount = Objects.requireNonNullElse(uAccount2, "");
         this.collectedTreasure = hasCollectedTreasure;
-        this.currentPosition = playerMapNode;
-        this.status = status;
+        this.currentPosition = Objects.requireNonNullElse(playerMapNode, Optional.empty());
+        this.status = Objects.requireNonNullElse(status, DEFAULT_STATUS);
     }
 
     /**
@@ -80,20 +75,22 @@ public class PlayerState {
      * @param playerState The player state to update from.
      */
     public void updatePlayerState(PlayerState playerState) {
-        if (playerState != null && this.playerID.equals(playerState.getPlayerID())) {
-            this.firstName = playerState.getFirstName();
-            this.lastName = playerState.getLastName();
-            this.uAccount = playerState.getUAccount();
-            this.status = playerState.getStatus();
-            this.collectedTreasure = playerState.hasCollectedTreasure();
-        }
+        Optional.ofNullable(playerState)
+                .filter(state -> this.playerID.equals(state.getPlayerID()))
+                .ifPresent(state -> {
+                    this.firstName = state.getFirstName();
+                    this.lastName = state.getLastName();
+                    this.uAccount = state.getUAccount();
+                    this.status = state.getStatus();
+                    this.collectedTreasure = state.hasCollectedTreasure();
+                });
     }
 
     /**
      * Gets the current position of the player.
      * @return The current position of the player.
      */
-    public MapNode getCurrentPosition() {
+    public Optional<MapNode> getCurrentPosition() {
         return currentPosition;
     }
 
@@ -102,7 +99,7 @@ public class PlayerState {
      * @param currentPosition The current position of the player.
      */
     public void setCurrentPosition(MapNode currentPosition) {
-        this.currentPosition = currentPosition;
+        this.currentPosition = Optional.ofNullable(currentPosition);
     }
 
     /**

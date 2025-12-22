@@ -1,11 +1,16 @@
 package client.model.mapper;
+
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.List;
 
 public class GameMap {
-    private ArrayList<MapNode> gameMapNodes;
-    private OwnToOppMapOrientation orientation;
-    private int maxX = 0;
-    private int maxY = 0;
+    private final MapEssentials map;
+    private Optional<OwnToOppMapOrientation> orientation;
+
+    private static final String ORIENTATION_REQUIRED_MESSAGE = "Map orientation must be set";
 
     /**
      * Constructs a GameMap with the given parameters.
@@ -14,15 +19,21 @@ public class GameMap {
      * @param orientation The orientation of the map.
      */
     public GameMap(ArrayList<MapNode> nodes, OwnToOppMapOrientation orientation) {
-        this.gameMapNodes = nodes;
-        this.orientation = orientation;
-        if(orientation == OwnToOppMapOrientation.UP_DOWN || orientation == OwnToOppMapOrientation.DOWN_UP) {
-            this.maxX = 9; 
-            this.maxY = 9; 
+        this.orientation = Optional.of(Objects.requireNonNull(orientation, "orientation"));
+
+        int width;
+        int height;
+        if (orientation == OwnToOppMapOrientation.UP_DOWN || orientation == OwnToOppMapOrientation.DOWN_UP) {
+            width = HalfMapDimensions.WIDTH;
+            height = HalfMapDimensions.HEIGHT * 2;
         } else {
-            this.maxX = 19;
-            this.maxY = 4;
+            width = HalfMapDimensions.WIDTH * 2;
+            height = HalfMapDimensions.HEIGHT;
         }
+
+        int maxX = width - 1;
+        int maxY = height - 1;
+        this.map = new MapEssentials(Objects.requireNonNull(nodes, "nodes"), maxX, maxY);
     }
 
     /**
@@ -34,20 +45,16 @@ public class GameMap {
      * @param maxY The maximum Y coordinate.
      */
     public GameMap(ArrayList<MapNode> nodes, OwnToOppMapOrientation orientation, int maxX, int maxY) {
-        this.gameMapNodes = nodes;
-        this.orientation = orientation;
-        this.maxX = maxX;
-        this.maxY = maxY;
+        this.orientation = Optional.of(Objects.requireNonNull(orientation, "orientation"));
+        this.map = new MapEssentials(Objects.requireNonNull(nodes, "nodes"), maxX, maxY);
     }
 
     /**
      * Default constructor for GameMap.
      */
     public GameMap() {
-        this.gameMapNodes = new ArrayList<>();
-        this.orientation = null;
-        this.maxX = 0;
-        this.maxY = 0;
+        this.map = new MapEssentials(new ArrayList<>(), 0, 0);
+        this.orientation = Optional.empty();
     }
 
     /**
@@ -55,40 +62,11 @@ public class GameMap {
      * @return The player's own half map.
      */
     public PlayerHalfMap getOwnHalfMap() {
-        PlayerHalfMap ownHalfMap = new PlayerHalfMap();
-        if(this.gameMapNodes.size() == 50){
-            for(MapNode node : gameMapNodes) {
-                ownHalfMap.addMapNode(node);
-            }
+        if (map.size() == HalfMapDimensions.TOTAL_NODES) {
+            return buildHalfMap(node -> true);
         }
-        else{
-            for (MapNode node : gameMapNodes) {
-                switch (orientation) {
-                    case UP_DOWN:
-                        if (node.getY() <= 4) {
-                            ownHalfMap.addMapNode(node);
-                        }
-                        break;
-                    case DOWN_UP:
-                        if (node.getY() >= 5) {
-                            ownHalfMap.addMapNode(node);
-                        }
-                        break;
-                    case LEFT_RIGHT:
-                        if (node.getX() <= 9) {
-                            ownHalfMap.addMapNode(node);
-                        }
-                        break;
-                    case RIGHT_LEFT:
-                        if (node.getX() >= 10) {
-                            ownHalfMap.addMapNode(node);
-                        }
-                        break;
-                }
-            }
-        }
-        return ownHalfMap;
-            
+
+        return buildHalfMap(ownHalfPredicate());
     }
 
     /**
@@ -96,32 +74,7 @@ public class GameMap {
      * @return The opponent's half map.
      */
     public PlayerHalfMap getOpponentHalfMap() {
-        PlayerHalfMap opponentHalfMap = new PlayerHalfMap();
-        for (MapNode node : gameMapNodes) {
-            switch (orientation) {
-                case UP_DOWN:
-                    if (node.getY() >= 5) {
-                        opponentHalfMap.addMapNode(node);
-                    }
-                    break;
-                case DOWN_UP:
-                    if (node.getY() <= 4) {
-                        opponentHalfMap.addMapNode(node);
-                    }
-                    break;
-                case LEFT_RIGHT:
-                    if (node.getX() >= 10) {
-                        opponentHalfMap.addMapNode(node);
-                    }
-                    break;
-                case RIGHT_LEFT:
-                    if (node.getX() <= 9) {
-                        opponentHalfMap.addMapNode(node);
-                    }
-                    break;
-            }
-        }
-        return opponentHalfMap;
+        return buildHalfMap(ownHalfPredicate().negate());
     }
 
 
@@ -130,7 +83,7 @@ public class GameMap {
      * @return The map orientation.
      */
     public OwnToOppMapOrientation getOrientation() {
-        return orientation;
+        return orientation.orElseThrow(() -> new IllegalStateException(ORIENTATION_REQUIRED_MESSAGE));
     }
 
     /**
@@ -138,7 +91,7 @@ public class GameMap {
      * @param orientation The map orientation.
      */
     public void setOrientation(OwnToOppMapOrientation orientation) {
-        this.orientation = orientation;
+        this.orientation = Optional.of(Objects.requireNonNull(orientation, "orientation"));
     }
 
     /**
@@ -146,7 +99,7 @@ public class GameMap {
      * @return The maximum X coordinate.
      */
     public int getMaxX() {
-        return maxX;
+        return map.getMaxX();
     }
 
     /**
@@ -154,7 +107,7 @@ public class GameMap {
      * @param maxX The maximum X coordinate.
      */
     public void setMaxX(int maxX) {
-        this.maxX = maxX;
+        map.setMaxX(maxX);
     }
 
     /**
@@ -162,7 +115,7 @@ public class GameMap {
      * @return The maximum Y coordinate.
      */
     public int getMaxY() {
-        return maxY;
+        return map.getMaxY();
     }
 
     /**
@@ -170,7 +123,7 @@ public class GameMap {
      * @param maxY The maximum Y coordinate.
      */
     public void setMaxY(int maxY) {
-        this.maxY = maxY;
+        map.setMaxY(maxY);
     }
 
     /**
@@ -178,7 +131,7 @@ public class GameMap {
      * @return The total number of nodes in the map.
      */
     public int getContentSize() {
-        return gameMapNodes.size();
+        return map.size();
     }
 
     /**
@@ -189,7 +142,7 @@ public class GameMap {
      * @throws IllegalArgumentException if coordinates are invalid.
      */
     public MapNode getNode(int x, int y) {
-        for (MapNode node : gameMapNodes) {
+        for (MapNode node : map.getNodes()) {
             if (node.getX() == x && node.getY() == y) {
                 return node;
             }
@@ -199,19 +152,20 @@ public class GameMap {
 
     /**
      * Gets the half map MapNode that contains the player's own fort.
-     * @return The MapNode containing the player's own fort.
+     *
+     * @return An {@link Optional} containing the MapNode with the player's own fort.
      */
-    public MapNode getOwnFortMapNode() {
+    public Optional<MapNode> getOwnFortMapNode() {
         PlayerHalfMap ownHalfMap = getOwnHalfMap();
         return ownHalfMap.getFortNode();
     }
 
     /**
      * gets the map nodes of the game map.
-     * @return An ArrayList of MapNode objects representing the game map nodes.
+     * @return An unmodifiable view of MapNode objects representing the game map nodes.
      */
-    public ArrayList<MapNode> getGameMapNodes() {
-        return gameMapNodes;
+    public List<MapNode> getGameMapNodes() {
+        return map.getNodes();
     }
     /**
      * Checks if the given node is in the player's own half of the map.
@@ -220,21 +174,33 @@ public class GameMap {
      * @return True if the node is in the player's own half, false otherwise.
      */
     public boolean isNodeInOwnHalf(MapNode node) {
-        if (node == null) {
-            throw new IllegalArgumentException("gameMap Half finder :Node cannot be null");
+        Objects.requireNonNull(node, "node");
+        return ownHalfPredicate().test(node);
+    }
+
+    private PlayerHalfMap buildHalfMap(Predicate<MapNode> includeNode) {
+        Objects.requireNonNull(includeNode, "includeNode");
+
+        PlayerHalfMap halfMap = new PlayerHalfMap();
+        for (MapNode node : map.getNodes()) {
+            if (includeNode.test(node)) {
+                halfMap.addMapNode(node);
+            }
         }
-        switch (orientation) {
-            case UP_DOWN:
-                return node.getY() <= 4;
-            case DOWN_UP:
-                return node.getY() >= 5;
-            case LEFT_RIGHT:
-                return node.getX() <= 9;
-            case RIGHT_LEFT:
-                return node.getX() >= 10;
-            default:
-                throw new IllegalArgumentException("Invalid orientation: " + orientation);
+        return halfMap;
+    }
+
+    private Predicate<MapNode> ownHalfPredicate() {
+        if (orientation.isEmpty()) {
+            throw new IllegalStateException(ORIENTATION_REQUIRED_MESSAGE);
         }
+
+        return switch (orientation.get()) {
+            case UP_DOWN -> node -> node.getY() <= HalfMapDimensions.HEIGHT - 1;
+            case DOWN_UP -> node -> node.getY() >= HalfMapDimensions.HEIGHT;
+            case LEFT_RIGHT -> node -> node.getX() <= HalfMapDimensions.WIDTH - 1;
+            case RIGHT_LEFT -> node -> node.getX() >= HalfMapDimensions.WIDTH;
+        };
     }
     /**
      * Returns a string representation of the GameMap.
@@ -243,10 +209,10 @@ public class GameMap {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("GameMap{orientation=").append(orientation)
-          .append(", maxX=").append(maxX)
-          .append(", maxY=").append(maxY)
+                    .append(", maxX=").append(getMaxX())
+                    .append(", maxY=").append(getMaxY())
           .append(", nodes=[");
-        for (MapNode node : gameMapNodes) {
+        for (MapNode node : map.getNodes()) {
             sb.append(node.toString()).append(", ");
         }
         sb.append("]}");

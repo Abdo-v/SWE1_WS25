@@ -6,44 +6,64 @@ import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
 import client.exception.AIDecisionException;
 import client.exception.MapProcessingException;
-import client.model.*;
+import client.model.GameMode;
 import client.model.ai.WayFinder;
-import client.view.*;
+import client.view.DynamicCLIGameView;
+import client.view.GameOutput;
+import client.view.MapVisualizationType;
 import client.controller.network.service.NetworkCenter;
 import client.model.mapper.GameMap;
-import client.model.mapper.MapGenerator;
-import client.model.mapper.MapValidator;
-import client.model.mapper.PlayerHalfMap;
-import client.model.common.Notification;
 import messagesbase.UniquePlayerIdentifier;
+
+import java.util.Optional;
+import java.util.Objects;
 
 public class GameManager {
     // private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     
     private client.model.GameState gameState;
-    private NetworkCenter networkCenter;
-    private String playerId;
-    private GameMap gameMap;
-    private WayFinder wayFinder = new WayFinder();
-    private MapValidator mapValidator = new MapValidator();
-    private CLIHandler cliHandler;
-    private DynamicCLIGameView dynamicView = new DynamicCLIGameView();
+    private final NetworkCenter networkCenter;
+    private Optional<String> playerId;
+    private final WayFinder wayFinder = new WayFinder();
+    private final DynamicCLIGameView dynamicView = new DynamicCLIGameView();
+    private final GameOutput output;
+    private final HalfMapService halfMapService;
+    private final GameStateSynchronizer gameStateSynchronizer;
+    private final GameStateQueryService gameStateQueryService;
+    private final GameLoopService gameLoopService;
+    private final PlayerRegistrationService playerRegistrationService;
+    private final MoveExecutionService moveExecutionService;
+    private final GameVisualizationService visualizationService;
+    private final PlayerTurnService playerTurnService;
 
-    private static final String GREEN = "\u001B[32m";
-    private static final String RESET = "\u001B[0m";
+    private static final String UNKNOWN_GAME_STATE_ID = "unknown";
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
-        // // logger.debug("Creating GameManager with gameId: {}, server: {}, mode: {}", state.getGameStateID(), serverBaseUrl, gameMode);
-        this.gameState = state;
-        this.networkCenter = new NetworkCenter(serverBaseUrl, state.getGameStateID());
-        this.gameMap = state.getMap();
-        this.cliHandler = new CLIHandler(gameMode);
-        state.addObserver(cliHandler);
-        state.addObserver(wayFinder);
-        state.addObserver(dynamicView);
-        wayFinder.setGameState(state);
-        wayFinder.addSubObservers();
-        // // logger.debug("GameManager initialization completed successfully");
+        this(state, serverBaseUrl, gameMode, new client.view.GameManagerView());
+    }
+
+    public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode, GameOutput output){
+        this(state, serverBaseUrl, GameMode.fromCliValue(gameMode), output);
+    }
+
+    public GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){
+        this.gameState = Objects.requireNonNull(state, "state is required");
+        this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), this.gameState.getGameStateID());
+        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+        this.playerId = Optional.empty();
+
+        var cliHandler = GameManagerWiring.createCliHandler(gameMode);
+        GameManagerWiring.wireObservers(state, cliHandler, wayFinder, dynamicView);
+
+        this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
+        this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
+        this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
+        this.gameLoopService = new GameLoopService(this, this.output);
+
+        this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
+        this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.playerTurnService = new PlayerTurnService();
     }
 
     /**
@@ -53,9 +73,27 @@ public class GameManager {
      * @param playerId The unique player identifier.
      */
     public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId) {
-        // // logger.debug("Creating GameManager with gameId: {}, server: {}, playerId: {}", gameId, serverBaseUrl, playerId.getUniquePlayerID());
-        this.networkCenter = new NetworkCenter(serverBaseUrl, gameId, playerId);
+        this(gameId, serverBaseUrl, playerId, new client.view.GameManagerView());
+    }
+
+    public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId, GameOutput output) {
+        this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), Objects.requireNonNull(gameId, "gameId is required"), Objects.requireNonNull(playerId, "playerId is required"));
         this.gameState = new client.model.GameState(gameId);
+        this.playerId = Optional.of(playerId.getUniquePlayerID());
+        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+
+        var cliHandler = GameManagerWiring.createCliHandler(GameMode.UNKNOWN);
+        GameManagerWiring.wireObservers(this.gameState, cliHandler, wayFinder, dynamicView);
+
+        this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
+        this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
+        this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
+        this.gameLoopService = new GameLoopService(this, this.output);
+
+        this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
+        this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.playerTurnService = new PlayerTurnService();
     }
 
     /**
@@ -64,9 +102,27 @@ public class GameManager {
      * @param serverBaseUrl The base URL of the server.
      */
     public GameManager(String gameId, String serverBaseUrl) {
-        // // logger.debug("Creating GameManager with gameId: {}, server: {}", gameId, serverBaseUrl);
-        this.networkCenter = new NetworkCenter(serverBaseUrl, gameId);
+        this(gameId, serverBaseUrl, new client.view.GameManagerView());
+    }
+
+    public GameManager(String gameId, String serverBaseUrl, GameOutput output) {
+        this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), Objects.requireNonNull(gameId, "gameId is required"));
         this.gameState = new client.model.GameState(gameId);
+        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+        this.playerId = Optional.empty();
+
+        var cliHandler = GameManagerWiring.createCliHandler(GameMode.UNKNOWN);
+        GameManagerWiring.wireObservers(this.gameState, cliHandler, wayFinder, dynamicView);
+
+        this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
+        this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
+        this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
+        this.gameLoopService = new GameLoopService(this, this.output);
+
+        this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
+        this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.playerTurnService = new PlayerTurnService();
     }
 
     /**
@@ -79,39 +135,9 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for player registration.
      */
     public String registerPlayer(String firstName, String lastName, String uAccount) throws GameCommunicationException, GameStateException {
-        // // logger.info("Attempting to register player: {} {}, uAccount: {}", firstName, lastName, uAccount);
-        
-        // Validate game state before registration
-        if (gameState == null) {
-            throw new GameStateException(
-                "Cannot register player: game state is not initialized",
-                null,
-                "PLAYER_REGISTRATION",
-                "uninitialized"
-            );
-        }
-        
-        try {
-            UniquePlayerIdentifier playerIdentifier = networkCenter.registerPlayer(firstName, lastName, uAccount);
-            this.playerId = playerIdentifier.getUniquePlayerID();
-            client.model.PlayerState playerState = new client.model.PlayerState(playerId, firstName, lastName, uAccount);
-            gameState.addPlayer(playerState);
-            // // logger.info("Successfully registered player {} with ID: {}", playerState.getLastName(), playerId);
-            return playerId;
-        } catch (GameCommunicationException e) {
-            // Re-throw communication exceptions as-is
-            throw e;
-        } catch (Exception e) {
-            // Wrap unexpected exceptions
-            throw new GameStateException(
-                "Unexpected error during player registration: " + e.getMessage(),
-                e,
-                gameState.getGameStateID(),
-                "PLAYER_REGISTRATION",
-                "unknown",
-                null
-            );
-        }
+        String registeredPlayerId = playerRegistrationService.registerPlayer(gameState, firstName, lastName, uAccount);
+        this.playerId = Optional.of(registeredPlayerId);
+        return registeredPlayerId;
     }
     
     /**
@@ -120,89 +146,7 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for map generation.
      */
     public void generateAndSendHalfMap() throws GameCommunicationException, GameStateException {
-        // // logger.debug("Generating and sending half map for player ID: {}", playerId);
-        
-        if (playerId == null) {
-            throw new GameStateException(
-                "Cannot generate half map: player ID is not set",
-                gameState != null ? gameState.getGameStateID() : "unknown",
-                "GENERATE_HALF_MAP",
-                "no_player_id"
-            );
-        }
-        
-        try {
-            int width = 10;
-            int height = 5;
-            PlayerHalfMap halfMapToSend = generateHalfMap(width, height, playerId);
-            // // logger.trace("Generated half map: {}", halfMapToSend.toString());
-            validateHalfMap(halfMapToSend);
-            sendHalfMap(halfMapToSend);
-            // // logger.info("Half map sent successfully for player ID: {}", playerId);
-        } catch (GameCommunicationException e) {
-            throw e; // Re-throw communication exceptions
-        } catch (Exception e) {
-            throw new GameStateException(
-                "Failed to generate or send half map: " + e.getMessage(),
-                e,
-                gameState.getGameStateID(),
-                "GENERATE_HALF_MAP",
-                "error",
-                null
-            );
-        }
-    }
-
-    private void validateHalfMap(PlayerHalfMap halfMap) {
-        // // logger.debug("Validating half map");
-        Notification validation = mapValidator.validate(halfMap);
-        if (validation.hasErrors()) {
-            // // logger.error("Map validation failed: {}", validation.getErrorMessages());
-            System.err.println("❌ Map validation failed:");
-            System.err.println(validation.getErrorMessages());
-            throw new IllegalStateException("Generated map is invalid: " + validation.getErrorMessages());
-        } else {
-            // // logger.info("Map validation successful");
-            // print in green all is ok
-            System.out.println(GREEN + "✅ Map validation found no errors, sending map..." + RESET);
-        }
-    }
-
-    /**
-     * Sends the player's half map to the server.
-     * @param halfMap The half map to send.
-     * @throws GameCommunicationException If sending half map fails due to network issues.
-     */
-    private void sendHalfMap(PlayerHalfMap halfMap) throws GameCommunicationException {
-        try {
-            // // logger.debug("Sending half map to server");
-            networkCenter.sendHalfMap(halfMap);
-            // // logger.debug("Half map successfully transmitted to server");
-        } catch (Exception e) {
-            throw new GameCommunicationException(
-                "Failed to send half map to server: " + e.getMessage(),
-                e,
-                networkCenter != null ? "unknown" : "no_network",
-                "SEND_HALF_MAP",
-                -1
-            );
-        }
-    }
-
-    /**
-     * Generates a half map for the player with the specified dimensions.
-     * @param width The width of the half map.
-     * @param height The height of the half map.
-     * @param playerId The ID of the player.
-     * @return The generated PlayerHalfMap.
-     */
-    private PlayerHalfMap generateHalfMap(int width, int height, String playerId) {
-        // // logger.debug("Generating half map with dimensions {}x{} for player: {}", width, height, playerId);
-        MapGenerator generator = new MapGenerator();
-        PlayerHalfMap halfMapToSend = generator.generateMap(width, height, playerId);
-        cliHandler.printHalfMap(halfMapToSend, "own"); 
-        // // logger.debug("Half map generation completed");
-        return halfMapToSend;
+        halfMapService.generateAndSendHalfMap(requirePlayerId(), requireGameStateId());
     }
 
     /**
@@ -211,21 +155,7 @@ public class GameManager {
      * @throws GameCommunicationException If polling fails due to network issues.
      */
     public boolean fullMapAvailable() throws GameCommunicationException {
-        try {
-            // // logger.trace("Checking if full map is available");
-            messagesbase.messagesfromserver.GameState serverGameState = networkCenter.pollGameState();
-            boolean available = serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 100;
-            // // logger.debug("Full map availability check: {}", available);
-            return available;
-        } catch (Exception e) {
-            throw new GameCommunicationException(
-                "Failed to check full map availability: " + e.getMessage(),
-                e,
-                networkCenter != null ? "unknown" : "no_network",
-                "FULL_MAP_CHECK",
-                -1
-            );
-        }
+        return gameStateQueryService.isFullMapAvailable();
     }
 
     /**
@@ -234,49 +164,7 @@ public class GameManager {
      * @throws MapProcessingException If the received data cannot be processed.
      */
     public void updateGameState() throws GameCommunicationException, MapProcessingException {
-        try {
-            // // logger.trace("Updating game state from server");
-            long startPollGameState = System.nanoTime();
-            messagesbase.messagesfromserver.GameState serverState = networkCenter.pollGameState();
-            long polt = (System.nanoTime() - startPollGameState) / 1_000_000;
-            
-            // Validate server state before processing
-            if (serverState == null) {
-                throw new MapProcessingException(
-                    "Received null game state from server",
-                    "GameState",
-                    "server_response_validation"
-                );
-            }
-            
-            GameState polledState = networkCenter.convertServerGamestate(serverState);
-            
-            // Validate converted state before updating
-            if (polledState == null) {
-                throw new MapProcessingException(
-                    "Failed to convert server game state to client format",
-                    "GameState",
-                    "state_conversion"
-                );
-            }
-            
-            this.gameState.updateGameState(polledState);
-            // // logger.trace("Game state update completed (poll: {}ms)", polt);
-            
-        } catch (GameCommunicationException | MapProcessingException e) {
-            throw e; // Re-throw our custom exceptions
-        } catch (Exception e) {
-            // // logger.error("Unexpected error updating game state: {}", e.getMessage(), e);
-            throw new MapProcessingException(
-                "Unexpected error during game state update: " + e.getMessage(),
-                e,
-                "GameState",
-                "update_process",
-                -1,
-                -1,
-                null
-            );
-        }
+        gameStateSynchronizer.synchronize(this.gameState);
     }
 
     /**
@@ -285,18 +173,7 @@ public class GameManager {
      * @throws GameCommunicationException If polling fails due to network issues.
      */
     public messagesbase.messagesfromserver.GameState managerpollGameState() throws GameCommunicationException {
-        try {
-            // // logger.trace("Polling server for current game state");
-            return networkCenter.pollGameState();
-        } catch (Exception e) {
-            throw new GameCommunicationException(
-                "Failed to poll game state from server: " + e.getMessage(),
-                e,
-                networkCenter != null ? "unknown" : "no_network",
-                "POLL_GAME_STATE",
-                -1
-            );
-        }
+        return gameStateQueryService.pollGameState();
     }
 
     /**
@@ -306,41 +183,7 @@ public class GameManager {
      * @throws GameStateException If the player is not found in the game state.
      */
     public messagesbase.messagesfromserver.EPlayerGameState pollMyStatus() throws GameCommunicationException, GameStateException {
-        // // logger.trace("Polling player status for player: {}", playerId);
-        
-        try {
-            messagesbase.messagesfromserver.GameState serverGameState = managerpollGameState();
-            
-            for (messagesbase.messagesfromserver.PlayerState playerState : serverGameState.getPlayers()) {
-                if (playerState.getUniquePlayerID().equals(playerId)) {
-                    // // logger.trace("Player {} status: {}", playerId, playerState.getState());
-                    return playerState.getState();
-                }
-            }
-            
-            // Player not found in server state
-            throw new GameStateException(
-                "Player not found in server game state",
-                gameState.getGameStateID(),
-                "POLL_PLAYER_STATUS",
-                "player_not_found",
-                "player_present"
-            );
-            
-        } catch (GameCommunicationException e) {
-            throw e; // Re-throw communication exceptions
-        } catch (GameStateException e) {
-            throw e; // Re-throw game state exceptions
-        } catch (Exception e) {
-            throw new GameStateException(
-                "Unexpected error polling player status: " + e.getMessage(),
-                e,
-                gameState.getGameStateID(),
-                "POLL_PLAYER_STATUS",
-                "error",
-                null
-            );
-        }
+        return gameStateQueryService.pollPlayerStatus(requirePlayerId(), requireGameStateId());
     }
 
     /**
@@ -350,64 +193,11 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for making moves.
      */
     public void makeMove(String gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
-        // // logger.debug("Making move for player: {}", playerId);
-        
-        // Validate game state before making move
-        if (gameState == null || gameState.getCurrentPlayerState() == null) {
-            throw new GameStateException(
-                "Cannot make move: game state or player state is null",
-                gameState != null ? gameState.getGameStateID() : "unknown",
-                "MAKE_MOVE",
-                "invalid_state"
-            );
-        }
-        
-        try {
-            Direction nextMoveDirection = wayFinder.findNext();
-            if (nextMoveDirection != null) {
-                // // logger.debug("WayFinder suggested direction: {}", nextMoveDirection);
-                try {
-                    networkCenter.sendMove(nextMoveDirection);
-                    // // logger.info("Move {} sent successfully for player {}", nextMoveDirection, playerId);
-                    
-                    if (gameMode.equals("TRR")) {
-                        // // logger.info("Player {} (TRR mode) moved to: {}", playerId, gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
-                        System.out.print("Move " + nextMoveDirection.name() + " sent to server, ");
-                    }
-                } catch (GameCommunicationException e) {
-                    throw e; // Re-throw communication exceptions
-                } catch (Exception e) {
-                    // // logger.error("Error making move for player {}: {}", playerId, e.getMessage(), e);
-                    throw new GameCommunicationException(
-                        "Failed to send move to server: " + e.getMessage(),
-                        e,
-                        networkCenter != null ? "unknown" : "no_network",
-                        "SEND_MOVE",
-                        -1
-                    );
-                }
-            } else {
-                // // logger.warn("WayFinder did not suggest a valid move for player {}. This may indicate AI decision failure.", playerId);
-                throw new AIDecisionException(
-                    "WayFinder failed to determine a valid move",
-                    "WayFinder",
-                    "findNext",
-                    gameState.getCurrentPlayerState().getCurrentPosition()
-                );
-            }
-        } catch (AIDecisionException | GameCommunicationException e) {
-            throw e; // Re-throw our custom exceptions
-        } catch (Exception e) {
-            // // logger.error("Unexpected error during move making: {}", e.getMessage(), e);
-            throw new GameStateException(
-                "Unexpected error during move making: " + e.getMessage(),
-                e,
-                gameState.getGameStateID(),
-                "MAKE_MOVE",
-                "error",
-                null
-            );
-        }
+        makeMove(GameMode.fromCliValue(gameMode));
+    }
+
+    public void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
+        moveExecutionService.makeMove(gameState, requirePlayerId(), gameMode);
     }
 
     /**
@@ -415,30 +205,8 @@ public class GameManager {
      * @return The current player status.
      * @throws GameStateException If the player is not found in the game state.
      */
-    public PlayerStatus getCurrentPlayerStatus() throws GameStateException {
-        if (gameState == null || gameState.getPlayers() == null) {
-            throw new GameStateException(
-                "Cannot get player status: game state or players list is null",
-                gameState != null ? gameState.getGameStateID() : "unknown",
-                "GET_PLAYER_STATUS",
-                "null_state"
-            );
-        }
-        
-        for (client.model.PlayerState playerState : gameState.getPlayers()) {
-            if (playerState.getPlayerID().equals(playerId)) {
-                // // logger.trace("Current player {} status: {}", playerId, playerState.getStatus());
-                return playerState.getStatus();
-            }
-        }
-        
-        throw new GameStateException(
-            "Player ID not found in game state",
-            gameState.getGameStateID(),
-            "GET_PLAYER_STATUS",
-            "player_not_found",
-            "player_present"
-        );
+    public client.model.PlayerStatus getCurrentPlayerStatus() throws GameStateException {
+        return playerTurnService.getCurrentPlayerStatus(gameState, requirePlayerId());
     }
 
     /**
@@ -447,124 +215,11 @@ public class GameManager {
      * @throws GameStateException If game state becomes invalid.
      */
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
-        boolean dynamicMode = "TR".equals(gameMode) || "ATTR".equals(gameMode);
-        if (dynamicMode) {
-            // // logger.info("Starting game with dynamic visualization (TR/ATTR mode)");
-            System.out.println("\n🎮 Starting game with dynamic visualization...");
-            try {
-                Thread.sleep(1000);
-                enableDynamicVisualization();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                // // logger.warn("Game loop initialization interrupted");
-            }
-        }
-        
-        // // logger.info("Entering main game loop with mode: {}", gameMode);
-        int loops = 0;
-        boolean gameIsRunning = true;
-        client.model.PlayerStatus currentStatus;
-        
-        while (gameIsRunning) {
-            try {
-                boolean acted = false;
-                updateGameState();
-                currentStatus = getCurrentPlayerStatus();
-                // // logger.trace("Game loop iteration: {}, Player status: {}", loops, currentStatus);
-                
-                switch (currentStatus) {
-                    case MUST_WAIT:
-                        // // logger.debug("Player {} must wait.", playerId);
-                        break;
-                    case MUST_ACT:
-                        // // logger.debug("Player {} must act.", playerId);
-                        try {
-                            makeMove(gameMode);
-                            if(gameMode.equals("TRR")) {
-                                System.out.print(gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
-                            }
-                            acted = true;
-                        } catch (AIDecisionException e) {
-                            // // logger.error("AI Decision Error for player {}: {}", playerId, e.getMessage());
-                            System.err.println("🤖 AI Error: " + e.getMessage());
-                            // Continue game loop - AI errors shouldn't terminate the game
-                        } catch (GameCommunicationException e) {
-                            // // logger.error("Communication error during move for player {}: {}", playerId, e.getMessage());
-                            System.err.println("🌐 Network Error: " + e.getMessage());
-                            if (!e.isRecoverable()) {
-                                throw e; // Fatal communication error
-                            }
-                            // For recoverable errors, continue and try again next loop
-                        }
-                        break;
-                    case WON:
-                        disableDynamicVisualization();
-                        // // logger.info("PLAYER {} WON THE GAME! Loops: {}", playerId, loops);
-                        System.out.println("🎉🎉🎉======= = = YOU WON! = = =======🎉🎉🎉");
-                        // // logger.info("Final player state: {}", gameState.getCurrentPlayerState().toString());
-                        System.out.println(gameState.getCurrentPlayerState().toString());
-                        if (dynamicMode) System.out.println(" loops: " + loops);
-                        gameIsRunning = false;
-                        break;
-                    case LOST:
-                        disableDynamicVisualization();
-                        // // logger.warn("PLAYER {} LOST THE GAME. Loops: {}", playerId, loops);
-                        System.out.println("💀💀💀======= = = YOU LOST! = = =======💀💀💀");
-                        // // logger.info("Final player state: {}", gameState.getCurrentPlayerState().toString());
-                        System.out.println(gameState.getCurrentPlayerState().toString());
-                        if (dynamicMode) System.out.println(" loops: " + loops);
-                        gameIsRunning = false;
-                        break;
-                    default:
-                        disableDynamicVisualization();
-                        // // logger.error("Unhandled player state: {}. Exiting game.", currentStatus);
-                        System.err.println("Unhandled player state: " + currentStatus + ". Exiting game.");
-                        gameIsRunning = false;
-                        break;
-                }
-                
-                loops++;
-                if (acted) {
-                    // // logger.trace("Loop {} completed with action", loops);
-                } else {
-                    // // logger.trace("Loop {} completed (no action taken)", loops);
-                }
-                if(gameMode.equals("TRR")) {
-                    // // logger.debug("Loop {} completed (TRR mode).", loops);
-                    System.out.println(" loops: " + loops);
-                }
-                
-            } catch (MapProcessingException e) {
-                // // logger.error("Map processing error in game loop: {}", e.getMessage(), e);
-                System.err.println("🗺️ Map Error: " + e.getRecoveryMessage());
-                if (!e.isRecoverable()) {
-                    throw new GameStateException(
-                        "Fatal map processing error: " + e.getMessage(),
-                        e,
-                        gameState.getGameStateID(),
-                        "GAME_LOOP",
-                        "map_error",
-                        null
-                    );
-                }
-                // For recoverable map errors, continue and try again
-            } catch (GameCommunicationException | GameStateException e) {
-                throw e; // Re-throw fatal exceptions
-            } catch (Exception e) {
-                // // logger.error("Unexpected error in game loop: {}", e.getMessage(), e);
-                throw new GameStateException(
-                    "Unexpected error in game loop: " + e.getMessage(),
-                    e,
-                    gameState.getGameStateID(),
-                    "GAME_LOOP",
-                    "unexpected_error",
-                    null
-                );
-            }
-        }
-        
-        disableDynamicVisualization();
-        // // logger.info("Game loop completed after {} iterations", loops);
+        gameLoopService.startGameLoop(gameMode);
+    }
+
+    public void startGameLoop(GameMode gameMode) throws GameCommunicationException, GameStateException {
+        gameLoopService.startGameLoop(gameMode);
     }
 
     /**
@@ -580,7 +235,7 @@ public class GameManager {
      * @param gameState The game state to set.
      */
     public void setGameState(client.model.GameState gameState) {
-        this.gameState = gameState;
+        this.gameState = Objects.requireNonNull(gameState, "gameState is required");
     }
 
     /**
@@ -588,7 +243,8 @@ public class GameManager {
      * @return The full game map.
      */
     public GameMap getMap() {
-        return gameMap;
+        GameMap map = gameState.getMap().orElse(new GameMap());
+        return map;
     }
 
     /**
@@ -596,7 +252,7 @@ public class GameManager {
      * @return The player ID.
      */
     public String getPlayerId() {
-        return playerId;
+        return playerId.orElse("");
     }
 
     /**
@@ -604,7 +260,8 @@ public class GameManager {
      * @param playerId The player ID to set.
      */
     public void setPlayerId(String playerId) {
-        this.playerId = playerId;
+        this.playerId = Optional.ofNullable(playerId)
+                .filter(id -> !id.isBlank());
     }
 
     /**
@@ -613,53 +270,51 @@ public class GameManager {
      * @throws GameCommunicationException If polling fails due to network issues.
      */
     public boolean isServerMapEmpty() throws GameCommunicationException {
-        try {
-            // // logger.trace("Checking if server map is empty");
-            messagesbase.messagesfromserver.GameState serverGameState = networkCenter.pollGameState();
-            if (serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 0) {
-                // // logger.debug("Server map is empty");
-                return true;
-            }
-        } catch (Exception e) {
-            throw new GameCommunicationException(
-                "Failed to check if server map is empty: " + e.getMessage(),
-                e,
-                networkCenter != null ? "unknown" : "no_network",
-                "CHECK_SERVER_MAP_EMPTY",
-                -1
-            );
-        }
-        return false;
+        return gameStateQueryService.isServerMapEmpty();
     }
 
     public boolean shouldAct() {
-        boolean mustAct = this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_ACT;
-        // // logger.trace("Should act check for player {}: {}", playerId, mustAct);
-        return mustAct;
+        return playerTurnService.shouldAct(this.gameState);
     }
 
     public boolean shouldWait() {
-        boolean mustWait = this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_WAIT;
-        // // logger.trace("Should wait check for player {}: {}", playerId, mustWait);
-        return mustWait;
+        return playerTurnService.shouldWait(this.gameState);
     }
 
     public void visualizeMap(String mapType) {
-        // // logger.debug("Visualizing map type: {}", mapType);
-        cliHandler.visualizeMap(mapType);
+        visualizationService.visualizeMap(mapType);
+    }
+
+    public void visualizeMap(MapVisualizationType mapType) {
+        visualizationService.visualizeMap(mapType);
     }
 
     public void enableDynamicVisualization() {
-        // // logger.debug("Enabling dynamic visualization");
-        dynamicView.enableDynamicMode();
+        visualizationService.enableDynamicVisualization();
     }
 
     /**
      * Disable dynamic visualization
      */
     public void disableDynamicVisualization() {
-        // // logger.debug("Disabling dynamic visualization");
-        dynamicView.disableDynamicMode();
+        visualizationService.disableDynamicVisualization();
+    }
+
+    private String requirePlayerId() {
+        return playerId.filter(id -> !id.isBlank()).orElseThrow(() -> new GameStateException(
+                "Player identifier is missing",
+                requireGameStateId(),
+                "PLAYER_ID",
+                "missing"
+        ));
+    }
+
+    private String requireGameStateId() {
+        return Optional.ofNullable(gameState)
+                .map(client.model.GameState::getGameStateID)
+                .filter(id -> !id.isBlank())
+                .orElse(UNKNOWN_GAME_STATE_ID);
     }
 
 }
+

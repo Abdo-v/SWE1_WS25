@@ -23,9 +23,6 @@ public class GameIdFetcher {
      * @throws GameCommunicationException if the request fails or game ID cannot be extracted
      */
     public static String fetchGameId(String serverBaseUrl) throws GameCommunicationException {
-        HttpURLConnection connection = null;
-        BufferedReader reader = null;
-        
         try {
             // Construct the URL for fetching game ID
             String urlString = serverBaseUrl;
@@ -35,28 +32,26 @@ public class GameIdFetcher {
             urlString += "games?enableDummyCompetition=true";
             
             URL url = new URL(urlString);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(5000);
-            
-            int responseCode = connection.getResponseCode();
-            if (responseCode != 200) {
-                throw new GameCommunicationException(
-                    "Failed to fetch game ID",
-                    serverBaseUrl,
-                    "fetchGameId",
-                    responseCode
-                );
-            }
-            
-            // Read the response
-            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                response.append(line);
-            }
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            try {
+                connection.setRequestMethod("GET");
+                connection.setConnectTimeout(5000);
+                connection.setReadTimeout(5000);
+
+                int responseCode = connection.getResponseCode();
+                if (responseCode != 200) {
+                    throw new GameCommunicationException(
+                        "Failed to fetch game ID",
+                        serverBaseUrl,
+                        "fetchGameId",
+                        responseCode
+                    );
+                }
+
+                StringBuilder response = new StringBuilder();
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+                    reader.lines().forEach(response::append);
+                }
             
             // Parse the XML to extract uniqueGameID
             String responseText = response.toString();
@@ -86,7 +81,10 @@ public class GameIdFetcher {
                 );
             }
             
-            return gameId;
+                return gameId;
+            } finally {
+                connection.disconnect();
+            }
             
         } catch (GameCommunicationException e) {
             throw e;
@@ -98,16 +96,6 @@ public class GameIdFetcher {
                 "fetchGameId",
                 -1
             );
-        } finally {
-            // Clean up resources
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (Exception ignored) {}
-            }
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
     }
 }

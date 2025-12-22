@@ -127,6 +127,31 @@ public class MapProcessingException extends Exception {
         this.actualNodes = actualNodes;
         this.coordinateContext = coordinateContext;
     }
+
+    public MapProcessingException(String message, MapDataType mapType, MapProcessingStage processingStage) {
+        this(message,
+            mapType != null ? mapType.label() : null,
+            processingStage != null ? processingStage.code() : null);
+    }
+
+    public MapProcessingException(String message, MapDataType mapType, MapProcessingStage processingStage, int expectedNodes, int actualNodes) {
+        this(message,
+            mapType != null ? mapType.label() : null,
+            processingStage != null ? processingStage.code() : null,
+            expectedNodes,
+            actualNodes);
+    }
+
+    public MapProcessingException(String message, Throwable cause, MapDataType mapType, MapProcessingStage processingStage,
+                                 int expectedNodes, int actualNodes, String coordinateContext) {
+        this(message,
+            cause,
+            mapType != null ? mapType.label() : null,
+            processingStage != null ? processingStage.code() : null,
+            expectedNodes,
+            actualNodes,
+            coordinateContext);
+    }
     
     /**
      * Builds a detailed error message with map processing context information.

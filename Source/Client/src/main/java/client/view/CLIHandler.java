@@ -1,6 +1,7 @@
 package client.view;
 
 import client.model.GameState;
+import client.model.GameMode;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 import client.model.mapper.PlayerHalfMap;
@@ -15,7 +16,11 @@ public class CLIHandler implements client.observer.util.Observer {
     }
 
     public CLIHandler(String gameMode){
-        CLIHandler.reduced = gameMode.equals("TRR");
+        this(GameMode.fromCliValue(gameMode));
+    }
+
+    public CLIHandler(GameMode gameMode) {
+        CLIHandler.reduced = gameMode != null && gameMode.isReduced();
     }
 
     public CLIHandler(GameState gameState) {
@@ -37,28 +42,42 @@ public class CLIHandler implements client.observer.util.Observer {
      * @param mapType The type of map to visualize: "own", "opponent", or "full".
      */
     public void visualizeMap(String mapType) {
-        System.out.println("Map Visualization: " + mapType.toUpperCase());
+        visualizeMap(MapVisualizationType.fromCliValue(mapType));
+    }
+
+    public void visualizeMap(MapVisualizationType mapType) {
+        String label = mapType != null ? mapType.cliValue() : "unknown";
+        System.out.println("Map Visualization: " + label.toUpperCase());
         System.out.println("=================================");
-        switch (mapType.toLowerCase()) {
-            case "own":
-                if (gameState.getMap() != null && gameState.getMap().getContentSize() != 0) {
-                    printHalfMap(gameState.getMap().getOwnHalfMap(), "Own Half Map");
-                } else {
-                    System.out.println("Own half map visual: gameMap null");
+        switch (mapType) {
+            case OWN:
+                if (gameState != null) {
+                    gameState.getMap()
+                            .filter(map -> map.getContentSize() != 0)
+                            .ifPresentOrElse(
+                                    map -> printHalfMap(map.getOwnHalfMap(), "Own Half Map"),
+                                    () -> System.out.println("Own half map visual: map not available")
+                            );
                 }
                 break;
-            case "opponent":
-                if (gameState.getMap() != null && gameState.getMap().getContentSize() == 100) {
-                    printHalfMap(gameState.getMap().getOpponentHalfMap(), "Opponent Half Map");
-                } else {
-                    System.out.println("Opponent half map visual gameMap null or not 100.");
+            case OPPONENT:
+                if (gameState != null) {
+                    gameState.getMap()
+                            .filter(map -> map.getContentSize() == 100)
+                            .ifPresentOrElse(
+                                    map -> printHalfMap(map.getOpponentHalfMap(), "Opponent Half Map"),
+                                    () -> System.out.println("Opponent half map visual: map not available or incomplete")
+                            );
                 }
                 break;
-            case "full":
-                if (gameState.getMap() != null && gameState.getMap().getContentSize() == 100) {
-                    printFullMap(gameState.getMap());
-                } else {
-                    System.out.println("Full map visual: gameState.getMap() null or not 100.");
+            case FULL:
+                if (gameState != null) {
+                    gameState.getMap()
+                            .filter(map -> map.getContentSize() == 100)
+                            .ifPresentOrElse(
+                                    this::printFullMap,
+                                    () -> System.out.println("Full map visual: map not available or incomplete")
+                            );
                 }
                 break;
             default:

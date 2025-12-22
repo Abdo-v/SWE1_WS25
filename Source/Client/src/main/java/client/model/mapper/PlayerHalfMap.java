@@ -1,15 +1,18 @@
 package client.model.mapper;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 public class PlayerHalfMap {
-    private ArrayList<MapNode> mapNodes;
+    private final MapEssentials map;
 
     /**
      * Constructs a PlayerHalfMap with an empty list of map nodes.
      */
     public PlayerHalfMap() {
-        this.mapNodes = new ArrayList<>();
+        this.map = new MapEssentials(new ArrayList<>(), 0, 0);
     }
 
     /**
@@ -17,7 +20,8 @@ public class PlayerHalfMap {
      * @param playerID The ID of the player.
      */
     public PlayerHalfMap(String playerID) {
-        this.mapNodes = new ArrayList<>();
+        Objects.requireNonNull(playerID, "playerID");
+        this.map = new MapEssentials(new ArrayList<>(), 0, 0);
 
     }
 
@@ -27,47 +31,62 @@ public class PlayerHalfMap {
      * @return true if the node was added successfully, false otherwise.
      */
     public boolean addMapNode(MapNode mapNode) {
-        if (mapNodes.size() < 50) {
-            mapNodes.add(mapNode);
-            return true;
-        } else {
-            throw new IllegalStateException("Cannot add more than 50 map nodes to a half map.");
+        Objects.requireNonNull(mapNode, "mapNode");
+        if (map.size() >= HalfMapDimensions.TOTAL_NODES) {
+            throw new IllegalStateException("Cannot add more than " + HalfMapDimensions.TOTAL_NODES + " map nodes to a half map.");
         }
+        return map.addNode(mapNode);
     }
 
     /**
      * Gets the map node that contains a fort in the half map.
-     * @return The map node containing a fort, or null if none exists.
+     * @return An {@link Optional} containing the map node with a fort; empty if none exists.
      */
-    public MapNode getFortNode() {
-        for (MapNode mapNode : mapNodes) {
+    public Optional<MapNode> getFortNode() {
+        for (MapNode mapNode : map.getNodes()) {
             if (mapNode.isFortPresent()) {
-                return mapNode;
+                return Optional.of(mapNode);
             }
         }
-        return null; // No fort found
+        return Optional.empty();
     }
 
     /**
      * Gets a map node by its coordinates using == for parameters.
      * @param x_index The X coordinate of the node.
      * @param y_index The Y coordinate of the node.
-     * @return The map node at the specified coordinates, or null if not found.
+     * @return An {@link Optional} containing the map node at the specified coordinates; empty if not found.
      */
-    public MapNode getMapNode(int x_index, int y_index) {
-        for (MapNode mapNode : mapNodes) {
-            if (mapNode.getX() == x_index && mapNode.getY() == y_index) {
-                return mapNode;
+    public Optional<MapNode> getMapNode(int xIndex, int yIndex) {
+        for (MapNode mapNode : map.getNodes()) {
+            if (mapNode.getX() == xIndex && mapNode.getY() == yIndex) {
+                return Optional.of(mapNode);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     /**
      * Gets the list of map nodes.
-     * @return The list of map nodes.
+     * @return An unmodifiable view of the map nodes.
      */
-    public ArrayList<MapNode> getMapNodes() {
-        return mapNodes;
+    public List<MapNode> getMapNodes() {
+        return map.getNodes();
+    }
+
+    public int getMaxX() {
+        return map.getMaxX();
+    }
+
+    public void setMaxX(int maxX) {
+        map.setMaxX(maxX);
+    }
+
+    public int getMaxY() {
+        return map.getMaxY();
+    }
+
+    public void setMaxY(int maxY) {
+        map.setMaxY(maxY);
     }
 }

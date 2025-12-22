@@ -103,6 +103,27 @@ public class GameStateException extends RuntimeException {
         this.currentState = currentState;
         this.expectedState = expectedState;
     }
+
+    public GameStateException(String message, String gameStateId, Operation operation, FailureReason currentState) {
+        this(message, gameStateId, operation != null ? operation.code() : null, currentState != null ? currentState.code() : null);
+    }
+
+    public GameStateException(String message, String gameStateId, Operation operation, FailureReason currentState, FailureReason expectedState) {
+        this(message,
+            gameStateId,
+            operation != null ? operation.code() : null,
+            currentState != null ? currentState.code() : null,
+            expectedState != null ? expectedState.code() : null);
+    }
+
+    public GameStateException(String message, Throwable cause, String gameStateId, Operation operation, FailureReason currentState, FailureReason expectedState) {
+        this(message,
+            cause,
+            gameStateId,
+            operation != null ? operation.code() : null,
+            currentState != null ? currentState.code() : null,
+            expectedState != null ? expectedState.code() : null);
+    }
     
     /**
      * Builds a detailed error message with game state context information.
