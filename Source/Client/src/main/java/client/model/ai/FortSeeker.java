@@ -8,6 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 // import org.slf4j.Logger;
@@ -24,17 +26,17 @@ public class FortSeeker implements client.observer.util.Observer {
 
     // private static final Logger logger = LoggerFactory.getLogger(FortSeeker.class);
 
-    private GameState gameState;
+    private Optional<GameState> gameState;
     private boolean enemyFortFound = false;
     private WayHelper wayHelper;
 
     public FortSeeker(GameState gameState) {
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         this.wayHelper = new WayHelper(gameState);
     }
 
     public FortSeeker() {
-        this.gameState = null;
+        this.gameState = Optional.empty();
         this.wayHelper = new WayHelper();
     }
     /**
@@ -46,31 +48,12 @@ public class FortSeeker implements client.observer.util.Observer {
         return wayHelper.getTraverseWayForOpponentHalf();
     }
 
-    public MapNode getEnemyFortNodeIfFound() {
-        // logger.trace("Searching for enemy fort in opponent half-map");
-        MapNode res = null;
-        if (gameState == null || gameState.getMap() == null) {
-            // logger.warn("Cannot search for enemy fort - GameState or map is null");
-            return null;
-        }
-        if (gameState.getCurrentPlayerState() == null) {
-            throw new IllegalArgumentException("Current player state cannot be null");
-        }
-        for (MapNode node : gameState.getMap().getOpponentHalfMap().getMapNodes()) {
-            if (node.isFortPresent()) {
-                res = node;
-                // logger.info("Enemy fort found at position: {}", res.printCoordinates());
-                break;
-            }
-        }
-        if(res != null) {
-            // logger.debug("Enemy fort confirmed at: {}, current position: {}", 
-            //             res.printCoordinates(),
-            //             gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
-        } else {
-            // logger.trace("No enemy fort found in opponent half-map");
-        }
-        return res;
+    public Optional<MapNode> getEnemyFortNodeIfFound() {
+        return gameState
+                .map(GameState::getMap)
+                .map(GameMap::getOpponentHalfMap)
+                .map(PlayerHalfMap::getMapNodes)
+                .flatMap(nodes -> nodes.stream().filter(MapNode::isFortPresent).findFirst());
     }
 
     public LinkedHashMap<MapNode, Boolean> getTraverseWay(MapNode currentPosition){
@@ -94,16 +77,15 @@ public class FortSeeker implements client.observer.util.Observer {
     @Override
     public void update(GameState gameState) {
         // logger.trace("FortSeeker received GameState update");
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         wayHelper.update(gameState);
-        
-        if (gameState.getOpponentFortPosition() != null && !enemyFortFound) {
-            enemyFortFound = true;
-            // logger.info("Enemy fort discovered at position: {}", gameState.getOpponentFortPosition().printCoordinates());
-        }
+
+        Optional.ofNullable(gameState.getOpponentFortPosition())
+                .filter(pos -> !enemyFortFound)
+                .ifPresent(pos -> enemyFortFound = true);
     }
     // for testing purposes, TDD
-	public Object getGameState() {
+	public Optional<GameState> getGameState() {
 		return gameState;
 	}
 

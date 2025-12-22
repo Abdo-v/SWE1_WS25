@@ -2,6 +2,8 @@ package client.model.ai;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import client.model.GameState;
@@ -16,7 +18,7 @@ import client.model.mapper.Terrain;
 public class TreasureSeeker implements client.observer.util.Observer {
 
     // private static final Logger logger = LoggerFactory.getLogger(TreasureSeeker.class);
-    private GameState gameState;
+    private Optional<GameState> gameState;
     private boolean treasureFound = false;
     private WayHelper wayHelper;
 
@@ -25,14 +27,14 @@ public class TreasureSeeker implements client.observer.util.Observer {
      * @param gameState The current game state.
      */
     public TreasureSeeker(GameState gameState) {
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         this.wayHelper = new WayHelper(gameState);
     }
     /**
      * Constructs a TreasureSeeker with no null game state.
      */
     public TreasureSeeker() {
-        this.gameState = null;
+        this.gameState = Optional.empty();
         this.wayHelper = new WayHelper();
     }
     /**
@@ -50,32 +52,12 @@ public class TreasureSeeker implements client.observer.util.Observer {
      * @param halfMapVisitedGrassFields
      * @return the treasure node if found, otherwise null
      */
-    public MapNode getTreasureNodeIfFound() {
-        // logger.trace("Searching for treasure in own half-map");
-        MapNode res = null;
-        
-        if (gameState == null || gameState.getMap() == null) {
-            // logger.warn("Cannot search for treasure - GameState or map is null");
-            return null;
-        }
-        
-        for (MapNode node : gameState.getMap().getOwnHalfMap().getMapNodes()) {
-            if (node.isTreasurePresent()) {
-                res = node;
-                // logger.info("Treasure found at position: {}", res.printCoordinates());
-                break;
-            }
-        }
-        
-        if(res != null) {
-            // logger.debug("Treasure confirmed at: {}, current position: {}", 
-            //             res.printCoordinates(), 
-            //             gameState.getCurrentPlayerState().getCurrentPosition().printCoordinates());
-            //System.out.println("Treasure found at: " + res.toString() + ", current position: " + gameState.getCurrentPlayerState().getCurrentPosition().toString());// for log
-        } else {
-            // logger.trace("No treasure found in own half-map");
-        }
-        return res; // placeholder
+    public Optional<MapNode> getTreasureNodeIfFound() {
+        return gameState
+                .map(GameState::getMap)
+                .map(GameMap::getOwnHalfMap)
+                .map(PlayerHalfMap::getMapNodes)
+                .flatMap(nodes -> nodes.stream().filter(MapNode::isTreasurePresent).findFirst());
     }
 
     /**
@@ -92,19 +74,18 @@ public class TreasureSeeker implements client.observer.util.Observer {
     @Override
     public void update(GameState gameState) {
         // logger.trace("TreasureSeeker received GameState update");
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         wayHelper.update(gameState);
-        
-        if (gameState.getTreasurePosition() != null && !treasureFound) {
-            treasureFound = true;
-            // logger.info("Treasure discovered at position: {}", gameState.getTreasurePosition().printCoordinates());
-        }
+
+        Optional.ofNullable(gameState.getTreasurePosition())
+                .filter(pos -> !treasureFound)
+                .ifPresent(pos -> treasureFound = true);
         
         //System.err.print(StaticColors.BLUE + "T" + StaticColors.RESET);
     }
 
     // for testing, TDD
-    public Object getGameState() {
+    public Optional<GameState> getGameState() {
         return gameState;
     }
 

@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Set;
+import java.util.Optional;
+import java.util.Objects;
 
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
@@ -22,8 +24,16 @@ final class GridDijkstra {
         // utility
     }
 
+    private static Optional<MapNode> getNodeSafely(GameMap map, int x, int y) {
+        try {
+            return Optional.ofNullable(map.getNode(x, y));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
+    }
+
     static int shortestPathCost(GameMap map, MapNode start, MapNode target, MovementCostProfile costProfile) {
-        if (map == null || start == null || target == null || costProfile == null) {
+        if (Objects.isNull(map) || Objects.isNull(start) || Objects.isNull(target) || Objects.isNull(costProfile)) {
             return Integer.MAX_VALUE;
         }
         if (start.equalsByCoordinates(target)) {
@@ -59,15 +69,14 @@ final class GridDijkstra {
                 int newX = currentX + dir[0];
                 int newY = currentY + dir[1];
 
-                try {
-                    MapNode neighbor = map.getNode(newX, newY);
-                    if (neighbor == null || settledNodes.contains(neighbor)) {
-                        continue;
+                getNodeSafely(map, newX, newY).ifPresent(neighbor -> {
+                    if (settledNodes.contains(neighbor)) {
+                        return;
                     }
 
                     int edgeCost = costProfile.cost(u, neighbor);
                     if (edgeCost == Integer.MAX_VALUE) {
-                        continue;
+                        return;
                     }
 
                     int currentDistanceU = distances.getOrDefault(u, Integer.MAX_VALUE);
@@ -79,9 +88,7 @@ final class GridDijkstra {
                         pq.remove(neighbor);
                         pq.add(neighbor);
                     }
-                } catch (IllegalArgumentException e) {
-                    // out of bounds
-                }
+                });
             }
         }
 
@@ -90,7 +97,7 @@ final class GridDijkstra {
 
     static ArrayList<MapNode> shortestPath(GameMap map, MapNode start, MapNode target, MovementCostProfile costProfile) {
         ArrayList<MapNode> path = new ArrayList<>();
-        if (map == null || start == null || target == null || costProfile == null) {
+        if (Objects.isNull(map) || Objects.isNull(start) || Objects.isNull(target) || Objects.isNull(costProfile)) {
             return path;
         }
 
@@ -109,13 +116,13 @@ final class GridDijkstra {
         distances.put(start, 0);
         pq.add(start);
 
-        MapNode pathEndNode = null;
+        Optional<MapNode> pathEndNode = Optional.empty();
 
         while (!pq.isEmpty()) {
             MapNode u = pq.poll();
 
             if (u.equalsByCoordinates(target)) {
-                pathEndNode = u;
+                pathEndNode = Optional.of(u);
                 break;
             }
 
@@ -132,15 +139,14 @@ final class GridDijkstra {
                 int newX = currentX + dir[0];
                 int newY = currentY + dir[1];
 
-                try {
-                    MapNode v = map.getNode(newX, newY);
-                    if (v == null || settledNodes.contains(v)) {
-                        continue;
+                getNodeSafely(map, newX, newY).ifPresent(v -> {
+                    if (settledNodes.contains(v)) {
+                        return;
                     }
 
                     int costUV = costProfile.cost(u, v);
                     if (costUV == Integer.MAX_VALUE) {
-                        continue;
+                        return;
                     }
 
                     int distanceU = distances.getOrDefault(u, Integer.MAX_VALUE);
@@ -152,20 +158,19 @@ final class GridDijkstra {
                         pq.remove(v);
                         pq.add(v);
                     }
-                } catch (IllegalArgumentException e) {
-                    // out of bounds
-                }
+                });
             }
         }
 
-        if (pathEndNode == null) {
+        if (pathEndNode.isEmpty()) {
             return path;
         }
 
-        MapNode currentTrace = pathEndNode;
-        while (currentTrace != null) {
-            path.add(currentTrace);
-            currentTrace = predecessors.get(currentTrace);
+        Optional<MapNode> currentTrace = pathEndNode;
+        while (currentTrace.isPresent()) {
+            MapNode node = currentTrace.orElseThrow();
+            path.add(node);
+            currentTrace = Optional.ofNullable(predecessors.get(node));
         }
         java.util.Collections.reverse(path);
         return path;

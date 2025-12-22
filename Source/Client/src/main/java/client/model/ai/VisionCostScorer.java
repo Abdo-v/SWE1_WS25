@@ -1,6 +1,7 @@
 package client.model.ai;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import client.model.GameState;
 import client.model.mapper.MapNode;
@@ -24,10 +25,7 @@ final class VisionCostScorer {
     }
 
     float score(GameState gameState, MapNode currentMapNode, MapNode node, Objective objective) {
-        if (node == null || gameState == null || gameState.getMap() == null) {
-            System.err.println("WayFinder.getCostToVisionRatio: Node, gameState, or map is null.");
-            return -1;
-        }
+        if (Objects.isNull(node) || Objects.isNull(gameState) || Objects.isNull(gameState.getMap())) return -1;
 
         ArrayList<MapNode> visitedGrassNodes = new ArrayList<>();
         if (objective == Objective.TREASURE) {

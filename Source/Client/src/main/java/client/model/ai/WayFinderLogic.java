@@ -1,6 +1,8 @@
 package client.model.ai;
 
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Optional;
 
 import client.exception.AIDecisionException;
 import client.model.Direction;
@@ -44,14 +46,9 @@ final class WayFinderLogic {
 
     Direction moveBasedOnStrategy(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
         try {
-            if (currentMapNode == null) {
-                throw new AIDecisionException(
-                        "Cannot execute strategy: current map node is null",
-                        "WayFinder",
-                        "moveBasedOnStrategy",
-                        null
-                );
-            }
+            Objects.requireNonNull(gameState, "gameState must not be null");
+            Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
+            Objects.requireNonNull(objective, "objective must not be null");
 
             nodeVisitTracker.markVisited(currentMapNode, gameState.isPlayerInOwnHalfMap());
 
@@ -62,48 +59,31 @@ final class WayFinderLogic {
                 }
             }
 
-            Direction treasureDirection = treasureTargeting.tryGetDirection(gameState, currentMapNode, objective);
-            if (treasureDirection != null) {
-                return treasureDirection;
-            }
+            Optional<Direction> treasureDirection = treasureTargeting.tryGetDirection(gameState, currentMapNode, objective);
+            if (treasureDirection.isPresent()) return treasureDirection.orElseThrow();
 
-            Direction fortDirection = fortTargeting.tryGetDirection(gameState, currentMapNode, objective);
-            if (fortDirection != null) {
-                return fortDirection;
-            }
+            Optional<Direction> fortDirection = fortTargeting.tryGetDirection(gameState, currentMapNode, objective);
+            if (fortDirection.isPresent()) return fortDirection.orElseThrow();
 
             MapNode bestNode = explorationTarget.selectBestNode(gameState, currentMapNode, objective);
-            if (bestNode == null) {
-                throw new AIDecisionException(
-                        "No valid target node found for traversal",
-                        "WayFinder",
-                        "traverseHalfMap",
-                        currentMapNode
-                );
-            }
 
-            Direction nextDirToBest = shortestPathFinder.findNextValidNodeToTarget(bestNode);
-            MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, nextDirToBest);
-            if (nextNode == null) {
-                throw new AIDecisionException(
-                        "Pathfinding failed: no valid next node found to target: " + bestNode.printCoordinates(),
+                Direction nextDirToBest = shortestPathFinder.findNextValidNodeToTarget(bestNode)
+                    .orElseThrow(() -> new AIDecisionException(
+                        "Pathfinding failed: no valid path to target: " + bestNode.printCoordinates(),
                         "WayFinder",
-                        "shortestPathFinder.getNodeInDirection",
+                        "shortestPathFinder.findNextValidNodeToTarget",
                         currentMapNode
-                );
-            }
+                    ));
 
-            Direction direction = shortestPathFinder.getDirectionToNeighbor(nextNode);
-            if (direction == null) {
-                throw new AIDecisionException(
+                MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, nextDirToBest);
+
+                return shortestPathFinder.getDirectionToNeighbor(nextNode)
+                    .orElseThrow(() -> new AIDecisionException(
                         "Direction calculation failed: cannot determine direction to neighbor: " + nextNode.printCoordinates(),
                         "WayFinder",
                         "shortestPathFinder.getDirectionToNeighbor",
                         currentMapNode
-                );
-            }
-
-            return direction;
+                    ));
         } catch (AIDecisionException e) {
             throw e;
         } catch (Exception e) {

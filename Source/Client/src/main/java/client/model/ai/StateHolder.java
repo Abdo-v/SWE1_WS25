@@ -3,49 +3,51 @@ package client.model.ai;
 import client.model.GameState;
 import client.model.mapper.MapNode;
 
+import java.util.Objects;
+import java.util.Optional;
+
 /**
  * Holds state information for the AI decision-making process.
  * This class encapsulates flags and positions that track the progress of treasure and fort discovery.
  */
 public class StateHolder implements client.observer.util.Observer {
 
-    private GameState gameState;
+    private Optional<GameState> gameState;
     private boolean treasureAlreadyFound;
     private boolean treasureAlreadyCollected;
     private boolean fortAlreadyFound;
-    private MapNode enemyFirstTruePosition;
+    private Optional<MapNode> enemyFirstTruePosition;
 
     /**
      * Constructs a StateHolder with a given GameState.
      * @param gameState The current game state.
      */
     public StateHolder(GameState gameState) {
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         this.treasureAlreadyFound = false;
         this.treasureAlreadyCollected = false;
         this.fortAlreadyFound = false;
-        this.enemyFirstTruePosition = null;
+        this.enemyFirstTruePosition = Optional.empty();
     }
 
     /**
      * Default constructor for StateHolder.
      */
     public StateHolder() {
-        this.gameState = null;
+        this.gameState = Optional.empty();
         this.treasureAlreadyFound = false;
         this.treasureAlreadyCollected = false;
         this.fortAlreadyFound = false;
-        this.enemyFirstTruePosition = null;
+        this.enemyFirstTruePosition = Optional.empty();
     }
 
     @Override
     public void update(GameState gameState) {
-        this.gameState = gameState;
-        
-        // Update treasure collected status from game state
-        if (gameState != null && gameState.isTreasureCollected()) {
-            this.treasureAlreadyCollected = true;
-        }
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
+
+        Optional.of(gameState)
+                .filter(GameState::isTreasureCollected)
+                .ifPresent(gs -> this.treasureAlreadyCollected = true);
     }
 
     // Getters and setters
@@ -74,15 +76,15 @@ public class StateHolder implements client.observer.util.Observer {
         this.fortAlreadyFound = fortAlreadyFound;
     }
 
-    public MapNode getEnemyFirstTruePosition() {
+    public Optional<MapNode> getEnemyFirstTruePosition() {
         return enemyFirstTruePosition;
     }
 
-    public void setEnemyFirstTruePosition(MapNode enemyFirstTruePosition) {
-        this.enemyFirstTruePosition = enemyFirstTruePosition;
+    public void setEnemyFirstTruePosition(Optional<MapNode> enemyFirstTruePosition) {
+        this.enemyFirstTruePosition = Objects.requireNonNull(enemyFirstTruePosition, "enemyFirstTruePosition must not be null");
     }
 
-    public GameState getGameState() {
+    public Optional<GameState> getGameState() {
         return gameState;
     }
 }

@@ -2,6 +2,7 @@ package client.model.ai;
 
 import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
+import java.util.Objects;
 
 /**
  * Defines movement cost rules for different AI use-cases.
@@ -12,7 +13,7 @@ enum MovementCostProfile {
     WAY_HELPER {
         @Override
         int cost(MapNode from, MapNode to) {
-            if (to == null || to.getTerrain() == Terrain.WATER) {
+            if (Objects.isNull(to) || to.getTerrain() == Terrain.WATER) {
                 return Integer.MAX_VALUE;
             }
 
@@ -31,7 +32,7 @@ enum MovementCostProfile {
     SHORTEST_PATH {
         @Override
         int cost(MapNode from, MapNode to) {
-            if (to == null || to.getTerrain() == Terrain.WATER) {
+            if (Objects.isNull(to) || to.getTerrain() == Terrain.WATER) {
                 return Integer.MAX_VALUE;
             }
 

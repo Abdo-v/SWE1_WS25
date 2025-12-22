@@ -4,6 +4,8 @@ import client.model.GameState;
 import client.model.Direction;
 import client.model.mapper.MapNode;
 import client.model.mapper.HalfMapDimensions;
+import java.util.Objects;
+import java.util.Optional;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -14,10 +16,10 @@ public class WayFinder implements client.observer.util.Observer{
     private static final int FULL_MAP_TOTAL_NODES = HALF_MAP_TOTAL_NODES * 2;
     private static final int MOVES_UNTIL_ENEMY_TRUE_POSITION = 8;
 
-    private GameState gameState;
+    private Optional<GameState> gameState;
     private WayHelper wayHelper;
     private StateHolder stateHolder;
-    private MapNode currentMapNode;
+    private Optional<MapNode> currentMapNode;
     private ShortestPathFinder shortestPathFinder;
     private TreasureSeeker treasureSeeker;
     private FortSeeker fortSeeker;
@@ -36,13 +38,13 @@ public class WayFinder implements client.observer.util.Observer{
 
     /**
      * Constructs a WayFinder without an initial GameState.
-     * game state intitilized to null, other fields initialized to empty collections.
+     * game state intitilized to empty, other fields initialized to empty collections.
      */
     public WayFinder(){
-        this.gameState = null;
+        this.gameState = Optional.empty();
         this.wayHelper = new WayHelper();
         this.stateHolder = new StateHolder();
-        this.currentMapNode = new MapNode();
+        this.currentMapNode = Optional.empty();
         this.shortestPathFinder = new ShortestPathFinder();
         this.treasureSeeker = new TreasureSeeker();
         this.fortSeeker = new FortSeeker();
@@ -58,19 +60,11 @@ public class WayFinder implements client.observer.util.Observer{
      */
     public void update(GameState state) {
         // logger.debug("WayFinder received GameState update");
-        if (state == null) {
-            return;
-        }
-        this.gameState = state;
+        Optional.ofNullable(state).ifPresent(this::updateFromState);
+    }
 
-        // Ensure sub-components exist (defensive for tests / partial construction)
-        if (this.wayHelper == null) this.wayHelper = new WayHelper();
-        if (this.stateHolder == null) this.stateHolder = new StateHolder();
-        if (this.currentMapNode == null) this.currentMapNode = new MapNode();
-        if (this.shortestPathFinder == null) this.shortestPathFinder = new ShortestPathFinder();
-        if (this.treasureSeeker == null) this.treasureSeeker = new TreasureSeeker();
-        if (this.fortSeeker == null) this.fortSeeker = new FortSeeker();
-        if (this.strategyGuide == null) this.strategyGuide = new StrategyGuide();
+    private void updateFromState(GameState state) {
+        this.gameState = Optional.of(Objects.requireNonNull(state, "state must not be null"));
 
         wayHelper.update(state);
         stateHolder.update(state);
@@ -78,40 +72,40 @@ public class WayFinder implements client.observer.util.Observer{
         treasureSeeker.update(state);
         fortSeeker.update(state);
         strategyGuide.update(state);
-        
-        // Add null safety checks for players list
-        if (state.getPlayers() != null && !state.getPlayers().isEmpty()) {
-            this.currentMapNode = state.getPlayers().get(0).getCurrentPosition();
-            // logger.trace("Current player position updated to: {}", 
-            //             currentMapNode != null ? currentMapNode.printCoordinates() : "null");
-        } else {
-            // logger.debug("Players list is null or empty, keeping current position: {}", 
-            //             currentMapNode != null ? currentMapNode.printCoordinates() : "null");
-            // Keep the existing currentMapNode if players are not available yet
-        }
-        
-        if(gameState.getMap() != null && gameState.getMap().getContentSize() >= HALF_MAP_TOTAL_NODES && (wayHelper.getHalfMapVisitedGrassFields() == null || wayHelper.getHalfMapVisitedGrassFields().isEmpty())) {
+
+        this.currentMapNode = Optional.ofNullable(state.getPlayers())
+                .filter(players -> !players.isEmpty())
+                .map(players -> players.get(0))
+                .map(player -> player.getCurrentPosition())
+                .map(Optional::ofNullable)
+                .orElse(Optional.empty());
+
+        Optional.ofNullable(state.getMap())
+                .filter(map -> map.getContentSize() >= HALF_MAP_TOTAL_NODES)
+                .filter(map -> wayHelper.getHalfMapVisitedGrassFields().isEmpty())
+                .ifPresent(map -> {
             wayHelper.setHalfMapVisitedGrassFields(treasureSeeker.getTraverseWay());
-            // logger.debug("Half map visited grass fields initialized with {} fields", 
-            //             wayHelper.getHalfMapVisitedGrassFields() != null ? wayHelper.getHalfMapVisitedGrassFields().size() : 0);
-        }
-        if (gameState.getMap() != null && (gameState.getMap().getContentSize() == FULL_MAP_TOTAL_NODES) && (wayHelper.getOppHalfMapVisitedGrassFields() == null || wayHelper.getOppHalfMapVisitedGrassFields().isEmpty())) {
+        });
+
+        Optional.ofNullable(state.getMap())
+                .filter(map -> map.getContentSize() == FULL_MAP_TOTAL_NODES)
+                .filter(map -> wayHelper.getOppHalfMapVisitedGrassFields().isEmpty())
+                .ifPresent(map -> {
             wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getTraverseWay());
-            // logger.debug("Opponent half map visited grass fields initialized with {} fields", 
-            //             wayHelper.getOppHalfMapVisitedGrassFields() != null ? wayHelper.getOppHalfMapVisitedGrassFields().size() : 0);
-        }
+        });
         if(movesMade == MOVES_UNTIL_ENEMY_TRUE_POSITION) {
-            stateHolder.setEnemyFirstTruePosition(this.gameState.getEnemyCurrentPosition());
-            wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getFilteredTraverseWay(stateHolder.getEnemyFirstTruePosition()));
-            // logger.debug("Enemy first turn position detected: {}, filtered traverse way updated", 
-            //             stateHolder.getEnemyFirstTruePosition() != null ? stateHolder.getEnemyFirstTruePosition().printCoordinates() : "null");
+            stateHolder.setEnemyFirstTruePosition(Optional.ofNullable(state.getEnemyCurrentPosition()));
+            stateHolder.getEnemyFirstTruePosition().ifPresent(enemyPos ->
+                    wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getFilteredTraverseWay(enemyPos))
+            );
         }
-        if(gameState.getMap() != null && gameState.getMap().getContentSize() == FULL_MAP_TOTAL_NODES && (wayHelper.getAllMountainFieldsMap() == null || wayHelper.getAllMountainFieldsMap().isEmpty())) { // target M
+        Optional.ofNullable(state.getMap())
+            .filter(map -> map.getContentSize() == FULL_MAP_TOTAL_NODES)
+            .filter(map -> wayHelper.getAllMountainFieldsMap().isEmpty())
+            .ifPresent(map -> {
             wayHelper.setAllMountainFields(strategyGuide.getAllMountainFields());
-            // logger.debug("All mountain fields initialized with {} mountains", 
-            //             wayHelper.getAllMountainFieldsMap() != null ? wayHelper.getAllMountainFieldsMap().size() : 0);
             //System.out.println("WayFinder: All mountain fields initialized: " + wayHelper.getAllMountainFieldsMap().toString());
-        }
+        });
         // logger.trace("WayFinder update completed");
         //System.out.print(StaticColors.BLUE + "W" + StaticColors.RESET);
     }
@@ -123,52 +117,36 @@ public class WayFinder implements client.observer.util.Observer{
      * @throws AIDecisionException If the AI cannot determine a valid move.
      */
     public Direction findNext() throws AIDecisionException {
-    	// logger.debug("Finding next move - treasure collected: {}, moves made: {}", gameState != null ? gameState.isTreasureCollected() : "unknown", movesMade);
+        // logger.debug("Finding next move - treasure collected: {}, moves made: {}", gameState.isPresent() ? gameState.get().isTreasureCollected() : "unknown", movesMade);
         
         // Validate game state before making decisions
-        if (gameState == null) {
-            throw new AIDecisionException(
-                "Cannot determine next move: game state is null",
+        GameState state = gameState.orElseThrow(() -> new AIDecisionException(
+                "Cannot determine next move: game state not initialized",
                 "WayFinder",
-                "findNext",
-                null
+                "findNext"
+        ));
+
+        if (Objects.isNull(state.getCurrentPlayerState())) {
+            throw new AIDecisionException(
+                    "Cannot determine next move: current player state is missing",
+                    "WayFinder",
+                    "findNext",
+                    state
             );
         }
-        
-        if (gameState.getCurrentPlayerState() == null) {
-            throw new AIDecisionException(
-                "Cannot determine next move: current player state is null",
-                "WayFinder",
-                "findNext",
-                null
-            );
-        }
-        
-        if (currentMapNode == null) {
-            throw new AIDecisionException(
+
+        MapNode current = currentMapNode.orElseThrow(() -> new AIDecisionException(
                 "Cannot determine next move: current position is unknown",
                 "WayFinder",
                 "findNext",
-                null
-            );
-        }
+                state
+        ));
         
         try {
-            Objective objective = gameState.isTreasureCollected() ? Objective.FORT : Objective.TREASURE;
-            Direction nextDirection = logic().moveBasedOnStrategy(gameState, currentMapNode, objective);
-            
-            if (nextDirection != null) {
-                movesMade++;
-                 // logger.info("WayFinder selected direction: {} (move #{}, objective: {})", nextDirection, movesMade, objective);
-                return nextDirection;
-            } else {
-                throw new AIDecisionException(
-                    "Strategy algorithm failed to determine a valid move",
-                    "WayFinder",
-                    "moveBasedOnStrategy",
-                    currentMapNode
-                );
-            }
+            Objective objective = state.isTreasureCollected() ? Objective.FORT : Objective.TREASURE;
+            Direction nextDirection = logic().moveBasedOnStrategy(state, current, objective);
+            movesMade++;
+            return nextDirection;
         } catch (AIDecisionException e) {
             throw e; // Re-throw AI exceptions
         } catch (Exception e) {
@@ -178,7 +156,7 @@ public class WayFinder implements client.observer.util.Observer{
                 e,
                 "WayFinder",
                 "findNext",
-                currentMapNode
+                current
             );
         }
     }
@@ -194,7 +172,9 @@ public class WayFinder implements client.observer.util.Observer{
     }
 
     public float getCostToVisionRatio(MapNode node, Objective objective) {
-        return logic().getCostToVisionRatio(gameState, currentMapNode, node, objective);
+        GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized before scoring"));
+        MapNode current = currentMapNode.orElseThrow(() -> new IllegalStateException("Current position must be initialized before scoring"));
+        return logic().getCostToVisionRatio(state, current, node, objective);
     }
 
     private WayFinderLogic logic() {
@@ -207,30 +187,13 @@ public class WayFinder implements client.observer.util.Observer{
      */
     public void addSubObservers(){
         // logger.debug("Adding sub-observers to GameState");
-        if(this.wayHelper != null) {
-            this.gameState.addObserver(this.wayHelper);
-            // logger.trace("WayHelper observer added");
-        }
-        if(this.stateHolder != null) {
-            this.gameState.addObserver(this.stateHolder);
-            // logger.trace("StateHolder observer added");
-        }
-        if(this.shortestPathFinder != null) {
-            this.gameState.addObserver(this.shortestPathFinder);
-            // logger.trace("ShortestPathFinder observer added");
-        }
-        if(this.treasureSeeker != null) {
-            this.gameState.addObserver(this.treasureSeeker);
-            // logger.trace("TreasureSeeker observer added");
-        }
-        if(this.fortSeeker != null) {
-            this.gameState.addObserver(this.fortSeeker);
-            // logger.trace("FortSeeker observer added");
-        }
-        if(this.strategyGuide != null) {
-            this.gameState.addObserver(this.strategyGuide);
-            // logger.trace("StrategyGuide observer added");
-        }
+        GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before adding sub-observers"));
+        state.addObserver(this.wayHelper);
+        state.addObserver(this.stateHolder);
+        state.addObserver(this.shortestPathFinder);
+        state.addObserver(this.treasureSeeker);
+        state.addObserver(this.fortSeeker);
+        state.addObserver(this.strategyGuide);
         // logger.debug("All sub-observers added successfully");
     }
 
@@ -249,29 +212,29 @@ public class WayFinder implements client.observer.util.Observer{
         return strategyGuide;
     }
     public GameState getGameState() {
-        return gameState;
+        return gameState.orElseThrow(() -> new IllegalStateException("GameState is not initialized"));
     }
     public MapNode getCurrentMapNode() {
-        return currentMapNode;
+        return currentMapNode.orElseThrow(() -> new IllegalStateException("Current position is not initialized"));
     }
     public void setCurrentMapNode(MapNode currentMapNode) {
-        this.currentMapNode = currentMapNode;
+        this.currentMapNode = Optional.of(Objects.requireNonNull(currentMapNode, "currentMapNode must not be null"));
         // logger.debug("Current MapNode set to: {}", currentMapNode.printCoordinates());
     }
     public void setTreasureSeeker(TreasureSeeker treasureSeeker) {
-        this.treasureSeeker = treasureSeeker;
+        this.treasureSeeker = Objects.requireNonNull(treasureSeeker, "treasureSeeker must not be null");
         // logger.debug("TreasureSeeker set for WayFinder");
     }
     public void setFortSeeker(FortSeeker fortSeeker) {
-        this.fortSeeker = fortSeeker;
+        this.fortSeeker = Objects.requireNonNull(fortSeeker, "fortSeeker must not be null");
         // logger.debug("FortSeeker set for WayFinder");
     }
     public void setShortestPathFinder(ShortestPathFinder shortestPathFinder) {
-        this.shortestPathFinder = shortestPathFinder;
+        this.shortestPathFinder = Objects.requireNonNull(shortestPathFinder, "shortestPathFinder must not be null");
         // logger.debug("ShortestPathFinder set for WayFinder");
     }
     public void setStrategyGuide(StrategyGuide strategyGuide) {
-        this.strategyGuide = strategyGuide;
+        this.strategyGuide = Objects.requireNonNull(strategyGuide, "strategyGuide must not be null");
         // logger.debug("StrategyGuide set for WayFinder");
     }
 
@@ -281,7 +244,7 @@ public class WayFinder implements client.observer.util.Observer{
      * @return
      */
     public void setGameState(GameState state){
-        this.gameState = state;
+        this.gameState = Optional.of(Objects.requireNonNull(state, "state must not be null"));
         // logger.debug("GameState set for WayFinder");
     }
     

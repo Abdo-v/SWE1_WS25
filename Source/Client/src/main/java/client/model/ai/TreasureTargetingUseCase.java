@@ -7,6 +7,9 @@ import client.model.StaticColors;
 import client.model.mapper.MapNode;
 import client.view.CLIHandler;
 
+import java.util.Objects;
+import java.util.Optional;
+
 /**
  * Handles the "treasure found => path towards treasure" use case.
  *
@@ -25,31 +28,28 @@ final class TreasureTargetingUseCase {
             ShortestPathFinder shortestPathFinder,
             NodeVisitTracker nodeVisitTracker
     ) {
-        this.treasureSeeker = treasureSeeker;
-        this.stateHolder = stateHolder;
-        this.shortestPathFinder = shortestPathFinder;
-        this.nodeVisitTracker = nodeVisitTracker;
+        this.treasureSeeker = Objects.requireNonNull(treasureSeeker, "treasureSeeker must not be null");
+        this.stateHolder = Objects.requireNonNull(stateHolder, "stateHolder must not be null");
+        this.shortestPathFinder = Objects.requireNonNull(shortestPathFinder, "shortestPathFinder must not be null");
+        this.nodeVisitTracker = Objects.requireNonNull(nodeVisitTracker, "nodeVisitTracker must not be null");
     }
 
-    Direction tryGetDirection(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
+    Optional<Direction> tryGetDirection(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
+        Objects.requireNonNull(gameState, "gameState must not be null");
+        Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
+        Objects.requireNonNull(objective, "objective must not be null");
+
         if (objective != Objective.TREASURE) {
-            return null;
+            return Optional.empty();
         }
 
         try {
-            if (treasureSeeker == null) {
-                throw new AIDecisionException(
-                        "Cannot target treasure: TreasureSeeker is null",
-                        "WayFinder",
-                        "targetTreasureIfFound",
-                        currentMapNode
-                );
+            Optional<MapNode> treasureNodeOpt = treasureSeeker.getTreasureNodeIfFound();
+            if (treasureNodeOpt.isEmpty()) {
+                return Optional.empty();
             }
 
-            MapNode treasureNode = treasureSeeker.getTreasureNodeIfFound();
-            if (treasureNode == null) {
-                return null;
-            }
+            MapNode treasureNode = treasureNodeOpt.orElseThrow();
 
             if (!stateHolder.isTreasureAlreadyFound()) {
                 if (CLIHandler.isGameModeReduced()) {
@@ -58,30 +58,26 @@ final class TreasureTargetingUseCase {
                 stateHolder.setTreasureAlreadyFound(true);
             }
 
-            Direction nextDir = shortestPathFinder.findNextValidNodeToTarget(treasureNode);
-            MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, nextDir);
-            nodeVisitTracker.markVisited(currentMapNode, gameState.isPlayerInOwnHalfMap());
-
-            if (nextNode == null) {
-                throw new AIDecisionException(
+                Direction nextDir = shortestPathFinder.findNextValidNodeToTarget(treasureNode)
+                    .orElseThrow(() -> new AIDecisionException(
                         "Cannot find path to treasure at: " + treasureNode.printCoordinates(),
                         "WayFinder",
                         "targetTreasureIfFound",
                         currentMapNode
-                );
-            }
+                    ));
 
-            Direction direction = shortestPathFinder.getDirectionToNeighbor(nextNode);
-            if (direction == null) {
-                throw new AIDecisionException(
+                MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, nextDir);
+            nodeVisitTracker.markVisited(currentMapNode, gameState.isPlayerInOwnHalfMap());
+
+                Direction direction = shortestPathFinder.getDirectionToNeighbor(nextNode)
+                    .orElseThrow(() -> new AIDecisionException(
                         "Cannot determine direction to treasure, nextNode: " + nextNode.printCoordinates(),
                         "WayFinder",
                         "targetTreasureIfFound",
                         currentMapNode
-                );
-            }
+                    ));
 
-            return direction;
+                return Optional.of(direction);
         } catch (AIDecisionException e) {
             throw e;
         } catch (Exception e) {

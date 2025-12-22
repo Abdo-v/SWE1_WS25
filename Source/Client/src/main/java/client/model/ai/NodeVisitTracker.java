@@ -1,5 +1,7 @@
 package client.model.ai;
 
+import java.util.Objects;
+
 import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
 
@@ -17,10 +19,7 @@ final class NodeVisitTracker {
     }
 
     void markVisited(MapNode node, boolean ownHalf) {
-        if (node == null) {
-            System.err.println("WayFinder: Cannot mark a null node as visited.");
-            return;
-        }
+        Objects.requireNonNull(node, "node must not be null");
 
         if (node.getTerrain() == Terrain.GRASS) {
             if (ownHalf) {

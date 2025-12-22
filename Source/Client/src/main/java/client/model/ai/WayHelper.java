@@ -1,6 +1,9 @@
 package client.model.ai;
 
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import client.model.GameState;
 import client.model.mapper.MapNode;
@@ -12,7 +15,7 @@ import client.model.mapper.PlayerHalfMap;
  */
 public class WayHelper implements client.observer.util.Observer {
 
-    private GameState gameState;
+    private Optional<GameState> gameState;
     private LinkedHashMap<MapNode, Boolean> halfMapVisitedGrassFields;
     private LinkedHashMap<MapNode, Boolean> oppHalfMapVisitedGrassFields;
     private LinkedHashMap<MapNode, Boolean> allMountainFields;
@@ -22,7 +25,7 @@ public class WayHelper implements client.observer.util.Observer {
      * @param gameState The current game state.
      */
     public WayHelper(GameState gameState) {
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         this.halfMapVisitedGrassFields = new LinkedHashMap<>();
         this.oppHalfMapVisitedGrassFields = new LinkedHashMap<>();
         this.allMountainFields = new LinkedHashMap<>();
@@ -32,7 +35,7 @@ public class WayHelper implements client.observer.util.Observer {
      * Default constructor for WayHelper.
      */
     public WayHelper() {
-        this.gameState = null;
+        this.gameState = Optional.empty();
         this.halfMapVisitedGrassFields = new LinkedHashMap<>();
         this.oppHalfMapVisitedGrassFields = new LinkedHashMap<>();
         this.allMountainFields = new LinkedHashMap<>();
@@ -45,28 +48,18 @@ public class WayHelper implements client.observer.util.Observer {
      * @return A LinkedHashMap of grass nodes with their visited status.
      */
     public LinkedHashMap<MapNode, Boolean> getTraverseWayForOwnHalf(){
-        if (gameState != null && gameState.getMap() != null) {
-            MapNode start = gameState.getCurrentPlayerState() != null ? 
-                           gameState.getCurrentPlayerState().getCurrentPosition() : 
-                           gameState.getOwnFortPosition();
-            PlayerHalfMap ownHalfMap = getArrangedOwnHalfMap(start);
-            if (ownHalfMap != null && ownHalfMap.getMapNodes() != null) {
-                return TraversalWayBuilders.grassTraversal(ownHalfMap);
-            } else {
-                System.err.println("WayHelper: Own half-map or its nodes are null");
-            }
-        }
-        else{
-            if(gameState == null) {
-                System.err.println("WayHelper: GameState is null, cannot get traversal way.");
-                new Throwable("WayHelper: GameState is null, cannot get traversal way.").printStackTrace();
-            } else if (gameState.getMap() == null) {
-                System.err.println("WayHelper: GameMap is null, cannot get traversal way.");
-            } else {
-                System.err.println("WayHelper: No grass nodes found in the specified half-map.");
-            }
-        }
-        return new LinkedHashMap<>();
+        return gameState
+            .flatMap(state -> Optional.ofNullable(state.getMap()).map(map -> {
+                MapNode start = Optional.ofNullable(state.getCurrentPlayerState())
+                    .map(ps -> ps.getCurrentPosition())
+                    .orElseGet(state::getOwnFortPosition);
+
+                if (Objects.isNull(start)) return new LinkedHashMap<MapNode, Boolean>();
+
+                PlayerHalfMap ownHalfMap = HalfMapSnakeArranger.arrangeOwnHalf(map, start);
+                return toMapNodeBooleanMap(TraversalWayBuilders.grassTraversal(ownHalfMap));
+            }))
+            .orElseGet(() -> new LinkedHashMap<MapNode, Boolean>());
     }
 
     /**
@@ -75,26 +68,15 @@ public class WayHelper implements client.observer.util.Observer {
      * @return A LinkedHashMap of grass nodes with their visited status.
      */
     public LinkedHashMap<MapNode, Boolean> getTraverseWayForOpponentHalf(){
-        if (gameState != null && gameState.getMap() != null) {
-            MapNode start = gameState.getOwnFortPosition();
-            if (start == null) {
-                System.err.println("WayHelper: Own fort position is null");
-            }
-            PlayerHalfMap opponentHalfMap = getArrangedOpponentHalfMap(start);
-            if (opponentHalfMap != null && opponentHalfMap.getMapNodes() != null) {
-                return TraversalWayBuilders.grassTraversal(opponentHalfMap);
-            } else {
-                System.err.println("WayHelper: Opponent half-map or its nodes are null");
-            }
-        }
-        else {
-            if(gameState == null) {
-                System.err.println("WayHelper: GameState is null, cannot get opponent traversal way.");
-            } else {
-                System.err.println("WayHelper: GameMap is null, cannot get opponent traversal way.");
-            }
-        }
-        return new LinkedHashMap<>();
+        return gameState
+            .flatMap(state -> Optional.ofNullable(state.getMap()).map(map -> {
+                MapNode start = state.getOwnFortPosition();
+                if (Objects.isNull(start)) return new LinkedHashMap<MapNode, Boolean>();
+
+                PlayerHalfMap opponentHalfMap = HalfMapSnakeArranger.arrangeOpponentHalf(map, start);
+                return toMapNodeBooleanMap(TraversalWayBuilders.grassTraversal(opponentHalfMap));
+            }))
+            .orElseGet(() -> new LinkedHashMap<MapNode, Boolean>());
     }
 
     /**
@@ -103,20 +85,12 @@ public class WayHelper implements client.observer.util.Observer {
      * @return A LinkedHashMap of grass nodes with their visited status.
      */
     public LinkedHashMap<MapNode, Boolean> getTraverseWayForOpponentHalf(MapNode currentPosition){
-        if (gameState != null && gameState.getMap() != null) {
-            PlayerHalfMap opponentHalfMap = getArrangedOpponentHalfMap(currentPosition);
-            if (opponentHalfMap != null && opponentHalfMap.getMapNodes() != null) {
-                return TraversalWayBuilders.grassTraversal(opponentHalfMap);
-            }
-        }
-        else {
-            if(gameState == null) {
-                System.err.println("WayHelper: GameState is null, cannot get opponent traversal way.");
-            } else {
-                System.err.println("WayHelper: GameMap is null, cannot get opponent traversal way.");
-            }
-        }
-        return new LinkedHashMap<>();
+        Objects.requireNonNull(currentPosition, "currentPosition must not be null");
+        return gameState
+                .map(GameState::getMap)
+                .map(map -> HalfMapSnakeArranger.arrangeOpponentHalf(map, currentPosition))
+                .map(halfMap -> toMapNodeBooleanMap(TraversalWayBuilders.grassTraversal(halfMap)))
+                .orElseGet(() -> new LinkedHashMap<MapNode, Boolean>());
     }
 
     /**
@@ -125,21 +99,18 @@ public class WayHelper implements client.observer.util.Observer {
      * @return A filtered LinkedHashMap containing only reachable nodes.
      */
     public LinkedHashMap<MapNode, Boolean> getFilteredTraverseWay(MapNode enemyTruePosition){
-        if (enemyTruePosition == null) {
-            throw new IllegalArgumentException("Enemy true position cannot be null");
+        Objects.requireNonNull(enemyTruePosition, "enemyTruePosition must not be null");
+        GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized"));
+        if (Objects.isNull(state.getCurrentPlayerState())) {
+            throw new IllegalStateException("Current player state must be initialized");
         }
-        if (gameState == null || gameState.getCurrentPlayerState() == null) {
-            throw new IllegalArgumentException("GameState or current player state cannot be null");
-        }
-        MapNode currentPosition = gameState.getCurrentPlayerState().getCurrentPosition();
+        MapNode currentPosition = state.getCurrentPlayerState().getCurrentPosition();
         LinkedHashMap<MapNode, Boolean> fullTraversalWay = getTraverseWayForOpponentHalf(currentPosition);
         LinkedHashMap<MapNode, Boolean> filteredTraversalWay = new LinkedHashMap<>();
         
         for (MapNode node : fullTraversalWay.keySet()) {
-            if (node == null) {
-                continue;
-            }
-            int cost = GridDijkstra.shortestPathCost(gameState.getMap(), enemyTruePosition, node, MovementCostProfile.WAY_HELPER);
+            if (Objects.isNull(node)) continue;
+            int cost = GridDijkstra.shortestPathCost(state.getMap(), enemyTruePosition, node, MovementCostProfile.WAY_HELPER);
             if (cost <= 8) {
                 filteredTraversalWay.put(node, false);
             }
@@ -154,11 +125,26 @@ public class WayHelper implements client.observer.util.Observer {
      * @return A LinkedHashMap containing all mountain fields.
      */
     public LinkedHashMap<MapNode,Boolean> getAllMountainFields(){
-        if (gameState != null && gameState.getMap() != null) {
-            return TraversalWayBuilders.mountainFields(gameState.getMap());
+        return gameState
+                .map(GameState::getMap)
+                .map(map -> toMapNodeBooleanMap(TraversalWayBuilders.mountainFields(map)))
+                .orElseGet(() -> new LinkedHashMap<MapNode, Boolean>());
+    }
+
+    private static LinkedHashMap<MapNode, Boolean> toMapNodeBooleanMap(Map<?, ?> raw) {
+        LinkedHashMap<MapNode, Boolean> typed = new LinkedHashMap<>();
+        if (raw == null || raw.isEmpty()) {
+            return typed;
         }
-        System.err.println("WayHelper: GameState or GameMap is null, cannot get mountain fields.");
-        return new LinkedHashMap<>();
+
+        for (Map.Entry<?, ?> entry : raw.entrySet()) {
+            Object key = entry.getKey();
+            Object value = entry.getValue();
+            if (key instanceof MapNode node && value instanceof Boolean visited) {
+                typed.put(node, visited);
+            }
+        }
+        return typed;
     }
 
     /**
@@ -169,10 +155,11 @@ public class WayHelper implements client.observer.util.Observer {
      * @return The arranged PlayerHalfMap containing nodes in Y-snake order.
      */
     public PlayerHalfMap getArrangedOwnHalfMap(MapNode currentPosition){
-        if (gameState == null || gameState.getMap() == null) {
-            throw new IllegalArgumentException("GameState/GameMap cannot be null");
-        }
-        return HalfMapSnakeArranger.arrangeOwnHalf(gameState.getMap(), currentPosition);
+        Objects.requireNonNull(currentPosition, "currentPosition must not be null");
+        GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized"));
+        return Optional.ofNullable(state.getMap())
+                .map(map -> HalfMapSnakeArranger.arrangeOwnHalf(map, currentPosition))
+                .orElseThrow(() -> new IllegalStateException("GameMap must be initialized"));
     }
 
     /**
@@ -182,15 +169,16 @@ public class WayHelper implements client.observer.util.Observer {
      * @return the arranged opponent half map.
      */
     public PlayerHalfMap getArrangedOpponentHalfMap(MapNode currentPosition){
-        if (gameState == null || gameState.getMap() == null) {
-            throw new IllegalArgumentException("GameState/GameMap cannot be null");
-        }
-        return HalfMapSnakeArranger.arrangeOpponentHalf(gameState.getMap(), currentPosition);
+        Objects.requireNonNull(currentPosition, "currentPosition must not be null");
+        GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized"));
+        return Optional.ofNullable(state.getMap())
+                .map(map -> HalfMapSnakeArranger.arrangeOpponentHalf(map, currentPosition))
+                .orElseThrow(() -> new IllegalStateException("GameMap must be initialized"));
     }
 
     @Override
     public void update(GameState gameState) {
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
     }
 
     // Getters for the fields
@@ -207,18 +195,18 @@ public class WayHelper implements client.observer.util.Observer {
     }
 
     public void setHalfMapVisitedGrassFields(LinkedHashMap<MapNode, Boolean> halfMapVisitedGrassFields) {
-        this.halfMapVisitedGrassFields = halfMapVisitedGrassFields;
+        this.halfMapVisitedGrassFields = Objects.requireNonNull(halfMapVisitedGrassFields, "halfMapVisitedGrassFields must not be null");
     }
 
     public void setOppHalfMapVisitedGrassFields(LinkedHashMap<MapNode, Boolean> oppHalfMapVisitedGrassFields) {
-        this.oppHalfMapVisitedGrassFields = oppHalfMapVisitedGrassFields;
+        this.oppHalfMapVisitedGrassFields = Objects.requireNonNull(oppHalfMapVisitedGrassFields, "oppHalfMapVisitedGrassFields must not be null");
     }
 
     public void setAllMountainFields(LinkedHashMap<MapNode, Boolean> allMountainFields) {
-        this.allMountainFields = allMountainFields;
+        this.allMountainFields = Objects.requireNonNull(allMountainFields, "allMountainFields must not be null");
     }
 
-    public GameState getGameState() {
+    public Optional<GameState> getGameState() {
         return gameState;
     }
 }

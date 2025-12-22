@@ -4,6 +4,8 @@ package client.model.ai;
 // import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Objects;
+import java.util.Optional;
 
 import client.model.GameState;
 import client.model.mapper.MapNode;
@@ -12,7 +14,7 @@ import client.model.mapper.Terrain;
 public class StrategyGuide implements client.observer.util.Observer {
     // private static final Logger logger = LoggerFactory.getLogger(StrategyGuide.class);
 
-    private GameState gameState;
+    private Optional<GameState> gameState;
     private WayHelper wayHelper;
     
     /**
@@ -20,35 +22,34 @@ public class StrategyGuide implements client.observer.util.Observer {
      * @param gameState The current game state to be used by the strategy guide.
      */
     public StrategyGuide(GameState gameState) {
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         this.wayHelper = new WayHelper(gameState);
-        // logger.debug("StrategyGuide initialized with GameState: {}", 
-        //             gameState != null ? gameState.getGameStateID() : "null");
     }
     
     /**
      * Default constructor for StrategyGuide.
-     * Initializes the gameState to null.
+     * Initializes the gameState to empty.
      */
     public StrategyGuide() {
-        this.gameState = null;
+        this.gameState = Optional.empty();
         this.wayHelper = new WayHelper();
-        // logger.debug("StrategyGuide initialized with null GameState");
     }
 
     @Override
     public void update(GameState gameState) {
         // logger.trace("StrategyGuide received GameState update");
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         wayHelper.update(gameState);
-        
-        if (gameState != null && gameState.getMap() != null) {
-            int totalNodes = gameState.getMap().getGameMapNodes().size();
-            long mountainCount = gameState.getMap().getGameMapNodes().stream()
+
+        Optional.of(gameState)
+                .map(GameState::getMap)
+                .ifPresent(map -> {
+                    int totalNodes = map.getGameMapNodes().size();
+                    long mountainCount = map.getGameMapNodes().stream()
                     .filter(node -> node.getTerrain() == Terrain.MOUNTAIN)
                     .count();
-            // logger.trace("Updated StrategyGuide - total nodes: {}, mountains: {}", totalNodes, mountainCount);
-        }
+                    // logger.trace("Updated StrategyGuide - total nodes: {}, mountains: {}", totalNodes, mountainCount);
+                });
     }
 
     /**
@@ -57,13 +58,7 @@ public class StrategyGuide implements client.observer.util.Observer {
      * @return An ArrayList of MapNode objects representing grass nodes surrounding the current node.
      */
     public ArrayList<MapNode> getGrassNodesFromExtendedVision(MapNode currentNode){
-        // logger.debug("Finding grass nodes from extended vision at position: {}", 
-        //             currentNode != null ? currentNode.printCoordinates() : "null");
-        
-        if (currentNode == null) {
-            // logger.warn("Cannot get extended vision from null node");
-            return new ArrayList<>();
-        }
+        if (Objects.isNull(currentNode)) return new ArrayList<>();
         
         ArrayList<MapNode> grassNodes = new ArrayList<>();
         ArrayList<MapNode> surroundingNodes = getSurroundingNodes(currentNode);
@@ -86,20 +81,16 @@ public class StrategyGuide implements client.observer.util.Observer {
      * @return An ArrayList of MapNode objects representing the surrounding nodes.
      */
     public ArrayList<MapNode> getSurroundingNodes(MapNode position) {
-        if (position == null) {
-            // logger.warn("Cannot get surrounding nodes for null position");
-            return new ArrayList<>();
-        }
+        if (Objects.isNull(position)) return new ArrayList<>();
         
         // logger.trace("Getting surrounding nodes for position: {}", position.printCoordinates());
         MapNode currentMapNode = position;
         //System.err.println("extended VISION: called, current: " + currentMapNode.toString());
         ArrayList<MapNode> nodes = new ArrayList<>();
-        
-        if (gameState == null || gameState.getMap() == null) {
-            // logger.error("Cannot get surrounding nodes - GameState or map is null");
-            return nodes;
-        }
+
+        if (gameState.isEmpty()) return nodes;
+        GameState state = gameState.orElseThrow();
+        if (Objects.isNull(state.getMap())) return nodes;
         
         // get neighbors (also diagonal)
         int currentX = currentMapNode.getX();
@@ -107,18 +98,18 @@ public class StrategyGuide implements client.observer.util.Observer {
         int outOfBoundsCount = 0;
         
         for(int x = currentX - 1; x <= currentX + 1; x++) {
-            if (x < 0 || x > gameState.getMap().getMaxX()) {
+            if (x < 0 || x > state.getMap().getMaxX()) {
                 outOfBoundsCount++;
                 continue; // Skip out of bounds X coordinates
             }
             for(int y = currentY - 1; y <= currentY + 1; y++) {
-                if (y < 0 || y > gameState.getMap().getMaxY()) {
+                if (y < 0 || y > state.getMap().getMaxY()) {
                     outOfBoundsCount++;
                     continue; // Skip out of bounds Y coordinates
                 }
                 try {
-                    MapNode node = gameState.getMap().getNode(x, y);
-                    if (node != null && !node.equalsByCoordinates(currentMapNode)) {
+                    MapNode node = state.getMap().getNode(x, y);
+                    if (!node.equalsByCoordinates(currentMapNode)) {
                         nodes.add(node);
                     }
                 } catch (IllegalArgumentException e) {
@@ -145,7 +136,7 @@ public class StrategyGuide implements client.observer.util.Observer {
         return wayHelper.getAllMountainFields();
     }
     // for testing purposes, TDD
-    public Object getGameState() {
+    public Optional<GameState> getGameState() {
         return gameState;
     }
 }

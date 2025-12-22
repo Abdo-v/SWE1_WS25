@@ -2,6 +2,7 @@ package client.model.ai;
 
 import client.model.mapper.GameMap;
 import client.model.mapper.HalfMapDimensions;
+import java.util.Objects;
 import client.model.mapper.MapNode;
 import client.model.mapper.OwnToOppMapOrientation;
 import client.model.mapper.PlayerHalfMap;
@@ -25,10 +26,10 @@ final class HalfMapSnakeArranger {
     }
 
     static PlayerHalfMap arrangeOwnHalf(GameMap map, MapNode currentPosition) {
-        if (map == null) {
+        if (Objects.isNull(map)) {
             throw new IllegalArgumentException("GameMap cannot be null");
         }
-        if (currentPosition == null) {
+        if (Objects.isNull(currentPosition)) {
             throw new IllegalArgumentException("Current position cannot be null");
         }
 
@@ -63,10 +64,10 @@ final class HalfMapSnakeArranger {
     }
 
     static PlayerHalfMap arrangeOpponentHalf(GameMap map, MapNode currentPosition) {
-        if (map == null) {
+        if (Objects.isNull(map)) {
             throw new IllegalArgumentException("GameMap cannot be null");
         }
-        if (currentPosition == null) {
+        if (Objects.isNull(currentPosition)) {
             throw new IllegalArgumentException("Current position cannot be null");
         }
 
@@ -102,16 +103,12 @@ final class HalfMapSnakeArranger {
         if (topToBottom) {
             for (int y = minY; y <= maxY; y++) {
                 MapNode node = map.getNode(x, y);
-                if (node != null) {
-                    halfMap.addMapNode(node);
-                }
+                halfMap.addMapNode(node);
             }
         } else {
             for (int y = maxY; y >= minY; y--) {
                 MapNode node = map.getNode(x, y);
-                if (node != null) {
-                    halfMap.addMapNode(node);
-                }
+                halfMap.addMapNode(node);
             }
         }
     }

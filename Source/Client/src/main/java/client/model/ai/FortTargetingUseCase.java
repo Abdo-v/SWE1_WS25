@@ -7,6 +7,9 @@ import client.model.StaticColors;
 import client.model.mapper.MapNode;
 import client.view.CLIHandler;
 
+import java.util.Objects;
+import java.util.Optional;
+
 /**
  * Handles the "fort found => path towards enemy fort" use case.
  *
@@ -19,30 +22,27 @@ final class FortTargetingUseCase {
     private final ShortestPathFinder shortestPathFinder;
 
     FortTargetingUseCase(FortSeeker fortSeeker, StateHolder stateHolder, ShortestPathFinder shortestPathFinder) {
-        this.fortSeeker = fortSeeker;
-        this.stateHolder = stateHolder;
-        this.shortestPathFinder = shortestPathFinder;
+        this.fortSeeker = Objects.requireNonNull(fortSeeker, "fortSeeker must not be null");
+        this.stateHolder = Objects.requireNonNull(stateHolder, "stateHolder must not be null");
+        this.shortestPathFinder = Objects.requireNonNull(shortestPathFinder, "shortestPathFinder must not be null");
     }
 
-    Direction tryGetDirection(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
+    Optional<Direction> tryGetDirection(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
+        Objects.requireNonNull(gameState, "gameState must not be null");
+        Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
+        Objects.requireNonNull(objective, "objective must not be null");
+
         if (objective != Objective.FORT) {
-            return null;
+            return Optional.empty();
         }
 
         try {
-            if (fortSeeker == null) {
-                throw new AIDecisionException(
-                        "Cannot target fort: FortSeeker is null",
-                        "WayFinder",
-                        "targetFortIfFOund",
-                        currentMapNode
-                );
+            Optional<MapNode> fortNodeOpt = fortSeeker.getEnemyFortNodeIfFound();
+            if (fortNodeOpt.isEmpty()) {
+                return Optional.empty();
             }
 
-            MapNode fortNode = fortSeeker.getEnemyFortNodeIfFound();
-            if (fortNode == null) {
-                return null;
-            }
+            MapNode fortNode = fortNodeOpt.orElseThrow();
 
             if (!stateHolder.isFortAlreadyFound()) {
                 if (CLIHandler.isGameModeReduced()) {
@@ -51,28 +51,25 @@ final class FortTargetingUseCase {
                 stateHolder.setFortAlreadyFound(true);
             }
 
-            Direction nextDir = shortestPathFinder.findNextValidNodeToTarget(fortNode);
-            MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, nextDir);
-            if (nextNode == null) {
-                throw new AIDecisionException(
+                Direction nextDir = shortestPathFinder.findNextValidNodeToTarget(fortNode)
+                    .orElseThrow(() -> new AIDecisionException(
                         "Cannot find path to enemy fort at: " + fortNode.printCoordinates(),
                         "WayFinder",
                         "targetFortIfFOund",
                         currentMapNode
-                );
-            }
+                    ));
 
-            Direction direction = shortestPathFinder.getDirectionToNeighbor(nextNode);
-            if (direction == null) {
-                throw new AIDecisionException(
+                MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, nextDir);
+
+                Direction direction = shortestPathFinder.getDirectionToNeighbor(nextNode)
+                    .orElseThrow(() -> new AIDecisionException(
                         "Cannot determine direction to enemy fort, nextNode: " + nextNode.printCoordinates(),
                         "WayFinder",
                         "targetFortIfFOund",
                         currentMapNode
-                );
-            }
+                    ));
 
-            return direction;
+                return Optional.of(direction);
         } catch (AIDecisionException e) {
             throw e;
         } catch (Exception e) {
