@@ -4,6 +4,7 @@ import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 public class GameState implements client.observer.util.Observable {
@@ -147,9 +148,18 @@ public class GameState implements client.observer.util.Observable {
     }
     
     public void setOpponentFortPosition(MapNode opponentFortPosition) {
-        this.opponentFortPosition = Optional.ofNullable(opponentFortPosition);
+        Optional<MapNode> oldPosition = this.opponentFortPosition;
+        Optional<MapNode> newPosition = Optional.ofNullable(opponentFortPosition);
+
+        this.opponentFortPosition = newPosition;
         this.opponentFortPosition.ifPresent(ignored -> this.opponentFortFound = true);
-        notifyObservers(GameStateEventType.OPPONENT_FORT_POSITION_CHANGED);
+
+        observerSupport.notifyObservers(new GameStateEvent(
+                this,
+                GameStateEventType.OPPONENT_FORT_POSITION_CHANGED,
+                oldPosition.map(pos -> (Object) pos),
+                newPosition.map(pos -> (Object) pos)
+        ));
     }
     
     public ArrayList<PlayerState> getPlayers() {
@@ -157,8 +167,16 @@ public class GameState implements client.observer.util.Observable {
     }
     
     public void setPlayers(ArrayList<PlayerState> players) {
+        List<PlayerState> oldPlayers = List.copyOf(this.players);
         this.players = new ArrayList<>(Optional.ofNullable(players).orElseGet(ArrayList::new));
-        notifyObservers(GameStateEventType.PLAYERS_CHANGED);
+        List<PlayerState> newPlayers = List.copyOf(this.players);
+
+        observerSupport.notifyObservers(new GameStateEvent(
+                this,
+                GameStateEventType.PLAYERS_CHANGED,
+                Optional.of(oldPlayers),
+                Optional.of(newPlayers)
+        ));
     }
 
     /**
@@ -176,8 +194,17 @@ public class GameState implements client.observer.util.Observable {
     }
     
     public void setMap(GameMap map) {
-        this.map = Optional.ofNullable(map);
-        notifyObservers(GameStateEventType.MAP_CHANGED);
+        Optional<GameMap> oldMap = this.map;
+        Optional<GameMap> newMap = Optional.ofNullable(map);
+
+        this.map = newMap;
+
+        observerSupport.notifyObservers(new GameStateEvent(
+                this,
+                GameStateEventType.MAP_CHANGED,
+                oldMap.map(m -> (Object) m),
+                newMap.map(m -> (Object) m)
+        ));
     }
     
     public boolean isTreasureCollected() {
@@ -185,8 +212,15 @@ public class GameState implements client.observer.util.Observable {
     }
     
     public void setTreasureCollected(boolean treasureCollected) {
+        boolean oldValue = this.treasureCollected;
         this.treasureCollected = treasureCollected;
-        notifyObservers(GameStateEventType.TREASURE_COLLECTED_CHANGED);
+
+        observerSupport.notifyObservers(new GameStateEvent(
+                this,
+                GameStateEventType.TREASURE_COLLECTED_CHANGED,
+                Optional.of(oldValue),
+                Optional.of(this.treasureCollected)
+        ));
     }
 
     public boolean isOpponentFortFound() {
@@ -194,8 +228,15 @@ public class GameState implements client.observer.util.Observable {
     }
     
     public void setOpponentFortFound(boolean opponentFortFound) {
+        boolean oldValue = this.opponentFortFound;
         this.opponentFortFound = opponentFortFound;
-        notifyObservers(GameStateEventType.OPPONENT_FORT_FOUND_CHANGED);
+
+        observerSupport.notifyObservers(new GameStateEvent(
+                this,
+                GameStateEventType.OPPONENT_FORT_FOUND_CHANGED,
+                Optional.of(oldValue),
+                Optional.of(this.opponentFortFound)
+        ));
     }
 
     public Optional<MapNode> getTreasurePosition() {
@@ -203,8 +244,17 @@ public class GameState implements client.observer.util.Observable {
     }
     
     public void setTreasurePosition(MapNode treasurePosition) {
-        this.treasurePosition = Optional.ofNullable(treasurePosition);
-        notifyObservers(GameStateEventType.TREASURE_POSITION_CHANGED);
+        Optional<MapNode> oldPosition = this.treasurePosition;
+        Optional<MapNode> newPosition = Optional.ofNullable(treasurePosition);
+
+        this.treasurePosition = newPosition;
+
+        observerSupport.notifyObservers(new GameStateEvent(
+                this,
+                GameStateEventType.TREASURE_POSITION_CHANGED,
+                oldPosition.map(pos -> (Object) pos),
+                newPosition.map(pos -> (Object) pos)
+        ));
     }
     
     /**

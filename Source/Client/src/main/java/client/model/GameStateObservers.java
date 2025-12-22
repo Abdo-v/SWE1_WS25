@@ -72,7 +72,11 @@ final class GameStateObservers {
         notifyObservers(new GameStateEvent(source, Optional.ofNullable(eventType).orElse(GameStateEventType.BULK_UPDATE)));
     }
 
-    private void notifyObservers(GameStateEvent event) {
+    void notifyObservers(GameStateEvent event) {
+        notifyObserversInternal(event);
+    }
+
+    private void notifyObserversInternal(GameStateEvent event) {
         Set<Observer> targets = new LinkedHashSet<>();
         targets.addAll(globalObservers);
         Optional.ofNullable(observersByType.get(event.type())).ifPresent(targets::addAll);
