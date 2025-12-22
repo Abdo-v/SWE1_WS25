@@ -5,9 +5,6 @@ import client.model.mapper.MapNode;
 
 import java.util.ArrayList;
 
-/**
- * Class representing the current state of the game.
- */
 public class GameState implements client.observer.util.Observable {
 
     private final String gameStateID;
@@ -113,11 +110,6 @@ public class GameState implements client.observer.util.Observable {
         this.opponentFortPosition = node;
     }
 
-    /**
-     * Gets the current player's state.
-     * 
-     * @return The current player's state.
-     */
     public PlayerState getCurrentPlayerState() {
         if (players != null && !players.isEmpty()) {
             return players.get(0);
@@ -125,29 +117,14 @@ public class GameState implements client.observer.util.Observable {
         return null;
     }
     
-    /**
-     * Gets the game state ID.
-     * 
-     * @return The game state ID.
-     */
     public String getGameStateID() {
         return gameStateID;
     }
     
-    /**
-     * Gets the opponent's fort position.
-     * 
-     * @return The opponent's fort position.
-     */
     public MapNode getOpponentFortPosition() {
         return opponentFortPosition;
     }
     
-    /**
-     * Sets the opponent's fort position.
-     * 
-     * @param opponentFortPosition The opponent's fort position.
-     */
     public void setOpponentFortPosition(MapNode opponentFortPosition) {
         this.opponentFortPosition = opponentFortPosition;
         if (opponentFortPosition != null) {
@@ -156,20 +133,10 @@ public class GameState implements client.observer.util.Observable {
         notifyObservers();
     }
     
-    /**
-     * Gets the list of players.
-     * 
-     * @return The list of players.
-     */
     public ArrayList<PlayerState> getPlayers() {
         return players;
     }
     
-    /**
-     * Sets the list of players.
-     * 
-     * @param players The list of players.
-     */
     public void setPlayers(ArrayList<PlayerState> players) {
         this.players = players;
         notifyObservers();
@@ -189,39 +156,20 @@ public class GameState implements client.observer.util.Observable {
         }
     }
     
-    /**
-     * Gets the game map.
-     * 
-     * @return The game map.
-     */
+
     public GameMap getMap() {
         return map;
     }
     
-    /**
-     * Sets the game map.
-     * 
-     * @param map The game map.
-     */
     public void setMap(GameMap map) {
         this.map = map;
         notifyObservers();
     }
     
-    /**
-     * Checks if the treasure has been collected.
-     * 
-     * @return true if the treasure has been collected, false otherwise.
-     */
     public boolean isTreasureCollected() {
         return treasureCollected;
     }
     
-    /**
-     * Sets the treasure collected status then notifies observers.
-     * 
-     * @param treasureCollected The treasure collected status.
-     */
     public void setTreasureCollected(boolean treasureCollected) {
         this.treasureCollected = treasureCollected;
         notifyObservers();
@@ -231,11 +179,6 @@ public class GameState implements client.observer.util.Observable {
         return opponentFortFound;
     }
     
-    /**
-     * Sets the opponent's fort found status then notifies observers.
-     * 
-     * @param opponentFortFound The opponent's fort found status.
-     */
     public void setOpponentFortFound(boolean opponentFortFound) {
         this.opponentFortFound = opponentFortFound;
         notifyObservers();
@@ -245,11 +188,6 @@ public class GameState implements client.observer.util.Observable {
         return treasurePosition;
     }
     
-    /**
-     * Sets the treasure position then notifies observers.
-     * 
-     * @param treasurePosition The treasure position.
-     */
     public void setTreasurePosition(MapNode treasurePosition) {
         this.treasurePosition = treasurePosition;
         notifyObservers();
