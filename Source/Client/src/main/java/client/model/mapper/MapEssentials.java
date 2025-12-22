@@ -1,6 +1,8 @@
 package client.model.mapper;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -18,7 +20,7 @@ public final class MapEssentials {
         this(new ArrayList<>(), 0, 0);
     }
 
-    public MapEssentials(ArrayList<MapNode> initialNodes, int maxX, int maxY) {
+    public MapEssentials(List<MapNode> initialNodes, int maxX, int maxY) {
         this.nodes = new ArrayList<>(Objects.requireNonNull(initialNodes, "initialNodes"));
         this.maxX = maxX;
         this.maxY = maxY;
@@ -32,11 +34,17 @@ public final class MapEssentials {
         return nodes.add(node);
     }
 
-    public ArrayList<MapNode> getNodes() {
-        return nodes;
+    /**
+     * Returns an unmodifiable view of the current nodes.
+     *
+     * <p>This prevents callers from mutating internal state without updating bounds/invariants.
+     * Use {@link #addNode(MapNode)} or {@link #setNodes(List)} to mutate.
+     */
+    public List<MapNode> getNodes() {
+        return Collections.unmodifiableList(nodes);
     }
 
-    public void setNodes(ArrayList<MapNode> newNodes) {
+    public void setNodes(List<MapNode> newNodes) {
         nodes.clear();
         nodes.addAll(Objects.requireNonNull(newNodes, "newNodes"));
         recomputeBoundsFromNodes();

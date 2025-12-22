@@ -3,6 +3,7 @@ package client.model.mapper;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.List;
 
 public class GameMap {
     private final MapEssentials map;
@@ -159,9 +160,9 @@ public class GameMap {
 
     /**
      * gets the map nodes of the game map.
-     * @return An ArrayList of MapNode objects representing the game map nodes.
+     * @return An unmodifiable view of MapNode objects representing the game map nodes.
      */
-    public ArrayList<MapNode> getGameMapNodes() {
+    public List<MapNode> getGameMapNodes() {
         return map.getNodes();
     }
     /**

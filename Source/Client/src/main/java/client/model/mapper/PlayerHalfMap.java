@@ -1,6 +1,7 @@
 package client.model.mapper;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -67,9 +68,9 @@ public class PlayerHalfMap {
 
     /**
      * Gets the list of map nodes.
-     * @return The list of map nodes.
+     * @return An unmodifiable view of the map nodes.
      */
-    public ArrayList<MapNode> getMapNodes() {
+    public List<MapNode> getMapNodes() {
         return map.getNodes();
     }
 
