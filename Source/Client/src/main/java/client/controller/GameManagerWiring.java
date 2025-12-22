@@ -34,7 +34,11 @@ final class GameManagerWiring {
         gameState.mapChanges().subscribe(ignored -> cliHandler.update(gameState));
 
         gameState.addObserver(wayFinder);
-        gameState.addObserver(dynamicView);
+
+        // Modern MVC wiring (composition): the dynamic view subscribes to the model's event stream.
+        // This keeps behavior equivalent (reacts to all changes) while using lambdas + generics.
+        dynamicView.update(gameState);
+        gameState.events().subscribe(ignored -> dynamicView.update(gameState));
 
         wayFinder.setGameState(gameState);
         wayFinder.addSubObservers();
