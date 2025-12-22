@@ -2,6 +2,7 @@ package client.model.mapper;
 
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.Optional;
 
 public class PlayerHalfMap {
     private final MapEssentials map;
@@ -38,30 +39,30 @@ public class PlayerHalfMap {
 
     /**
      * Gets the map node that contains a fort in the half map.
-     * @return The map node containing a fort, or null if none exists.
+     * @return An {@link Optional} containing the map node with a fort; empty if none exists.
      */
-    public MapNode getFortNode() {
+    public Optional<MapNode> getFortNode() {
         for (MapNode mapNode : map.getNodes()) {
             if (mapNode.isFortPresent()) {
-                return mapNode;
+                return Optional.of(mapNode);
             }
         }
-        return null; // No fort found
+        return Optional.empty();
     }
 
     /**
      * Gets a map node by its coordinates using == for parameters.
      * @param x_index The X coordinate of the node.
      * @param y_index The Y coordinate of the node.
-     * @return The map node at the specified coordinates, or null if not found.
+     * @return An {@link Optional} containing the map node at the specified coordinates; empty if not found.
      */
-    public MapNode getMapNode(int xIndex, int yIndex) {
+    public Optional<MapNode> getMapNode(int xIndex, int yIndex) {
         for (MapNode mapNode : map.getNodes()) {
             if (mapNode.getX() == xIndex && mapNode.getY() == yIndex) {
-                return mapNode;
+                return Optional.of(mapNode);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     /**

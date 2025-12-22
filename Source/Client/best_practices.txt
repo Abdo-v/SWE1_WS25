@@ -43,3 +43,7 @@ Advanced/General Industry Best Practices
     Fail-Fast Principle: Validate inputs and states immediately; throw exceptions as soon as an unexpected state is detected.
 
     Immutability: Use immutable objects (e.g., record in Java) for data transfer objects (DTOs) like map coordinates or player stats to prevent side effects.
+
+always update docs and commentss after modifications if needed.
+
+when refactoring do not break wxisting functinality.

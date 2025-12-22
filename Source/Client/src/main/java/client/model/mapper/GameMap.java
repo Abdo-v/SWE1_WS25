@@ -154,7 +154,7 @@ public class GameMap {
      */
     public MapNode getOwnFortMapNode() {
         PlayerHalfMap ownHalfMap = getOwnHalfMap();
-        return ownHalfMap.getFortNode();
+        return ownHalfMap.getFortNode().orElse(null);
     }
 
     /**

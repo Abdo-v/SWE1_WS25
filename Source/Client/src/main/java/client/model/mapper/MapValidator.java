@@ -5,6 +5,7 @@ import client.model.common.Notification;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -96,7 +97,7 @@ public class MapValidator {
             // Check for missing nodes within the inferred rectangle
             for (int x = 0; x <= maxX; x++) {
                 for (int y = 0; y <= maxY; y++) {
-                    if (halfMap.getMapNode(x, y) == null) {
+                    if (halfMap.getMapNode(x, y).isEmpty()) {
                         notification.addError("Missing map node at coordinates X=" + x + ", Y=" + y + " within the " + (maxX+1) + "x" + (maxY+1) + " grid.");
                     }
                 }
@@ -266,11 +267,9 @@ public class MapValidator {
         Set<MapNode> visited = new HashSet<>();
         Queue<MapNode> queue = new LinkedList<>();
         
-        MapNode startNode = halfMap.getFortNode();
-        if (startNode == null || !startNode.isWalkable()) {
-            // If no fort, or fort is not walkable, pick the first available walkable node
-            startNode = walkableNodes.get(0); 
-        }
+        MapNode startNode = halfMap.getFortNode()
+            .filter(MapNode::isWalkable)
+            .orElse(walkableNodes.get(0));
         
         queue.add(startNode);
         visited.add(startNode);
@@ -285,11 +284,13 @@ public class MapValidator {
                 int nextY = current.getY() + dY[i];
 
                 if (nextX >= 0 && nextX <= maxX && nextY >= 0 && nextY <= maxY) {
-                    MapNode neighbor = halfMap.getMapNode(nextX, nextY);
-                    if (neighbor != null && neighbor.isWalkable() && !visited.contains(neighbor)) {
-                        visited.add(neighbor);
-                        queue.add(neighbor);
-                    }
+                    halfMap.getMapNode(nextX, nextY)
+                            .filter(MapNode::isWalkable)
+                            .filter(neighbor -> !visited.contains(neighbor))
+                            .ifPresent(neighbor -> {
+                                visited.add(neighbor);
+                                queue.add(neighbor);
+                            });
                 }
             }
         }
@@ -329,9 +330,10 @@ public class MapValidator {
                 y = fixedCoordVal;
             }
 
-            MapNode node = halfMap.getMapNode(x, y);
+            Optional<MapNode> nodeOpt = halfMap.getMapNode(x, y);
             // Node existence should be guaranteed by prior checks if this point is reached without errors
-            if (node != null) { 
+            if (nodeOpt.isPresent()) {
+                MapNode node = nodeOpt.get();
                 totalEdgeNodes++;
                 if (node.isWalkable()) {
                     walkableEdgeNodes++;
@@ -423,8 +425,8 @@ public class MapValidator {
         int total = maxY + 1;
         int crossable = 0;
         for (int y = 0; y <= maxY; y++) {
-            MapNode n1 = newHalfMap.getMapNode(newX, y);
-            MapNode n2 = existingHalfMap.getMapNode(existingX, y);
+            MapNode n1 = newHalfMap.getMapNode(newX, y).orElse(null);
+            MapNode n2 = existingHalfMap.getMapNode(existingX, y).orElse(null);
             if (n1 == null || n2 == null) {
                 notification.addError("Missing node(s) while checking crossing: " + label + " at y=" + y);
                 return;
@@ -452,8 +454,8 @@ public class MapValidator {
         int total = maxX + 1;
         int crossable = 0;
         for (int x = 0; x <= maxX; x++) {
-            MapNode n1 = newHalfMap.getMapNode(x, newY);
-            MapNode n2 = existingHalfMap.getMapNode(x, existingY);
+            MapNode n1 = newHalfMap.getMapNode(x, newY).orElse(null);
+            MapNode n2 = existingHalfMap.getMapNode(x, existingY).orElse(null);
             if (n1 == null || n2 == null) {
                 notification.addError("Missing node(s) while checking crossing: " + label + " at x=" + x);
                 return;

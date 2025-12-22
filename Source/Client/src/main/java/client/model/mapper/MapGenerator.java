@@ -383,16 +383,16 @@ public class MapGenerator {
             return null;
         }
         if (newEdge == Edge.LEFT) {
-            return existingHalfMap.getMapNode(width - 1, y);
+            return existingHalfMap.getMapNode(width - 1, y).orElse(null);
         }
         if (newEdge == Edge.RIGHT) {
-            return existingHalfMap.getMapNode(0, y);
+            return existingHalfMap.getMapNode(0, y).orElse(null);
         }
         if (newEdge == Edge.TOP) {
-            return existingHalfMap.getMapNode(x, height - 1);
+            return existingHalfMap.getMapNode(x, height - 1).orElse(null);
         }
         // BOTTOM
-        return existingHalfMap.getMapNode(x, 0);
+        return existingHalfMap.getMapNode(x, 0).orElse(null);
     }
 
     /**
