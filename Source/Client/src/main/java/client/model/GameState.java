@@ -218,7 +218,7 @@ public class GameState implements client.observer.util.Observable {
     }
     
     /**
-     * Sets the treasure collected status.
+     * Sets the treasure collected status then notifies observers.
      * 
      * @param treasureCollected The treasure collected status.
      */
@@ -226,18 +226,13 @@ public class GameState implements client.observer.util.Observable {
         this.treasureCollected = treasureCollected;
         notifyObservers();
     }
-    
-    /**
-     * Checks if the opponent's fort has been found.
-     * 
-     * @return true if the opponent's fort has been found, false otherwise.
-     */
+
     public boolean isOpponentFortFound() {
         return opponentFortFound;
     }
     
     /**
-     * Sets the opponent's fort found status.
+     * Sets the opponent's fort found status then notifies observers.
      * 
      * @param opponentFortFound The opponent's fort found status.
      */
@@ -245,18 +240,13 @@ public class GameState implements client.observer.util.Observable {
         this.opponentFortFound = opponentFortFound;
         notifyObservers();
     }
-    
-    /**
-     * Gets the treasure position.
-     * 
-     * @return The treasure position.
-     */
+
     public MapNode getTreasurePosition() {
         return treasurePosition;
     }
     
     /**
-     * Sets the treasure position.
+     * Sets the treasure position then notifies observers.
      * 
      * @param treasurePosition The treasure position.
      */
@@ -282,20 +272,10 @@ public class GameState implements client.observer.util.Observable {
         return null;
     }
 
-    /**
-     * Gets the player's own fort position.
-     * 
-     * @return The player's own fort position.
-     */
     public MapNode getOwnFortPosition(){
         return queries.getOwnFortPosition(map);
     }
 
-    /**
-     * Gets the opponent's fort position.
-     * 
-     * @return The opponent's fort position.
-     */
     public MapNode getEnemyFortPosition(){
         return queries.getEnemyFortPosition(map);
     }
@@ -310,10 +290,9 @@ public class GameState implements client.observer.util.Observable {
 
     /**
      * Checks if the player is in their own half of the map.
-     * uses getCurrentPlayerState().getCurrentPosition() and and getOrientation().
+     * uses queries.isPlayerInOwnHalfMap to determine this.
      * @return true if the player is in their own half, false otherwise.
      */
-
     public boolean isPlayerInOwnHalfMap(){
         MapNode currentNode = getCurrentPlayerState().getCurrentPosition();
         return queries.isPlayerInOwnHalfMap(map, currentNode);
