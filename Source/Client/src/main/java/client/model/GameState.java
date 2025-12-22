@@ -27,13 +27,28 @@ public class GameState implements client.observer.util.Observable {
     }
 
     @Override
+    public void addObserver(GameStateEventType eventType, client.observer.util.Observer observer) {
+        observerSupport.addObserver(eventType, observer);
+    }
+
+    @Override
     public void removeObserver(client.observer.util.Observer observer) {
         observerSupport.removeObserver(observer);
     }
 
     @Override
+    public void removeObserver(GameStateEventType eventType, client.observer.util.Observer observer) {
+        observerSupport.removeObserver(eventType, observer);
+    }
+
+    @Override
     public void notifyObservers() {
-        observerSupport.notifyObservers();
+        observerSupport.notifyObservers(GameStateEventType.BULK_UPDATE);
+    }
+
+    @Override
+    public void notifyObservers(GameStateEventType eventType) {
+        observerSupport.notifyObservers(eventType);
     }
     
     /**
@@ -100,7 +115,7 @@ public class GameState implements client.observer.util.Observable {
                     this.treasurePosition = state.getTreasurePosition();
                     this.opponentFortPosition = state.getOpponentFortPosition();
                 });
-        notifyObservers();
+        notifyObservers(GameStateEventType.BULK_UPDATE);
     }
     
     /**
@@ -134,7 +149,7 @@ public class GameState implements client.observer.util.Observable {
     public void setOpponentFortPosition(MapNode opponentFortPosition) {
         this.opponentFortPosition = Optional.ofNullable(opponentFortPosition);
         this.opponentFortPosition.ifPresent(ignored -> this.opponentFortFound = true);
-        notifyObservers();
+        notifyObservers(GameStateEventType.OPPONENT_FORT_POSITION_CHANGED);
     }
     
     public ArrayList<PlayerState> getPlayers() {
@@ -143,7 +158,7 @@ public class GameState implements client.observer.util.Observable {
     
     public void setPlayers(ArrayList<PlayerState> players) {
         this.players = new ArrayList<>(Optional.ofNullable(players).orElseGet(ArrayList::new));
-        notifyObservers();
+        notifyObservers(GameStateEventType.PLAYERS_CHANGED);
     }
 
     /**
@@ -162,7 +177,7 @@ public class GameState implements client.observer.util.Observable {
     
     public void setMap(GameMap map) {
         this.map = Optional.ofNullable(map);
-        notifyObservers();
+        notifyObservers(GameStateEventType.MAP_CHANGED);
     }
     
     public boolean isTreasureCollected() {
@@ -171,7 +186,7 @@ public class GameState implements client.observer.util.Observable {
     
     public void setTreasureCollected(boolean treasureCollected) {
         this.treasureCollected = treasureCollected;
-        notifyObservers();
+        notifyObservers(GameStateEventType.TREASURE_COLLECTED_CHANGED);
     }
 
     public boolean isOpponentFortFound() {
@@ -180,7 +195,7 @@ public class GameState implements client.observer.util.Observable {
     
     public void setOpponentFortFound(boolean opponentFortFound) {
         this.opponentFortFound = opponentFortFound;
-        notifyObservers();
+        notifyObservers(GameStateEventType.OPPONENT_FORT_FOUND_CHANGED);
     }
 
     public Optional<MapNode> getTreasurePosition() {
@@ -189,7 +204,7 @@ public class GameState implements client.observer.util.Observable {
     
     public void setTreasurePosition(MapNode treasurePosition) {
         this.treasurePosition = Optional.ofNullable(treasurePosition);
-        notifyObservers();
+        notifyObservers(GameStateEventType.TREASURE_POSITION_CHANGED);
     }
     
     /**
