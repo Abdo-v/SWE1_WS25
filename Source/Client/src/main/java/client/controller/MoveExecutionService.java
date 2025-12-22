@@ -12,6 +12,9 @@ import client.model.GameState;
 import client.model.ai.WayFinder;
 import client.view.GameOutput;
 
+import java.util.Optional;
+import java.util.Objects;
+
 final class MoveExecutionService {
 
     private final NetworkCenter networkCenter;
@@ -19,38 +22,42 @@ final class MoveExecutionService {
     private final GameOutput output;
 
     MoveExecutionService(NetworkCenter networkCenter, WayFinder wayFinder, GameOutput output) {
-        this.networkCenter = networkCenter;
-        this.wayFinder = wayFinder;
-        this.output = output;
+        this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
+        this.wayFinder = Objects.requireNonNull(wayFinder, "wayFinder is required");
+        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
     }
 
     void makeMove(GameState gameState, String playerId, GameMode gameMode)
             throws GameCommunicationException, AIDecisionException, GameStateException {
 
-        if (gameState == null || gameState.getCurrentPlayerState() == null) {
-            throw new GameStateException(
-                    "Cannot make move: game state or player state is null",
-                    gameState != null ? gameState.getGameStateID() : "unknown",
-                    "MAKE_MOVE",
-                    "invalid_state"
-            );
-        }
+        GameState state = Optional.ofNullable(gameState).orElseThrow(() -> new GameStateException(
+            "Cannot make move: game state is missing",
+            "unknown",
+            "MAKE_MOVE",
+            "missing"
+        ));
+
+        Optional.ofNullable(state.getCurrentPlayerState()).orElseThrow(() -> new GameStateException(
+            "Cannot make move: current player state is missing",
+            state.getGameStateID(),
+            "MAKE_MOVE",
+            "missing_player_state"
+        ));
+
+        GameMode effectiveMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
 
         try {
-            Direction nextMoveDirection = wayFinder.findNext();
-            if (nextMoveDirection == null) {
-                throw new AIDecisionException(
-                        "WayFinder failed to determine a valid move",
-                        "WayFinder",
-                        "findNext",
-                        gameState.getCurrentPlayerState().getCurrentPosition()
-                );
-            }
+                Direction nextMoveDirection = Optional.ofNullable(wayFinder.findNext()).orElseThrow(() -> new AIDecisionException(
+                    "WayFinder failed to determine a valid move",
+                    "WayFinder",
+                    "findNext",
+                    state.getCurrentPlayerState().getCurrentPosition()
+                ));
 
             try {
                 networkCenter.sendMove(nextMoveDirection);
 
-                if (gameMode != null && gameMode.isReduced()) {
+                if (effectiveMode.isReduced()) {
                     output.showMoveSent(nextMoveDirection);
                 }
             } catch (GameCommunicationException e) {
@@ -59,7 +66,7 @@ final class MoveExecutionService {
                 throw new GameCommunicationException(
                         "Failed to send move to server: " + e.getMessage(),
                         e,
-                        networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                    FailureReason.UNKNOWN.code(),
                         Operation.SEND_MOVE,
                         -1
                 );
@@ -71,11 +78,12 @@ final class MoveExecutionService {
             throw new GameStateException(
                     "Unexpected error during move making: " + e.getMessage(),
                     e,
-                    gameState.getGameStateID(),
-                    Operation.MAKE_MOVE,
-                    FailureReason.ERROR,
-                    null
+                    state.getGameStateID(),
+                    Operation.MAKE_MOVE.code(),
+                    FailureReason.ERROR.code(),
+                    ""
             );
         }
     }
 }
+

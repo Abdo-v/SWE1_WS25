@@ -11,6 +11,7 @@ import client.model.PlayerStatus;
 import client.view.GameOutput;
 
 import java.time.Duration;
+import java.util.Objects;
 
 public class GameLoopService {
 
@@ -20,8 +21,8 @@ public class GameLoopService {
     private final GameOutput output;
 
     public GameLoopService(GameManager gameManager, GameOutput output) {
-        this.gameManager = gameManager;
-        this.output = output;
+        this.gameManager = Objects.requireNonNull(gameManager, "gameManager is required");
+        this.output = Objects.requireNonNullElse(output, new NoOpGameOutput());
     }
 
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
@@ -29,7 +30,8 @@ public class GameLoopService {
     }
 
     public void startGameLoop(GameMode gameMode) throws GameCommunicationException, GameStateException {
-        boolean dynamicMode = gameMode != null && gameMode.isDynamicVisualization();
+        GameMode effectiveMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
+        boolean dynamicMode = effectiveMode.isDynamicVisualization();
         if (dynamicMode) {
             output.showDynamicModeStarting();
             try {
@@ -55,8 +57,8 @@ public class GameLoopService {
                         break;
                     case MUST_ACT:
                         try {
-                            gameManager.makeMove(gameMode);
-                            if (gameMode != null && gameMode.isReduced()) {
+                            gameManager.makeMove(effectiveMode);
+                            if (effectiveMode.isReduced()) {
                                 output.showPosition(gameManager.getGameState().getCurrentPlayerState().getCurrentPosition().printCoordinates());
                             }
                             acted = true;
@@ -87,7 +89,7 @@ public class GameLoopService {
                 }
 
                 loops++;
-                if (gameMode != null && gameMode.isReduced()) {
+                if (effectiveMode.isReduced()) {
                     output.showLoops(loops);
                 }
 
@@ -98,9 +100,9 @@ public class GameLoopService {
                         "Fatal map processing error: " + e.getMessage(),
                         e,
                         gameManager.getGameState().getGameStateID(),
-                        Operation.GAME_LOOP,
-                        FailureReason.MAP_ERROR,
-                        null
+                        Operation.GAME_LOOP.code(),
+                        FailureReason.MAP_ERROR.code(),
+                        ""
                     );
                 }
             } catch (GameCommunicationException | GameStateException e) {
@@ -110,9 +112,9 @@ public class GameLoopService {
                     "Unexpected error in game loop: " + e.getMessage(),
                     e,
                     gameManager.getGameState().getGameStateID(),
-                    Operation.GAME_LOOP,
-                    FailureReason.UNEXPECTED_ERROR,
-                    null
+                    Operation.GAME_LOOP.code(),
+                    FailureReason.UNEXPECTED_ERROR.code(),
+                    ""
                 );
             }
         }
@@ -120,3 +122,4 @@ public class GameLoopService {
         gameManager.disableDynamicVisualization();
     }
 }
+

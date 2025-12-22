@@ -6,6 +6,8 @@ import client.model.ai.WayFinder;
 import client.view.CLIHandler;
 import client.view.DynamicCLIGameView;
 
+import java.util.Objects;
+
 /**
  * Centralizes the wiring of observers and AI components for a {@link GameState}.
  *
@@ -17,22 +19,14 @@ final class GameManagerWiring {
     }
 
     static CLIHandler createCliHandler(GameMode gameMode) {
-        return new CLIHandler(gameMode != null ? gameMode : GameMode.UNKNOWN);
+        return new CLIHandler(Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN));
     }
 
     static void wireObservers(GameState gameState, CLIHandler cliHandler, WayFinder wayFinder, DynamicCLIGameView dynamicView) {
-        if (gameState == null) {
-            throw new IllegalArgumentException("gameState must not be null");
-        }
-        if (cliHandler == null) {
-            throw new IllegalArgumentException("cliHandler must not be null");
-        }
-        if (wayFinder == null) {
-            throw new IllegalArgumentException("wayFinder must not be null");
-        }
-        if (dynamicView == null) {
-            throw new IllegalArgumentException("dynamicView must not be null");
-        }
+        Objects.requireNonNull(gameState, "gameState is required");
+        Objects.requireNonNull(cliHandler, "cliHandler is required");
+        Objects.requireNonNull(wayFinder, "wayFinder is required");
+        Objects.requireNonNull(dynamicView, "dynamicView is required");
 
         gameState.addObserver(cliHandler);
         gameState.addObserver(wayFinder);
@@ -42,3 +36,4 @@ final class GameManagerWiring {
         wayFinder.addSubObservers();
     }
 }
+

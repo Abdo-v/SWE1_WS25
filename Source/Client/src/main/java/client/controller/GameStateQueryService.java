@@ -6,25 +6,30 @@ import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
 import client.exception.Operation;
 
+import java.util.Objects;
+import java.util.Optional;
+
 public class GameStateQueryService {
 
     private final NetworkCenter networkCenter;
 
     public GameStateQueryService(NetworkCenter networkCenter) {
-        this.networkCenter = networkCenter;
+        this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
     }
 
     public boolean isFullMapAvailable() throws GameCommunicationException {
         try {
             messagesbase.messagesfromserver.GameState serverGameState = pollGameState();
-            return serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 100;
+            return Optional.ofNullable(serverGameState.getMap())
+                    .map(m -> m.getMapNodes().size() == 100)
+                    .orElse(false);
         } catch (GameCommunicationException e) {
             throw e;
         } catch (Exception e) {
             throw new GameCommunicationException(
                 "Failed to check full map availability: " + e.getMessage(),
                 e,
-                networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                FailureReason.UNKNOWN.code(),
                 Operation.FULL_MAP_CHECK,
                 -1
             );
@@ -40,7 +45,7 @@ public class GameStateQueryService {
             throw new GameCommunicationException(
                 "Failed to poll game state from server: " + e.getMessage(),
                 e,
-                networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                FailureReason.UNKNOWN.code(),
                 Operation.POLL_GAME_STATE,
                 -1
             );
@@ -50,14 +55,16 @@ public class GameStateQueryService {
     public boolean isServerMapEmpty() throws GameCommunicationException {
         try {
             messagesbase.messagesfromserver.GameState serverGameState = pollGameState();
-            return serverGameState.getMap() != null && serverGameState.getMap().getMapNodes().size() == 0;
+            return Optional.ofNullable(serverGameState.getMap())
+                    .map(m -> m.getMapNodes().isEmpty())
+                    .orElse(false);
         } catch (GameCommunicationException e) {
             throw e;
         } catch (Exception e) {
             throw new GameCommunicationException(
                 "Failed to check if server map is empty: " + e.getMessage(),
                 e,
-                networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                FailureReason.UNKNOWN.code(),
                 Operation.CHECK_SERVER_MAP_EMPTY,
                 -1
             );
@@ -93,8 +100,9 @@ public class GameStateQueryService {
                 gameStateId,
                 Operation.POLL_PLAYER_STATUS,
                 FailureReason.ERROR,
-                null
+                FailureReason.UNKNOWN
             );
         }
     }
 }
+

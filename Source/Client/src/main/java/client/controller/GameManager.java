@@ -15,12 +15,15 @@ import client.controller.network.service.NetworkCenter;
 import client.model.mapper.GameMap;
 import messagesbase.UniquePlayerIdentifier;
 
+import java.util.Optional;
+import java.util.Objects;
+
 public class GameManager {
     // private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     
     private client.model.GameState gameState;
     private final NetworkCenter networkCenter;
-    private String playerId;
+    private Optional<String> playerId;
     private final WayFinder wayFinder = new WayFinder();
     private final DynamicCLIGameView dynamicView = new DynamicCLIGameView();
     private final GameOutput output;
@@ -33,6 +36,8 @@ public class GameManager {
     private final GameVisualizationService visualizationService;
     private final PlayerTurnService playerTurnService;
 
+    private static final String UNKNOWN_GAME_STATE_ID = "unknown";
+
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
         this(state, serverBaseUrl, gameMode, new client.view.GameManagerView());
     }
@@ -42,9 +47,10 @@ public class GameManager {
     }
 
     public GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){
-        this.gameState = state;
-        this.networkCenter = new NetworkCenter(serverBaseUrl, state.getGameStateID());
-        this.output = output;
+        this.gameState = Objects.requireNonNull(state, "state is required");
+        this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), this.gameState.getGameStateID());
+        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+        this.playerId = Optional.empty();
 
         var cliHandler = GameManagerWiring.createCliHandler(gameMode);
         GameManagerWiring.wireObservers(state, cliHandler, wayFinder, dynamicView);
@@ -71,10 +77,10 @@ public class GameManager {
     }
 
     public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId, GameOutput output) {
-        this.networkCenter = new NetworkCenter(serverBaseUrl, gameId, playerId);
+        this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), Objects.requireNonNull(gameId, "gameId is required"), Objects.requireNonNull(playerId, "playerId is required"));
         this.gameState = new client.model.GameState(gameId);
-        this.playerId = playerId != null ? playerId.getUniquePlayerID() : null;
-        this.output = output;
+        this.playerId = Optional.of(playerId.getUniquePlayerID());
+        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
 
         var cliHandler = GameManagerWiring.createCliHandler(GameMode.UNKNOWN);
         GameManagerWiring.wireObservers(this.gameState, cliHandler, wayFinder, dynamicView);
@@ -100,9 +106,10 @@ public class GameManager {
     }
 
     public GameManager(String gameId, String serverBaseUrl, GameOutput output) {
-        this.networkCenter = new NetworkCenter(serverBaseUrl, gameId);
+        this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), Objects.requireNonNull(gameId, "gameId is required"));
         this.gameState = new client.model.GameState(gameId);
-        this.output = output;
+        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+        this.playerId = Optional.empty();
 
         var cliHandler = GameManagerWiring.createCliHandler(GameMode.UNKNOWN);
         GameManagerWiring.wireObservers(this.gameState, cliHandler, wayFinder, dynamicView);
@@ -128,8 +135,9 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for player registration.
      */
     public String registerPlayer(String firstName, String lastName, String uAccount) throws GameCommunicationException, GameStateException {
-        this.playerId = playerRegistrationService.registerPlayer(gameState, firstName, lastName, uAccount);
-        return this.playerId;
+        String registeredPlayerId = playerRegistrationService.registerPlayer(gameState, firstName, lastName, uAccount);
+        this.playerId = Optional.of(registeredPlayerId);
+        return registeredPlayerId;
     }
     
     /**
@@ -138,7 +146,7 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for map generation.
      */
     public void generateAndSendHalfMap() throws GameCommunicationException, GameStateException {
-        halfMapService.generateAndSendHalfMap(playerId, gameState != null ? gameState.getGameStateID() : "unknown");
+        halfMapService.generateAndSendHalfMap(requirePlayerId(), requireGameStateId());
     }
 
     /**
@@ -175,7 +183,7 @@ public class GameManager {
      * @throws GameStateException If the player is not found in the game state.
      */
     public messagesbase.messagesfromserver.EPlayerGameState pollMyStatus() throws GameCommunicationException, GameStateException {
-        return gameStateQueryService.pollPlayerStatus(playerId, gameState != null ? gameState.getGameStateID() : "unknown");
+        return gameStateQueryService.pollPlayerStatus(requirePlayerId(), requireGameStateId());
     }
 
     /**
@@ -189,7 +197,7 @@ public class GameManager {
     }
 
     public void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
-        moveExecutionService.makeMove(gameState, playerId, gameMode);
+        moveExecutionService.makeMove(gameState, requirePlayerId(), gameMode);
     }
 
     /**
@@ -198,7 +206,7 @@ public class GameManager {
      * @throws GameStateException If the player is not found in the game state.
      */
     public client.model.PlayerStatus getCurrentPlayerStatus() throws GameStateException {
-        return playerTurnService.getCurrentPlayerStatus(gameState, playerId);
+        return playerTurnService.getCurrentPlayerStatus(gameState, requirePlayerId());
     }
 
     /**
@@ -227,7 +235,7 @@ public class GameManager {
      * @param gameState The game state to set.
      */
     public void setGameState(client.model.GameState gameState) {
-        this.gameState = gameState;
+        this.gameState = Objects.requireNonNull(gameState, "gameState is required");
     }
 
     /**
@@ -235,7 +243,7 @@ public class GameManager {
      * @return The full game map.
      */
     public GameMap getMap() {
-        return gameState != null ? gameState.getMap() : null;
+        return Optional.ofNullable(gameState.getMap()).orElseGet(GameMap::new);
     }
 
     /**
@@ -243,7 +251,7 @@ public class GameManager {
      * @return The player ID.
      */
     public String getPlayerId() {
-        return playerId;
+        return playerId.orElse("");
     }
 
     /**
@@ -251,7 +259,8 @@ public class GameManager {
      * @param playerId The player ID to set.
      */
     public void setPlayerId(String playerId) {
-        this.playerId = playerId;
+        this.playerId = Optional.ofNullable(playerId)
+                .filter(id -> !id.isBlank());
     }
 
     /**
@@ -290,4 +299,21 @@ public class GameManager {
         visualizationService.disableDynamicVisualization();
     }
 
+    private String requirePlayerId() {
+        return playerId.filter(id -> !id.isBlank()).orElseThrow(() -> new GameStateException(
+                "Player identifier is missing",
+                requireGameStateId(),
+                "PLAYER_ID",
+                "missing"
+        ));
+    }
+
+    private String requireGameStateId() {
+        return Optional.ofNullable(gameState)
+                .map(client.model.GameState::getGameStateID)
+                .filter(id -> !id.isBlank())
+                .orElse(UNKNOWN_GAME_STATE_ID);
+    }
+
 }
+

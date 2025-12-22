@@ -13,6 +13,9 @@ import client.model.mapper.PlayerHalfMap;
 import client.view.CLIHandler;
 import client.view.GameOutput;
 
+import java.util.Objects;
+import java.util.Optional;
+
 public class HalfMapService {
 
     private final NetworkCenter networkCenter;
@@ -21,9 +24,9 @@ public class HalfMapService {
     private final MapValidator mapValidator;
 
     public HalfMapService(NetworkCenter networkCenter, CLIHandler cliHandler, GameOutput output) {
-        this.networkCenter = networkCenter;
-        this.cliHandler = cliHandler;
-        this.output = output;
+        this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
+        this.cliHandler = Objects.requireNonNull(cliHandler, "cliHandler is required");
+        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
         this.mapValidator = new MapValidator();
     }
 
@@ -31,17 +34,16 @@ public class HalfMapService {
      * Generates, validates, and sends the player's half map to the server.
      */
     public void generateAndSendHalfMap(String playerId, String gameStateId) throws GameCommunicationException, GameStateException {
-        if (playerId == null) {
-            throw new GameStateException(
-                "Cannot generate half map: player ID is not set",
-                gameStateId != null ? gameStateId : "unknown",
+        String safeGameStateId = Optional.ofNullable(gameStateId).filter(id -> !id.isBlank()).orElse("unknown");
+        String safePlayerId = Optional.ofNullable(playerId).filter(id -> !id.isBlank()).orElseThrow(() -> new GameStateException(
+                "Cannot generate half map: player ID is missing",
+                safeGameStateId,
                 Operation.GENERATE_HALF_MAP,
                 FailureReason.NO_PLAYER_ID
-            );
-        }
+        ));
 
         try {
-            PlayerHalfMap halfMapToSend = generateHalfMap(playerId);
+            PlayerHalfMap halfMapToSend = generateHalfMap(safePlayerId);
             validateHalfMap(halfMapToSend);
             sendHalfMap(halfMapToSend);
         } catch (GameCommunicationException e) {
@@ -53,7 +55,7 @@ public class HalfMapService {
                 gameStateId,
                 Operation.GENERATE_HALF_MAP,
                 FailureReason.ERROR,
-                null
+                FailureReason.UNKNOWN
             );
         }
     }
@@ -61,24 +63,18 @@ public class HalfMapService {
     private PlayerHalfMap generateHalfMap(String playerId) {
         MapGenerator generator = new MapGenerator();
         PlayerHalfMap halfMapToSend = generator.generateMap(HalfMapDimensions.WIDTH, HalfMapDimensions.HEIGHT, playerId);
-        if (cliHandler != null) {
-            cliHandler.printHalfMap(halfMapToSend, "own");
-        }
+        cliHandler.printHalfMap(halfMapToSend, "own");
         return halfMapToSend;
     }
 
     private void validateHalfMap(PlayerHalfMap halfMap) {
         Notification validation = mapValidator.validate(halfMap);
         if (validation.hasErrors()) {
-            if (output != null) {
-                output.showMapValidationFailed(validation.getErrorMessages());
-            }
+            output.showMapValidationFailed(validation.getErrorMessages());
             throw new IllegalStateException("Generated map is invalid: " + validation.getErrorMessages());
         }
 
-        if (output != null) {
-            output.showMapValidationOk();
-        }
+        output.showMapValidationOk();
     }
 
     private void sendHalfMap(PlayerHalfMap halfMap) throws GameCommunicationException {
@@ -88,10 +84,11 @@ public class HalfMapService {
             throw new GameCommunicationException(
                 "Failed to send half map to server: " + e.getMessage(),
                 e,
-                networkCenter != null ? FailureReason.UNKNOWN.code() : FailureReason.NO_NETWORK.code(),
+                FailureReason.UNKNOWN.code(),
                 Operation.SEND_HALF_MAP,
                 -1
             );
         }
     }
 }
+

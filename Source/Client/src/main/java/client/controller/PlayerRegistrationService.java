@@ -7,6 +7,8 @@ import client.model.GameState;
 import client.model.PlayerState;
 import messagesbase.UniquePlayerIdentifier;
 
+import java.util.Optional;
+
 final class PlayerRegistrationService {
 
     private final NetworkCenter networkCenter;
@@ -18,20 +20,18 @@ final class PlayerRegistrationService {
     String registerPlayer(GameState gameState, String firstName, String lastName, String uAccount)
             throws GameCommunicationException, GameStateException {
 
-        if (gameState == null) {
-            throw new GameStateException(
-                    "Cannot register player: game state is not initialized",
-                    null,
-                    "PLAYER_REGISTRATION",
-                    "uninitialized"
-            );
-        }
+        GameState state = Optional.ofNullable(gameState).orElseThrow(() -> new GameStateException(
+            "Cannot register player: game state is missing",
+            "unknown",
+            "PLAYER_REGISTRATION",
+            "missing"
+        ));
 
         try {
             UniquePlayerIdentifier playerIdentifier = networkCenter.registerPlayer(firstName, lastName, uAccount);
             String playerId = playerIdentifier.getUniquePlayerID();
             PlayerState playerState = new PlayerState(playerId, firstName, lastName, uAccount);
-            gameState.addPlayer(playerState);
+            state.addPlayer(playerState);
             return playerId;
         } catch (GameCommunicationException e) {
             throw e;
@@ -39,11 +39,12 @@ final class PlayerRegistrationService {
             throw new GameStateException(
                     "Unexpected error during player registration: " + e.getMessage(),
                     e,
-                    gameState.getGameStateID(),
+                    state.getGameStateID(),
                     "PLAYER_REGISTRATION",
                     "unknown",
-                    null
+                    ""
             );
         }
     }
 }
+
