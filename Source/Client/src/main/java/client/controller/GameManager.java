@@ -7,7 +7,6 @@ import client.exception.GameStateException;
 import client.exception.AIDecisionException;
 import client.exception.MapProcessingException;
 import client.model.GameMode;
-import client.model.PlayerStatus;
 import client.model.ai.WayFinder;
 import client.view.DynamicCLIGameView;
 import client.view.GameOutput;
@@ -32,6 +31,7 @@ public class GameManager {
     private final PlayerRegistrationService playerRegistrationService;
     private final MoveExecutionService moveExecutionService;
     private final GameVisualizationService visualizationService;
+    private final PlayerTurnService playerTurnService;
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
         this(state, serverBaseUrl, gameMode, new client.view.GameManagerView());
@@ -57,6 +57,7 @@ public class GameManager {
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
         this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.playerTurnService = new PlayerTurnService();
     }
 
     /**
@@ -86,6 +87,7 @@ public class GameManager {
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
         this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.playerTurnService = new PlayerTurnService();
     }
 
     /**
@@ -113,6 +115,7 @@ public class GameManager {
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
         this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.playerTurnService = new PlayerTurnService();
     }
 
     /**
@@ -194,30 +197,8 @@ public class GameManager {
      * @return The current player status.
      * @throws GameStateException If the player is not found in the game state.
      */
-    public PlayerStatus getCurrentPlayerStatus() throws GameStateException {
-        if (gameState == null || gameState.getPlayers() == null) {
-            throw new GameStateException(
-                "Cannot get player status: game state or players list is null",
-                gameState != null ? gameState.getGameStateID() : "unknown",
-                "GET_PLAYER_STATUS",
-                "null_state"
-            );
-        }
-        
-        for (client.model.PlayerState playerState : gameState.getPlayers()) {
-            if (playerState.getPlayerID().equals(playerId)) {
-                // // logger.trace("Current player {} status: {}", playerId, playerState.getStatus());
-                return playerState.getStatus();
-            }
-        }
-        
-        throw new GameStateException(
-            "Player ID not found in game state",
-            gameState.getGameStateID(),
-            "GET_PLAYER_STATUS",
-            "player_not_found",
-            "player_present"
-        );
+    public client.model.PlayerStatus getCurrentPlayerStatus() throws GameStateException {
+        return playerTurnService.getCurrentPlayerStatus(gameState, playerId);
     }
 
     /**
@@ -283,11 +264,11 @@ public class GameManager {
     }
 
     public boolean shouldAct() {
-        return this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_ACT;
+        return playerTurnService.shouldAct(this.gameState);
     }
 
     public boolean shouldWait() {
-        return this.gameState.getCurrentPlayerState().getStatus() == client.model.PlayerStatus.MUST_WAIT;
+        return playerTurnService.shouldWait(this.gameState);
     }
 
     public void visualizeMap(String mapType) {
