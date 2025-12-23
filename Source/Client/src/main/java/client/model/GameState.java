@@ -8,6 +8,7 @@ import client.model.mapper.MapNode;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class GameState implements client.observer.util.Observable {
@@ -61,7 +62,7 @@ public class GameState implements client.observer.util.Observable {
 
     @Override
     public void notifyObservers(GameStateEventType eventType) {
-        publish(new GameStateEvent(this, Optional.ofNullable(eventType).orElse(GameStateEventType.BULK_UPDATE)));
+        publish(new GameStateEvent(this, Objects.requireNonNull(eventType, "event type is required")));
     }
 
     /**
@@ -96,8 +97,9 @@ public class GameState implements client.observer.util.Observable {
     }
 
     private void publish(GameStateEvent event) {
-        events.publish(event);
-        observerSupport.notifyObservers(event);
+        GameStateEvent requiredEvent = Objects.requireNonNull(event, "event is required");
+        events.publish(requiredEvent);
+        observerSupport.notifyObservers(requiredEvent);
     }
     
     /**

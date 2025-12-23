@@ -31,21 +31,22 @@ final class GameStateObservers {
     private final Map<GameStateEventType, Set<Observer>> observersByType = new EnumMap<>(GameStateEventType.class);
 
     GameStateObservers(GameState source) {
-        this.source = source;
+        this.source = Objects.requireNonNull(source, "source game state is required");
     }
 
     void addObserver(Observer observer) {
-        Optional.ofNullable(observer)
-                .filter(globalObservers::add)
-                .ifPresent(obs -> notifySingleObserver(obs, new GameStateEvent(source, GameStateEventType.BULK_UPDATE)));
+        Observer requiredObserver = Objects.requireNonNull(observer, "observer is required");
+        if (globalObservers.add(requiredObserver)) {
+            notifySingleObserver(requiredObserver, new GameStateEvent(source, GameStateEventType.BULK_UPDATE));
+        }
     }
 
     void addObserver(GameStateEventType eventType, Observer observer) {
-        Optional.ofNullable(observer).ifPresent(obs -> {
-            GameStateEventType safeType = Optional.ofNullable(eventType).orElse(GameStateEventType.BULK_UPDATE);
-            observersByType.computeIfAbsent(safeType, ignored -> new LinkedHashSet<>()).add(obs);
-            notifySingleObserver(obs, new GameStateEvent(source, safeType));
-        });
+        Observer requiredObserver = Objects.requireNonNull(observer, "observer is required");
+        GameStateEventType requiredType = Objects.requireNonNull(eventType, "event type is required");
+
+        observersByType.computeIfAbsent(requiredType, ignored -> new LinkedHashSet<>()).add(requiredObserver);
+        notifySingleObserver(requiredObserver, new GameStateEvent(source, requiredType));
     }
 
     void removeObserver(Observer observer) {
@@ -56,9 +57,9 @@ final class GameStateObservers {
     }
 
     void removeObserver(GameStateEventType eventType, Observer observer) {
-        Optional.ofNullable(eventType)
-                .flatMap(type -> Optional.ofNullable(observersByType.get(type)))
-                .ifPresent(bucket -> Optional.ofNullable(observer).ifPresent(bucket::remove));
+        Observer requiredObserver = Objects.requireNonNull(observer, "observer is required");
+        GameStateEventType requiredType = Objects.requireNonNull(eventType, "event type is required");
+        Optional.ofNullable(observersByType.get(requiredType)).ifPresent(bucket -> bucket.remove(requiredObserver));
     }
 
     void notifyObservers() {
@@ -66,7 +67,7 @@ final class GameStateObservers {
     }
 
     void notifyObservers(GameStateEventType eventType) {
-        notifyObservers(new GameStateEvent(source, Optional.ofNullable(eventType).orElse(GameStateEventType.BULK_UPDATE)));
+        notifyObservers(new GameStateEvent(source, Objects.requireNonNull(eventType, "event type is required")));
     }
 
     void notifyObservers(GameStateEvent event) {
