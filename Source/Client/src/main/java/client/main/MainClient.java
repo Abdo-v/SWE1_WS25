@@ -1,7 +1,9 @@
 package client.main;
+import client.controller.PollingDefaults;
 import client.controller.GameManager;
 import client.controller.network.GameIdFetcher;
 import client.exception.ConfigurationException;
+import client.exception.FullMapNotAvailableException;
 import client.exception.GameCommunicationException;
 import client.view.ClientStartupView;
 import client.view.GameManagerView;
@@ -9,6 +11,7 @@ import client.view.GameOutput;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -87,6 +90,13 @@ public class MainClient {
                 view.showWaitingForGameStateAfterRegister();
                 // logger.trace("Player status is MUST_WAIT, continuing to poll...");
                 gameManager.updateGameState();
+
+                try {
+                    Thread.sleep(PollingDefaults.MIN_POLL_INTERVAL.toMillis());
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
             }
             // logger.info("Game state ready, player status: {}", gameManager.getCurrentPlayerStatus());
 
@@ -95,8 +105,10 @@ public class MainClient {
             gameManager.generateAndSendHalfMap();
             // logger.info("Half map successfully generated and sent");
 
-            // logger.debug("Updating game state after half map submission");
-			gameManager.updateGameState();
+
+            view.showWaitingForFullMap();
+            gameManager.waitForFullMap(PollingDefaults.FULL_MAP_WAIT_TIMEOUT, PollingDefaults.DEFAULT_POLL_INTERVAL);
+
 			// logger.debug("Visualizing full map");
 			gameManager.visualizeMap("full");
 
@@ -109,6 +121,9 @@ public class MainClient {
             // Handle configuration errors with user-friendly messages
             view.showConfigurationError(e);
             // logger.error("Configuration error: {}", e.getMessage(), e);
+            System.exit(1);
+        } catch (FullMapNotAvailableException e) {
+            view.showFullMapNotAvailable(e);
             System.exit(1);
         } catch (GameCommunicationException e) {
             // Handle communication errors with retry suggestions

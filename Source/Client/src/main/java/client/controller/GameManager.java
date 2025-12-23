@@ -5,6 +5,7 @@ package client.controller;
 import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
 import client.exception.AIDecisionException;
+import client.exception.FullMapNotAvailableException;
 import client.exception.MapProcessingException;
 import client.model.GameMode;
 import client.model.ai.WayFinder;
@@ -17,6 +18,7 @@ import messagesbase.UniquePlayerIdentifier;
 
 import java.util.Optional;
 import java.util.Objects;
+import java.time.Duration;
 
 public class GameManager {
     // private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
@@ -31,6 +33,7 @@ public class GameManager {
     private final GameStateSynchronizer gameStateSynchronizer;
     private final GameStateQueryService gameStateQueryService;
     private final GameLoopService gameLoopService;
+    private final FullMapWaitService fullMapWaitService;
     private final PlayerRegistrationService playerRegistrationService;
     private final MoveExecutionService moveExecutionService;
     private final GameVisualizationService visualizationService;
@@ -58,6 +61,7 @@ public class GameManager {
         this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
+        this.fullMapWaitService = new FullMapWaitService(this.gameStateSynchronizer, this.gameStateQueryService);
         this.gameLoopService = new GameLoopService(this, this.output);
 
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
@@ -88,6 +92,7 @@ public class GameManager {
         this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
+        this.fullMapWaitService = new FullMapWaitService(this.gameStateSynchronizer, this.gameStateQueryService);
         this.gameLoopService = new GameLoopService(this, this.output);
 
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
@@ -117,6 +122,7 @@ public class GameManager {
         this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
         this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);
         this.gameStateQueryService = new GameStateQueryService(this.networkCenter);
+        this.fullMapWaitService = new FullMapWaitService(this.gameStateSynchronizer, this.gameStateQueryService);
         this.gameLoopService = new GameLoopService(this, this.output);
 
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
@@ -165,6 +171,17 @@ public class GameManager {
      */
     public void updateGameState() throws GameCommunicationException, MapProcessingException {
         gameStateSynchronizer.synchronize(this.gameState);
+    }
+
+    /**
+     * Waits until the full map is available, polling periodically.
+     *
+     * This method does NOT throw as part of normal control flow. It only throws
+     * a checked exception when the timeout is exceeded.
+     */
+    public void waitForFullMap(Duration timeout, Duration pollInterval)
+            throws GameCommunicationException, MapProcessingException, FullMapNotAvailableException {
+        fullMapWaitService.waitForFullMap(this.gameState, timeout, pollInterval);
     }
 
     /**

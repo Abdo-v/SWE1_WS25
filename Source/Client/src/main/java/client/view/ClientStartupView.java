@@ -1,6 +1,7 @@
 package client.view;
 
 import client.exception.ConfigurationException;
+import client.exception.FullMapNotAvailableException;
 import client.exception.GameCommunicationException;
 import client.model.GameMode;
 
@@ -46,6 +47,15 @@ public class ClientStartupView {
 
     public void showGeneratingAndSendingHalfMap() {
         System.out.println("Generating and sending half map...");
+    }
+
+    public void showWaitingForFullMap() {
+        System.out.println("Waiting for full map from server...");
+    }
+
+    public void showFullMapNotAvailable(FullMapNotAvailableException e) {
+        System.err.println("⏳ Full map not available in time: " + safeText(e.getMessage()));
+        System.err.println("💡 Tip: Ensure another player joined and sent their half map.");
     }
 
     public void showStartingMainGameLoop() {
