@@ -26,9 +26,10 @@ public enum ValidationInternalsKind {
         return displayText;
     }
 
-    public static ValidationInternalsKind from(StackTraceElement referenceFrame, String message) {
-        if (referenceFrame != null) {
-            String className = String.valueOf(referenceFrame.getClassName());
+    public static ValidationInternalsKind from(java.util.Optional<StackTraceElement> referenceFrame, String message) {
+        java.util.Optional<StackTraceElement> safeFrame = java.util.Optional.ofNullable(referenceFrame).orElse(java.util.Optional.empty());
+        if (safeFrame.isPresent()) {
+            String className = String.valueOf(safeFrame.orElseThrow().getClassName());
             if (className.contains("HalfMapStructureValidator")) {
                 return STRUCTURE;
             }
@@ -46,14 +47,12 @@ public enum ValidationInternalsKind {
             }
         }
 
-        if (message != null) {
-            String lower = message.toLowerCase();
-            if (lower.contains("must be provided") || lower.contains("missing")) {
-                return PRECONDITION;
-            }
-            if (lower.contains("dimension") || lower.contains("width") || lower.contains("height")) {
-                return DIMENSIONS;
-            }
+        String lower = java.util.Objects.requireNonNullElse(message, "").toLowerCase();
+        if (lower.contains("must be provided") || lower.contains("missing") || lower.contains("required")) {
+            return PRECONDITION;
+        }
+        if (lower.contains("dimension") || lower.contains("width") || lower.contains("height")) {
+            return DIMENSIONS;
         }
 
         return VALIDATION;

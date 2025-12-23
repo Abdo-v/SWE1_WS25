@@ -17,8 +17,8 @@ import java.util.Optional;
 public class MapSnapshotView {
 
     public void visualize(GameState gameState, MapVisualizationType mapType) {
-        Objects.requireNonNull(gameState, "gameState must not be null");
-        Objects.requireNonNull(mapType, "mapType must not be null");
+        Objects.requireNonNull(gameState, "gameState is required");
+        Objects.requireNonNull(mapType, "mapType is required");
 
         Optional<GameMap> mapOpt = gameState.getMap();
         if (mapOpt.isEmpty() || mapOpt.get().getContentSize() == 0) {
@@ -67,13 +67,7 @@ public class MapSnapshotView {
         for (int y = minY; y <= maxY; y++) {
             StringBuilder row = new StringBuilder("|");
             for (int x = minX; x <= maxX; x++) {
-                MapNode node;
-                try {
-                    node = map.getNode(x, y);
-                } catch (Exception e) {
-                    node = null;
-                }
-
+                Optional<MapNode> node = safeNode(map, x, y);
                 row.append(MapCellRenderer.renderCell(state, node, myPosition, opponentPosition, myHasTreasure, opponentHasTreasure));
 
                 if (x < maxX) {
@@ -85,5 +79,13 @@ public class MapSnapshotView {
         }
 
         System.out.println(CLITexts.SEPARATOR_SHORT);
+    }
+
+    private static Optional<MapNode> safeNode(GameMap map, int x, int y) {
+        try {
+            return Optional.ofNullable(map.getNode(x, y));
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 }

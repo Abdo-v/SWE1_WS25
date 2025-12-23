@@ -12,7 +12,7 @@ import java.util.Objects;
 final class PlayerSummaryFormatter {
 
     String format(PlayerState playerState, int movesMade) {
-        Objects.requireNonNull(playerState, "playerState must not be null");
+        Objects.requireNonNull(playerState, "playerState is required");
 
         String id = displayOrUnknown(playerState.getPlayerID());
         String firstName = displayOrUnknown(playerState.getFirstName());
@@ -28,10 +28,7 @@ final class PlayerSummaryFormatter {
     }
 
     private static String displayOrUnknown(String value) {
-        if (value == null) {
-            return "(unknown)";
-        }
-        String trimmed = value.trim();
+        String trimmed = Objects.requireNonNullElse(value, "").trim();
         return trimmed.isEmpty() ? "(unknown)" : trimmed;
     }
 }

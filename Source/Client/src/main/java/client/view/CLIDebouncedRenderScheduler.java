@@ -1,6 +1,7 @@
 package client.view;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -20,7 +21,7 @@ final class CLIDebouncedRenderScheduler {
 
     private final long debounceMillis;
     private final Object lock = new Object();
-    private ScheduledFuture<?> pending;
+    private Optional<ScheduledFuture<?>> pending = Optional.empty();
 
     CLIDebouncedRenderScheduler(long debounceMillis) {
         if (debounceMillis < 0) {
@@ -30,21 +31,17 @@ final class CLIDebouncedRenderScheduler {
     }
 
     void schedule(Runnable task) {
-        Objects.requireNonNull(task, "task must not be null");
+        Objects.requireNonNull(task, "task is required");
         synchronized (lock) {
-            if (pending != null) {
-                pending.cancel(false);
-            }
-            pending = EXECUTOR.schedule(task, debounceMillis, TimeUnit.MILLISECONDS);
+            pending.ifPresent(existing -> existing.cancel(false));
+            pending = Optional.of(EXECUTOR.schedule(task, debounceMillis, TimeUnit.MILLISECONDS));
         }
     }
 
     void cancelPending() {
         synchronized (lock) {
-            if (pending != null) {
-                pending.cancel(false);
-                pending = null;
-            }
+            pending.ifPresent(existing -> existing.cancel(false));
+            pending = Optional.empty();
         }
     }
 }

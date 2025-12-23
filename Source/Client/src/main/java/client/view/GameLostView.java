@@ -14,12 +14,12 @@ public final class GameLostView {
     private final PlayerSummaryFormatter playerSummaryFormatter;
 
     public GameLostView(PrintStream out) {
-        this.out = Objects.requireNonNull(out, "out must not be null");
+        this.out = Objects.requireNonNull(out, "out is required");
         this.playerSummaryFormatter = new PlayerSummaryFormatter();
     }
 
     public void show(PlayerState playerState, int movesMade) {
-        Objects.requireNonNull(playerState, "playerState must not be null");
+        Objects.requireNonNull(playerState, "playerState is required");
 
         out.println("\n========================================");
         out.println("💀💀💀  YOU LOST  💀💀💀");

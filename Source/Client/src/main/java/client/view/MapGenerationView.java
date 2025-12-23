@@ -6,6 +6,7 @@ import client.model.mapper.PlayerHalfMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * CLI visualization for the map generation phase.
@@ -23,9 +24,10 @@ public class MapGenerationView {
      * @param title title shown above the map
      */
     public void printHalfMap(PlayerHalfMap halfMap, String title) {
-        Objects.requireNonNull(title, "title must not be null");
+        Objects.requireNonNull(title, "title is required");
+        Objects.requireNonNull(halfMap, "halfMap is required");
 
-        if (halfMap == null || halfMap.getMapNodes().isEmpty()) {
+        if (halfMap.getMapNodes().isEmpty()) {
             System.out.println("\n" + title + ": (no half-map data)");
             return;
         }
@@ -45,7 +47,7 @@ public class MapGenerationView {
         for (int y = 0; y <= maxY; y++) {
             StringBuilder row = new StringBuilder("|");
             for (int x = 0; x <= maxX; x++) {
-                MapNode node = nodeMap.get(x + "," + y);
+                Optional<MapNode> node = Optional.ofNullable(nodeMap.get(x + "," + y));
                 row.append(renderNode(node));
                 if (x < maxX) {
                     row.append(' ');
@@ -58,24 +60,25 @@ public class MapGenerationView {
         System.out.println(CLITexts.SEPARATOR_HALF_MAP);
     }
 
-    private static String renderNode(MapNode node) {
-        if (node == null) {
-            return CLIIcons.UNKNOWN;
-        }
-
-        if (node.isFortPresent()) {
+    private static String renderNode(Optional<MapNode> node) {
+        if (node.filter(MapNode::isFortPresent).isPresent()) {
             return CLIIcons.OWN_FORT;
         }
 
-        switch (node.getTerrain()) {
-            case GRASS:
-                return CLIIcons.GRASS;
-            case MOUNTAIN:
-                return CLIIcons.MOUNTAIN;
-            case WATER:
-                return CLIIcons.WATER;
-            default:
-                return CLIIcons.UNKNOWN;
-        }
+        return node
+                .map(MapNode::getTerrain)
+                .map(terrain -> {
+                    switch (terrain) {
+                        case GRASS:
+                            return CLIIcons.GRASS;
+                        case MOUNTAIN:
+                            return CLIIcons.MOUNTAIN;
+                        case WATER:
+                            return CLIIcons.WATER;
+                        default:
+                            return CLIIcons.UNKNOWN;
+                    }
+                })
+                .orElse(CLIIcons.UNKNOWN);
     }
 }

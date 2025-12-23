@@ -3,6 +3,7 @@ package client.view;
 import client.model.GameState;
 
 import java.util.Objects;
+import java.util.Optional;
 
 public class DynamicCLIGameView implements client.observer.util.Observer {
 
@@ -10,7 +11,7 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
     private final CLIDebouncedRenderScheduler renderScheduler = new CLIDebouncedRenderScheduler(RENDER_DEBOUNCE_MILLIS);
     private final DynamicCLIFrameRenderer frameRenderer = new DynamicCLIFrameRenderer();
 
-    private GameState currentGameState;
+    private Optional<GameState> currentGameState = Optional.empty();
     private boolean dynamicModeActive = false;
 
     /**
@@ -19,9 +20,7 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
      */
     public void enableDynamicMode() {
         this.dynamicModeActive = true;
-        if (this.currentGameState != null) {
-            render();
-        }
+        this.currentGameState.ifPresent(ignored -> render());
     }
 
     /**
@@ -35,7 +34,7 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
     
     @Override
     public void update(GameState gameState) {
-        this.currentGameState = Objects.requireNonNull(gameState, "gameState must not be null");
+        this.currentGameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
         requestRender();
     }
 
@@ -44,7 +43,7 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
      * If multiple updates arrive quickly (e.g., during bulk model updates), renders are coalesced.
      */
     public void requestRender() {
-        if (!this.dynamicModeActive || this.currentGameState == null) {
+        if (!this.dynamicModeActive || this.currentGameState.isEmpty()) {
             return;
         }
 
@@ -52,13 +51,14 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
     }
 
     private void renderIfActive() {
-        if (this.dynamicModeActive && this.currentGameState != null) {
-            render();
+        if (this.dynamicModeActive) {
+            this.currentGameState.ifPresent(ignored -> render());
         }
     }
 
     private void render() {
-        DynamicCLIFrameRenderer.RenderedCLIFrame frame = frameRenderer.render(this.currentGameState);
+        GameState state = this.currentGameState.orElseThrow();
+        DynamicCLIFrameRenderer.RenderedCLIFrame frame = frameRenderer.render(state);
         if (frame.lineCount() <= 0) {
             return;
         }

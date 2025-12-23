@@ -4,6 +4,8 @@ import client.model.GameState;
 import client.model.GameMode;
 import client.model.mapper.PlayerHalfMap;
 
+import java.util.Objects;
+import java.util.Optional;
 /**
  * Legacy CLI handler.
  *
@@ -19,13 +21,12 @@ import client.model.mapper.PlayerHalfMap;
  */
 public class CLIHandler implements client.observer.util.Observer {
 
-    private GameState gameState;
+    private Optional<GameState> gameState = Optional.empty();
     private static boolean reduced;
     private final MapSnapshotView snapshotView = new MapSnapshotView();
     private final MapGenerationView mapGenerationView = new MapGenerationView();
 
     public CLIHandler() {
-        this.gameState = null;
     }
 
     public CLIHandler(String gameMode){
@@ -33,16 +34,17 @@ public class CLIHandler implements client.observer.util.Observer {
     }
 
     public CLIHandler(GameMode gameMode) {
-        CLIHandler.reduced = gameMode != null && gameMode.isReduced();
+        GameMode safeMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
+        CLIHandler.reduced = safeMode.isReduced();
     }
 
     public CLIHandler(GameState gameState) {
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
     }
 
     @Override
     public void update(GameState gameState ){
-        this.gameState = gameState;
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
         // to do : implement update on the output to the CLI
     }
 
@@ -59,13 +61,10 @@ public class CLIHandler implements client.observer.util.Observer {
     }
 
     public void visualizeMap(MapVisualizationType mapType) {
-        if (mapType == null) {
-            System.out.println("Invalid map type. Use 'own', 'opponent', or 'full'.");
-            return;
-        }
+        MapVisualizationType safeType = Objects.requireNonNullElse(mapType, MapVisualizationType.UNKNOWN);
 
-        if (this.gameState == null) {
-            switch (mapType) {
+        if (this.gameState.isEmpty()) {
+            switch (safeType) {
                 case OWN:
                     System.out.println("Own map visual: map not available");
                     break;
@@ -81,7 +80,7 @@ public class CLIHandler implements client.observer.util.Observer {
             return;
         }
 
-        snapshotView.visualize(this.gameState, mapType);
+        snapshotView.visualize(this.gameState.orElseThrow(), safeType);
     }
 
     /**

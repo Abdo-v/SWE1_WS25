@@ -17,7 +17,7 @@ import java.util.Objects;
 public class MapValidationInternalsView {
 
     public void report(Notification notification) {
-        Objects.requireNonNull(notification, "notification must not be null");
+        Objects.requireNonNull(notification, "notification is required");
 
         if (!notification.hasErrors()) {
             return;
@@ -30,13 +30,12 @@ public class MapValidationInternalsView {
         int index = 1;
         for (Notification.Error error : notification.getErrors()) {
             String message = safeText(error.info);
-            StackTraceElement referenceFrame = error.cause
-                .map(MapValidationInternalsView::findTopRelevantFrame)
-                .orElse(null);
+            var referenceFrame = error.cause
+                    .flatMap(MapValidationInternalsView::findTopRelevantFrame);
             ValidationInternalsKind kind = ValidationInternalsKind.from(referenceFrame, message);
-            String reference = referenceFrame == null
-                ? "(no stack trace reference available)"
-                : formatFrameLikeStackTrace(referenceFrame);
+            String reference = referenceFrame
+                    .map(MapValidationInternalsView::formatFrameLikeStackTrace)
+                    .orElse("(no stack trace reference available)");
 
             System.err.println("  " + index + ") Kind: " + kind.displayText());
             System.err.println("     Message: " + message);
@@ -47,47 +46,37 @@ public class MapValidationInternalsView {
     }
 
     private static String safeText(String text) {
-        return text == null ? "(no message)" : text;
+        return Objects.requireNonNullElse(text, "(no message)");
     }
 
-    private static StackTraceElement findTopRelevantFrame(Exception ex) {
-        if (ex == null) {
-            return null;
-        }
-
-        StackTraceElement[] frames = ex.getStackTrace();
-        if (frames == null || frames.length == 0) {
-            return null;
+    private static java.util.Optional<StackTraceElement> findTopRelevantFrame(Exception ex) {
+        Objects.requireNonNull(ex, "exception is required");
+        StackTraceElement[] frames = Objects.requireNonNullElse(ex.getStackTrace(), new StackTraceElement[0]);
+        if (frames.length == 0) {
+            return java.util.Optional.empty();
         }
 
         // Prefer frames that look like validation logic.
         for (StackTraceElement frame : frames) {
-            String className = frame.getClassName();
-            if (className == null) {
-                continue;
-            }
-            String lower = className.toLowerCase();
+            String lower = String.valueOf(frame.getClassName()).toLowerCase();
             if (lower.contains("validator") || lower.contains("mapvalidator")) {
-                return frame;
+                return java.util.Optional.of(frame);
             }
         }
 
         // Fallback: first frame.
-        return frames[0];
+        return java.util.Optional.of(frames[0]);
     }
-
-
-
     private static String formatFrameLikeStackTrace(StackTraceElement frame) {
         String className = String.valueOf(frame.getClassName());
         String methodName = String.valueOf(frame.getMethodName());
-        String fileName = frame.getFileName();
+        String fileName = Objects.requireNonNullElse(frame.getFileName(), "");
         int line = frame.getLineNumber();
 
-        if (fileName != null && line > 0) {
+        if (!fileName.isBlank() && line > 0) {
             return "at " + className + "." + methodName + "(" + fileName + ":" + line + ")";
         }
-        if (fileName != null) {
+        if (!fileName.isBlank()) {
             return "at " + className + "." + methodName + "(" + fileName + ")";
         }
         return "at " + className + "." + methodName + "()";

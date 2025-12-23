@@ -19,8 +19,8 @@ public class GameManagerView implements GameOutput {
     }
 
     public GameManagerView(PrintStream out, PrintStream err) {
-        this.out = Objects.requireNonNull(out, "out must not be null");
-        this.err = Objects.requireNonNull(err, "err must not be null");
+        this.out = Objects.requireNonNull(out, "out is required");
+        this.err = Objects.requireNonNull(err, "err is required");
         this.gameWonView = new GameWonView(this.out);
         this.gameLostView = new GameLostView(this.out);
     }
@@ -64,13 +64,13 @@ public class GameManagerView implements GameOutput {
     @Override
     public void showWon(PlayerState playerState, int loops, boolean showLoops) {
         // Keep the signature for wiring compatibility; present user-friendly info.
-        gameWonView.show(Objects.requireNonNull(playerState, "playerState must not be null"), loops);
+        gameWonView.show(Objects.requireNonNull(playerState, "playerState is required"), loops);
     }
 
     @Override
     public void showLost(PlayerState playerState, int loops, boolean showLoops) {
         // Keep the signature for wiring compatibility; present user-friendly info.
-        gameLostView.show(Objects.requireNonNull(playerState, "playerState must not be null"), loops);
+        gameLostView.show(Objects.requireNonNull(playerState, "playerState is required"), loops);
     }
 
     @Override
