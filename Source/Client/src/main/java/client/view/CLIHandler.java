@@ -6,6 +6,19 @@ import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 import client.model.mapper.PlayerHalfMap;
 
+/**
+ * Legacy CLI handler.
+ *
+ * <p>This class historically provided letter-based map rendering and is still used in wiring
+ * (e.g., as a lightweight holder for the latest {@link client.model.GameState} and reduced-mode flag).
+ *
+ * <p>For assignment-compliant, emoji-based visualizations, prefer:
+ * <ul>
+ *   <li>{@link DynamicCLIGameView} for in-game visualization</li>
+ *   <li>{@link MapGenerationView} for initial half-map visualization after generation</li>
+ *   <li>{@link MapValidationInternalsView} for technical validation internals (System.err)</li>
+ * </ul>
+ */
 public class CLIHandler implements client.observer.util.Observer {
 
     private GameState gameState;

@@ -12,6 +12,8 @@ import client.model.mapper.MapValidator;
 import client.model.mapper.PlayerHalfMap;
 import client.view.CLIHandler;
 import client.view.GameOutput;
+import client.view.MapGenerationView;
+import client.view.MapValidationInternalsView;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -22,12 +24,16 @@ public class HalfMapService {
     private final CLIHandler cliHandler;
     private final GameOutput output;
     private final MapValidator mapValidator;
+    private final MapGenerationView mapGenerationView;
+    private final MapValidationInternalsView mapValidationInternalsView;
 
     public HalfMapService(NetworkCenter networkCenter, CLIHandler cliHandler, GameOutput output) {
         this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
         this.cliHandler = Objects.requireNonNull(cliHandler, "cliHandler is required");
         this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
         this.mapValidator = new MapValidator();
+        this.mapGenerationView = new MapGenerationView();
+        this.mapValidationInternalsView = new MapValidationInternalsView();
     }
 
     /**
@@ -63,13 +69,17 @@ public class HalfMapService {
     private PlayerHalfMap generateHalfMap(String playerId) {
         MapGenerator generator = new MapGenerator();
         PlayerHalfMap halfMapToSend = generator.generateMap(HalfMapDimensions.WIDTH, HalfMapDimensions.HEIGHT, playerId);
-        cliHandler.printHalfMap(halfMapToSend, "own");
+        // Keep CLIHandler available for legacy wiring, but use the dedicated map generation view
+        // for consistent emoji-based output.
+        mapGenerationView.printHalfMap(halfMapToSend, "Own Half Map");
         return halfMapToSend;
     }
 
     private void validateHalfMap(PlayerHalfMap halfMap) {
         Notification validation = mapValidator.validate(halfMap);
         if (validation.hasErrors()) {
+            // Technical internals go to System.err
+            mapValidationInternalsView.report(validation);
             output.showMapValidationFailed(validation.getErrorMessages());
             throw new IllegalStateException("Generated map is invalid: " + validation.getErrorMessages());
         }

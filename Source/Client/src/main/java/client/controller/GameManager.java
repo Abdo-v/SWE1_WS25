@@ -62,7 +62,7 @@ public class GameManager {
 
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
-        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView, this.gameState);
         this.playerTurnService = new PlayerTurnService();
     }
 
@@ -92,7 +92,7 @@ public class GameManager {
 
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
-        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView, this.gameState);
         this.playerTurnService = new PlayerTurnService();
     }
 
@@ -121,7 +121,7 @@ public class GameManager {
 
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
-        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView, this.gameState);
         this.playerTurnService = new PlayerTurnService();
     }
 
