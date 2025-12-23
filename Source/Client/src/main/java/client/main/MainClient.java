@@ -107,7 +107,7 @@ public class MainClient {
 
         } catch (ConfigurationException e) {
             // Handle configuration errors with user-friendly messages
-            view.showConfigurationError(e.getHelpMessage());
+            view.showConfigurationError(e);
             // logger.error("Configuration error: {}", e.getMessage(), e);
             System.exit(1);
         } catch (GameCommunicationException e) {

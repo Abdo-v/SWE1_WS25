@@ -1,5 +1,6 @@
 package client.view;
 
+import client.exception.ConfigurationException;
 import client.exception.GameCommunicationException;
 import client.model.GameMode;
 
@@ -55,6 +56,19 @@ public class ClientStartupView {
         System.err.println(helpMessage);
     }
 
+    public void showConfigurationError(ConfigurationException e) {
+        Objects.requireNonNull(e, "configuration exception is required");
+
+        System.err.println("Configuration Error: " + safeText(e.getMessage()));
+        e.getConfigurationKey().ifPresent(key -> System.err.println("Parameter: " + key));
+        e.getProvidedValue().ifPresent(value -> System.err.println("Provided: " + value));
+
+        String[] validValues = e.getValidValues();
+        if (validValues.length > 0) {
+            System.err.println("Valid options: " + String.join(", ", validValues));
+        }
+    }
+
     public void showCommunicationError(GameCommunicationException e) {
         System.err.println("🌐 Network Communication Error: " + e.getMessage());
         if (e.isRecoverable()) {
@@ -83,5 +97,9 @@ public class ClientStartupView {
             case ATTR -> "Auto-Fetch Terminal";
             default -> safeMode.cliValue();
         };
+    }
+
+    private static String safeText(String text) {
+        return Objects.requireNonNullElse(text, "(no message)");
     }
 }

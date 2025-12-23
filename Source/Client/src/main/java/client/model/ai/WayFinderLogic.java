@@ -5,6 +5,8 @@ import java.util.Objects;
 import java.util.Optional;
 
 import client.exception.AIDecisionException;
+import client.exception.AIInvariantViolationException;
+import client.exception.NoValidMoveAvailableException;
 import client.model.Direction;
 import client.model.GameState;
 import client.model.mapper.MapNode;
@@ -44,7 +46,8 @@ final class WayFinderLogic {
         this.explorationTarget = new ExplorationTargetUseCase(wayHelper, treasureSeeker, visionCostScorer);
     }
 
-    Direction moveBasedOnStrategy(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
+    Direction moveBasedOnStrategy(GameState gameState, MapNode currentMapNode, Objective objective)
+            throws AIDecisionException, NoValidMoveAvailableException {
         try {
             Objects.requireNonNull(gameState, "gameState must not be null");
             Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
@@ -67,24 +70,28 @@ final class WayFinderLogic {
 
             MapNode bestNode = explorationTarget.selectBestNode(gameState, currentMapNode, objective);
 
-                Direction nextDirToBest = shortestPathFinder.findNextValidNodeToTarget(bestNode)
-                    .orElseThrow(() -> new AIDecisionException(
+            Optional<Direction> nextDirToBestOpt = shortestPathFinder.findNextValidNodeToTarget(bestNode);
+            if (nextDirToBestOpt.isEmpty()) {
+                throw new NoValidMoveAvailableException(
                         "Pathfinding failed: no valid path to target: " + bestNode.printCoordinates(),
-                        "WayFinder",
-                        "shortestPathFinder.findNextValidNodeToTarget",
-                        currentMapNode
-                    ));
+                        "WayFinderLogic",
+                        "moveBasedOnStrategy",
+                        suggestFallbackDirection(currentMapNode)
+                );
+            }
 
-                MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, nextDirToBest);
+            Direction nextDirToBest = nextDirToBestOpt.orElseThrow();
 
-                return shortestPathFinder.getDirectionToNeighbor(nextNode)
-                    .orElseThrow(() -> new AIDecisionException(
-                        "Direction calculation failed: cannot determine direction to neighbor: " + nextNode.printCoordinates(),
-                        "WayFinder",
-                        "shortestPathFinder.getDirectionToNeighbor",
-                        currentMapNode
+            MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, nextDirToBest);
+
+            return shortestPathFinder.getDirectionToNeighbor(nextNode)
+                    .orElseThrow(() -> new AIInvariantViolationException(
+                            "Direction calculation failed: neighbor direction is missing",
+                            "WayFinderLogic",
+                            "neighbor direction must be present",
+                            "current=" + currentMapNode.printCoordinates() + ", next=" + nextNode.printCoordinates()
                     ));
-        } catch (AIDecisionException e) {
+        } catch (AIDecisionException | NoValidMoveAvailableException | AIInvariantViolationException e) {
             throw e;
         } catch (Exception e) {
             throw new AIDecisionException(
@@ -99,6 +106,22 @@ final class WayFinderLogic {
 
     float getCostToVisionRatio(GameState gameState, MapNode currentMapNode, MapNode node, Objective objective) {
         return visionCostScorer.score(gameState, currentMapNode, node, objective);
+    }
+
+    private Optional<Direction> suggestFallbackDirection(MapNode currentMapNode) {
+        Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
+
+        for (Direction direction : Direction.values()) {
+            try {
+                MapNode candidate = shortestPathFinder.getNodeInDirection(currentMapNode, direction);
+                if (candidate.getTerrain() != Terrain.WATER) {
+                    return Optional.of(direction);
+                }
+            } catch (RuntimeException ignored) {
+                // Out of bounds or state not initialized -> ignore.
+            }
+        }
+        return Optional.empty();
     }
 
 

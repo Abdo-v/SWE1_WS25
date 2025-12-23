@@ -1,5 +1,6 @@
 package client.model.ai;
 import client.exception.AIDecisionException;
+import client.exception.NoValidMoveAvailableException;
 import client.model.GameState;
 import client.model.Direction;
 import client.model.mapper.MapNode;
@@ -112,7 +113,7 @@ public class WayFinder implements client.observer.util.Observer{
      * @return The direction for the next move.
      * @throws AIDecisionException If the AI cannot determine a valid move.
      */
-    public Direction findNext() throws AIDecisionException {
+    public Direction findNext() throws AIDecisionException, NoValidMoveAvailableException {
         // logger.debug("Finding next move - treasure collected: {}, moves made: {}", gameState.isPresent() ? gameState.get().isTreasureCollected() : "unknown", movesMade);
         
         // Validate game state before making decisions
@@ -143,6 +144,8 @@ public class WayFinder implements client.observer.util.Observer{
             Direction nextDirection = logic().moveBasedOnStrategy(state, current, objective);
             movesMade++;
             return nextDirection;
+        } catch (NoValidMoveAvailableException e) {
+            throw e;
         } catch (AIDecisionException e) {
             throw e; // Re-throw AI exceptions
         } catch (Exception e) {

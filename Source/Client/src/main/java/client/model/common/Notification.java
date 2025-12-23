@@ -7,22 +7,22 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class Notification {
-    private List<Error> errors = new ArrayList<>();
+    private final List<Error> errors = new ArrayList<>();
 
     public void addError(String info, Exception e) {
-    errors.add(new Error(
-        Objects.requireNonNull(info, "info is required"),
-        Objects.requireNonNull(e, "exception is required")
-    ));
+        errors.add(new Error(
+                Objects.requireNonNull(info, "info is required"),
+                Objects.requireNonNull(e, "exception is required")
+        ));
     }
 
     public void addError(String info) {
         // Capture stack trace at the call site (typically within a validator)
         // so technical-internals views can reference the relevant validation logic.
-    errors.add(new Error(
-        Objects.requireNonNull(info, "info is required"),
-        new Exception("Validation error")
-    ));
+        errors.add(new Error(
+                Objects.requireNonNull(info, "info is required"),
+                new Exception("Validation error")
+        ));
     }
 
     public boolean hasErrors() {

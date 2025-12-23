@@ -5,6 +5,7 @@ import client.exception.AIDecisionException;
 import client.exception.FailureReason;
 import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
+import client.exception.NoValidMoveAvailableException;
 import client.exception.Operation;
 import client.model.Direction;
 import client.model.GameMode;
@@ -48,15 +49,37 @@ final class MoveExecutionService {
         GameMode effectiveMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
 
         try {
-                Direction nextMoveDirection = Optional.ofNullable(wayFinder.findNext()).orElseThrow(() -> new AIDecisionException(
-                    "WayFinder failed to determine a valid move",
-                    "WayFinder",
-                    "findNext",
-                    state.getCurrentPlayerState()
-                            .flatMap(PlayerState::getCurrentPosition)
-                            .map(Object::toString)
-                            .orElse("<unknown_position>")
+            Direction nextMoveDirection;
+            try {
+                nextMoveDirection = Optional.ofNullable(wayFinder.findNext()).orElseThrow(() -> new AIDecisionException(
+                        "WayFinder returned null for next move",
+                        "WayFinder",
+                        "findNext",
+                        state.getCurrentPlayerState()
+                                .flatMap(PlayerState::getCurrentPosition)
+                                .map(Object::toString)
+                                .orElse("<unknown_position>")
                 ));
+            } catch (NoValidMoveAvailableException e) {
+                Optional<Direction> suggested = e.getSuggestedFallbackDirection();
+                if (suggested.isEmpty()) {
+                    throw new AIDecisionException(
+                            "AI could not determine a move and did not provide a fallback",
+                            e,
+                            e.getAiComponent().orElse("WayFinder"),
+                            e.getDecisionContext().orElse("findNext"),
+                            state.getCurrentPlayerState()
+                                    .flatMap(PlayerState::getCurrentPosition)
+                                    .map(Object::toString)
+                                    .orElse("<unknown_position>")
+                    );
+                }
+
+                nextMoveDirection = suggested.orElseThrow();
+                output.showAiError(
+                        "AI could not compute a move (" + e.getMessage() + "). Falling back to: " + nextMoveDirection
+                );
+            }
 
             try {
                 networkCenter.sendMove(nextMoveDirection);

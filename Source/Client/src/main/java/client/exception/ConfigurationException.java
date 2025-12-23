@@ -62,7 +62,7 @@ public class ConfigurationException extends RuntimeException {
      * @param validValues array of valid values for this configuration parameter
      */
     public ConfigurationException(String message, String configurationKey, String providedValue, String[] validValues) {
-        super(buildDetailedMessage(message, configurationKey, providedValue, validValues));
+        super(message);
         this.configurationKey = Optional.ofNullable(configurationKey);
         this.providedValue = Optional.ofNullable(providedValue);
         this.validValues = Optional.ofNullable(validValues).map(String[]::clone).orElseGet(() -> new String[0]);
@@ -78,25 +78,10 @@ public class ConfigurationException extends RuntimeException {
      * @param validValues array of valid values for this configuration parameter
      */
     public ConfigurationException(String message, Throwable cause, String configurationKey, String providedValue, String[] validValues) {
-        super(buildDetailedMessage(message, configurationKey, providedValue, validValues), cause);
+        super(message, cause);
         this.configurationKey = Optional.ofNullable(configurationKey);
         this.providedValue = Optional.ofNullable(providedValue);
         this.validValues = Optional.ofNullable(validValues).map(String[]::clone).orElseGet(() -> new String[0]);
-    }
-    
-    /**
-     * Builds a detailed error message with configuration context information.
-     */
-    private static String buildDetailedMessage(String message, String configurationKey, String providedValue, String[] validValues) {
-        StringBuilder sb = new StringBuilder("Configuration Error: ").append(message);
-        Optional.ofNullable(configurationKey).ifPresent(key -> sb.append(" [Parameter: ").append(key).append("]"));
-        Optional.ofNullable(providedValue).ifPresent(value -> sb.append(" [Provided: ").append(value).append("]"));
-
-        String[] safeValidValues = Optional.ofNullable(validValues).orElseGet(() -> new String[0]);
-        if (safeValidValues.length > 0) {
-            sb.append(" [Valid options: ").append(String.join(", ", safeValidValues)).append("]");
-        }
-        return sb.toString();
     }
     
     // Getters for additional context information
@@ -111,27 +96,5 @@ public class ConfigurationException extends RuntimeException {
      */
     public boolean hasValidValues() {
         return validValues.length > 0;
-    }
-    
-    /**
-     * Creates a user-friendly error message with correction suggestions.
-     * 
-     * @return a formatted error message with suggestions for fixing the configuration
-     */
-    public String getHelpMessage() {
-        StringBuilder help = new StringBuilder();
-        help.append("❌ Configuration Error: ").append(getMessage()).append("\n");
-
-        configurationKey.ifPresent(key -> help.append("📋 Parameter: ").append(key).append("\n"));
-        providedValue.ifPresent(value -> help.append("🔍 You provided: ").append(value).append("\n"));
-        
-        if (hasValidValues()) {
-            help.append("✅ Valid options are: ").append(String.join(", ", validValues)).append("\n");
-            help.append("💡 Try using one of the valid options listed above.");
-        } else {
-            help.append("💡 Please check the documentation for valid configuration values.");
-        }
-        
-        return help.toString();
     }
 }
