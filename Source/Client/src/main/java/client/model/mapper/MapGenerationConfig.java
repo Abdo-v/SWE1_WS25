@@ -40,9 +40,9 @@ public record MapGenerationConfig(
     public static MapGenerationConfig defaultConfig() {
         return new MapGenerationConfig(
                 5,
-                5,
                 7,
                 7,
+                8,
                 1,
                 MapRules.MIN_EDGE_WALKABLE_RATIO,
                 50
