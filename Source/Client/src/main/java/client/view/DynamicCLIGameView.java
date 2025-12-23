@@ -2,7 +2,6 @@ package client.view;
 
 import client.model.GameState;
 import client.model.PlayerState;
-import client.model.StaticColors;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 
@@ -31,8 +30,6 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
     private final Object renderLock = new Object();
     private ScheduledFuture<?> pendingRender;
     private boolean dynamicModeActive = false;
-    private boolean firstRenderDone = false; // To manage clearing strategy
-    private int linesRenderedInPreviousFrame = 0; // New field
 
     // Emojis for map elements
     private static final String GRASS_ICON = "🟩";
@@ -54,11 +51,8 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
      */
     public void enableDynamicMode() {
         this.dynamicModeActive = true;
-        this.firstRenderDone = false; // Reset when enabling
-        this.linesRenderedInPreviousFrame = 0; // Reset line count
         if (this.currentGameState != null) {
             render();
-            // Note: firstRenderDone will be set to true at the end of the render() call
         }
     }
 
@@ -68,7 +62,6 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
      */
     public void disableDynamicMode() {
         this.dynamicModeActive = false;
-        // No need to reset firstRenderDone here, as it's reset on enable
     }
     
     @Override
@@ -101,12 +94,6 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
     }
 
     private void render() {
-        // Clear based on the height of the *previous* frame
-        if (firstRenderDone && linesRenderedInPreviousFrame > 0) {
-            System.out.print("\033[" + linesRenderedInPreviousFrame + "A"); // Move cursor up
-            System.out.print("\033[J"); // Clear from cursor to end of screen
-        }
-
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
 
@@ -116,15 +103,11 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
 
         String currentFrameOutput = stringWriter.toString();
         int totalLinesThisFrame = playerInfoLines + mapLines;
-
+        if (totalLinesThisFrame <= 0) {
+            return;
+        }
         System.out.print(currentFrameOutput);
         System.out.flush(); // Ensure all output is written
-
-        linesRenderedInPreviousFrame = totalLinesThisFrame;
-        // Set firstRenderDone only if something was actually rendered to prevent issues with empty initial renders
-        if (!firstRenderDone && totalLinesThisFrame > 0) {
-            firstRenderDone = true;
-        }
     }
 
     private int displayPlayerInfo(PrintWriter out) { // Takes PrintWriter, returns line count
@@ -146,12 +129,12 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
             myState.get().getCurrentPosition()
                     .ifPresentOrElse(
                             pos -> {
-                                out.println(StaticColors.CYAN  + "  Position: (" + pos.getX() + "," + pos.getY() + ")" + StaticColors.RESET);
+                                out.println("  Position: (" + pos.getX() + "," + pos.getY() + ")");
                             },
-                            () -> out.println("  Position: N/A" + StaticColors.RESET)
+                            () -> out.println("  Position: N/A")
                     );
             lines++;
-            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (myHasTreasure ? "Yes" : "No")); lines++;
+            out.println("  Treasure collected: " + (myHasTreasure ? "Yes" : "No")); lines++;
         } else {
             out.println(); lines++;
             out.println(PLAYER_ICON + " Your Player: Data N/A"); lines++;
@@ -165,12 +148,12 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
             opponentState.get().getCurrentPosition()
                     .ifPresentOrElse(
                             pos -> {
-                                out.println(StaticColors.PURPLE + "  Position: (" + pos.getX() + "," + pos.getY() + ")" + StaticColors.RESET);
+                                out.println("  Position: (" + pos.getX() + "," + pos.getY() + ")");
                             },
                             () -> out.println("  Position: Unknown")
                     );
             lines++;
-            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (opponentHasTreasure ? "Yes" : "No")); lines++;
+            out.println("  Treasure collected: " + (opponentHasTreasure ? "Yes" : "No")); lines++;
         } else {
             out.println(); lines++;
             out.println(OPPONENT_ICON + " Opponent: Data N/A"); lines++;

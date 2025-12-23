@@ -3,7 +3,6 @@ package client.view;
 import client.model.Direction;
 import client.model.PlayerState;
 import client.model.PlayerStatus;
-import client.model.StaticColors;
 
 public class GameManagerView implements GameOutput {
 
@@ -15,7 +14,7 @@ public class GameManagerView implements GameOutput {
 
     @Override
     public void showMapValidationOk() {
-        System.out.println(StaticColors.GREEN + "✅ Map validation found no errors, sending map..." + StaticColors.RESET);
+        System.out.println("✅ Map validation found no errors, sending map...");
     }
 
     @Override
