@@ -147,7 +147,7 @@ final class DynamicCLIFrameRenderer {
     }
 
     private static String renderCell(int r, int c, GameMap gameMap, Optional<PlayerState> myPlayerState, Optional<PlayerState> opponentState, GameState fullGameState) {
-        Optional<MapNode> currentCellNode = safeNode(gameMap, c, r);
+        Optional<MapNode> currentCellNode = SafeMapNodeLookup.tryGetNode(gameMap, c, r);
 
         var myPosition = myPlayerState.flatMap(PlayerState::getCurrentPosition);
         var opponentPosition = opponentState.flatMap(PlayerState::getCurrentPosition);
@@ -156,14 +156,6 @@ final class DynamicCLIFrameRenderer {
         boolean opponentHasTreasure = opponentState.map(PlayerState::hasCollectedTreasure).orElse(false);
 
         return MapCellRenderer.renderCell(fullGameState, currentCellNode, myPosition, opponentPosition, myHasTreasure, opponentHasTreasure);
-    }
-
-    private static Optional<MapNode> safeNode(GameMap gameMap, int x, int y) {
-        try {
-            return Optional.ofNullable(gameMap.getNode(x, y));
-        } catch (Exception e) {
-            return Optional.empty();
-        }
     }
 
     record RenderedCLIFrame(String text, int lineCount) {

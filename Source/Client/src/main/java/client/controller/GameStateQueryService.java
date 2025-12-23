@@ -56,7 +56,8 @@ public class GameStateQueryService {
         try {
             messagesbase.messagesfromserver.GameState serverGameState = pollGameState();
             return Optional.ofNullable(serverGameState.getMap())
-                    .map(m -> m.getMapNodes().isEmpty())
+                    .map(m -> m.getMapNodes())
+                    .map(nodes -> nodes.isEmpty())
                     .orElse(false);
         } catch (GameCommunicationException e) {
             throw e;

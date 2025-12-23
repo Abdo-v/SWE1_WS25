@@ -2,6 +2,7 @@ package client.model.mapper;
 
 import client.model.common.Notification;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class MapValidator {
@@ -27,7 +28,7 @@ public class MapValidator {
      */
     public Notification validate(PlayerHalfMap halfMap) {
         Notification notification = new Notification();
-        if (Optional.ofNullable(halfMap).isEmpty()) {
+        if (Objects.isNull(halfMap)) {
             notification.addError("PlayerHalfMap must be provided.");
             return notification;
         }
@@ -88,12 +89,7 @@ public class MapValidator {
             return notification;
         }
 
-        Optional<PlayerHalfMap> existingHalfMapOpt = Optional.ofNullable(existingHalfMap);
-        if (existingHalfMapOpt.isEmpty()) {
-            return notification;
-        }
-
-        PlayerHalfMap existing = existingHalfMapOpt.get();
+        PlayerHalfMap existing = Objects.requireNonNull(existingHalfMap, "existingHalfMap is required");
 
         int[] newDims = HalfMapDimensionUtil.determineDimensions(newHalfMap);
         int[] existingDims = HalfMapDimensionUtil.determineDimensions(existing);

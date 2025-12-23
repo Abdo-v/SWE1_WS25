@@ -67,7 +67,7 @@ public class MapSnapshotView {
         for (int y = minY; y <= maxY; y++) {
             StringBuilder row = new StringBuilder("|");
             for (int x = minX; x <= maxX; x++) {
-                Optional<MapNode> node = safeNode(map, x, y);
+                Optional<MapNode> node = SafeMapNodeLookup.tryGetNode(map, x, y);
                 row.append(MapCellRenderer.renderCell(state, node, myPosition, opponentPosition, myHasTreasure, opponentHasTreasure));
 
                 if (x < maxX) {
@@ -79,13 +79,5 @@ public class MapSnapshotView {
         }
 
         System.out.println(CLITexts.SEPARATOR_SHORT);
-    }
-
-    private static Optional<MapNode> safeNode(GameMap map, int x, int y) {
-        try {
-            return Optional.ofNullable(map.getNode(x, y));
-        } catch (Exception e) {
-            return Optional.empty();
-        }
     }
 }

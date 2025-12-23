@@ -55,7 +55,8 @@ public class MapGenerator {
         * (walkable on both sides).
      */
     public PlayerHalfMap generateMap(int width, int height, String playerID, PlayerHalfMap existingHalfMap) {
-        return generateMap(width, height, playerID, Optional.ofNullable(existingHalfMap));
+        Objects.requireNonNull(existingHalfMap, "existingHalfMap is required");
+        return generateMap(width, height, playerID, Optional.of(existingHalfMap));
     }
 
     /**
