@@ -41,7 +41,7 @@ public class MapSnapshotView {
                 break;
             case FULL:
                 if (map.getContentSize() != 100) {
-                    System.out.println("Full map visual: map not available or incomplete");
+                    System.out.println("Full map visual: map incomplete");
                     return;
                 }
                 printMap(gameState, map, 0, 0, map.getMaxX(), map.getMaxY(), "Full Map Snapshot");
