@@ -38,8 +38,10 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
     private static final String GRASS_ICON = "🟩";
     private static final String MOUNTAIN_ICON = "⬜"; // grey square instead ⛰️
     private static final String WATER_ICON = "🟦";
-    private static final String PLAYER_ICON = "🦸"; // hero icon instead 👤
-    private static final String OPPONENT_ICON = "👹";
+    private static final String PLAYER_ICON = "🫤";
+    private static final String PLAYER_WITH_TREASURE_ICON = "🤑";
+    private static final String OPPONENT_ICON = "👿";
+    private static final String OPPONENT_WITH_TREASURE_ICON = "👹";
     private static final String OWN_FORT_ICON = "🏰";
     private static final String OPPONENT_FORT_ICON = "🏯";
     private static final String TREASURE_ICON = "💎";
@@ -137,8 +139,9 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
         out.println("--- Game State ---"); lines++;
 
         if (myState.isPresent()) {
+            final boolean myHasTreasure = myState.get().hasCollectedTreasure();
             out.println(); lines++; // For the original behavior of println("\n" + ...)
-            out.println(PLAYER_ICON + " Your Player (" + myState.get().getPlayerID() + "):" ); lines++;
+            out.println((myHasTreasure ? PLAYER_WITH_TREASURE_ICON : PLAYER_ICON) + " Your Player (" + myState.get().getPlayerID() + "):" ); lines++;
             //out.println("  Status: " + (myState.getStatus() != null ? myState.getStatus().toString() : "N/A")); lines++;
             myState.get().getCurrentPosition()
                     .ifPresentOrElse(
@@ -148,15 +151,16 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
                             () -> out.println("  Position: N/A" + StaticColors.RESET)
                     );
             lines++;
-            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (myState.get().hasCollectedTreasure() ? "Yes" : "No")); lines++;
+            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (myHasTreasure ? "Yes" : "No")); lines++;
         } else {
             out.println(); lines++;
             out.println(PLAYER_ICON + " Your Player: Data N/A"); lines++;
         }
 
         if (opponentState.isPresent()) {
+            final boolean opponentHasTreasure = opponentState.get().hasCollectedTreasure();
             out.println(); lines++;
-            out.println(OPPONENT_ICON + " Opponent (" + opponentState.get().getPlayerID() + "):" ); lines++;
+            out.println((opponentHasTreasure ? OPPONENT_WITH_TREASURE_ICON : OPPONENT_ICON) + " Opponent (" + opponentState.get().getPlayerID() + "):" ); lines++;
             //out.println("  Status: " + (opponentState.getStatus() != null ? opponentState.getStatus().toString() : "N/A")); lines++;
             opponentState.get().getCurrentPosition()
                     .ifPresentOrElse(
@@ -166,7 +170,7 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
                             () -> out.println("  Position: Unknown")
                     );
             lines++;
-            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (opponentState.get().hasCollectedTreasure() ? "Yes" : "No")); lines++;
+            out.println(StaticColors.YELLOW + StaticColors.BOLD + "  Treasure collected: " + StaticColors.RESET + (opponentHasTreasure ? "Yes" : "No")); lines++;
         } else {
             out.println(); lines++;
             out.println(OPPONENT_ICON + " Opponent: Data N/A"); lines++;
@@ -224,6 +228,9 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
         var myPosition = myPlayerState.flatMap(PlayerState::getCurrentPosition);
         var opponentPosition = opponentState.flatMap(PlayerState::getCurrentPosition);
 
+        final boolean myHasTreasure = myPlayerState.map(PlayerState::hasCollectedTreasure).orElse(false);
+        final boolean opponentHasTreasure = opponentState.map(PlayerState::hasCollectedTreasure).orElse(false);
+
         // Priority 1: Clash
         if (myPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()
                 && opponentPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()) {
@@ -232,20 +239,18 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
 
         // Priority 2: Player
         if (myPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()) {
-            return PLAYER_ICON;
+            return myHasTreasure ? PLAYER_WITH_TREASURE_ICON : PLAYER_ICON;
         }
 
         // Priority 3: Opponent
         if (opponentPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()) {
-            return OPPONENT_ICON;
+            return opponentHasTreasure ? OPPONENT_WITH_TREASURE_ICON : OPPONENT_ICON;
         }
         
         MapNode node = currentCellNode; // We already fetched it
 
         // Priority 4: Treasure
-        boolean treasureAlreadyCollected = myPlayerState
-            .map(PlayerState::hasCollectedTreasure)
-            .orElse(false);
+        final boolean treasureAlreadyCollected = myHasTreasure;
 
         if (!treasureAlreadyCollected
             && fullGameState.getTreasurePosition().filter(tp -> tp.equals(node)).isPresent()) {
