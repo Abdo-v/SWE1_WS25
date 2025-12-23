@@ -1,5 +1,6 @@
 package client.exception;
 
+import java.util.Objects;
 import java.util.Locale;
 
 public enum Operation {
@@ -28,10 +29,10 @@ public enum Operation {
     }
 
     public static Operation fromCode(String code) {
-        if (code == null) {
+        String normalized = Objects.requireNonNullElse(code, "").trim();
+        if (normalized.isEmpty()) {
             return UNKNOWN;
         }
-        String normalized = code.trim();
         for (Operation op : values()) {
             if (op.code.equals(normalized)) {
                 return op;

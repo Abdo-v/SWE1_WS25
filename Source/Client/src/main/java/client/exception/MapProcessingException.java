@@ -1,5 +1,7 @@
 package client.exception;
 
+import java.util.Optional;
+
 /**
  * Checked exception for map data processing failures.
  * 
@@ -21,11 +23,11 @@ public class MapProcessingException extends Exception {
     
     private static final long serialVersionUID = 1L;
     
-    private final String mapType;
+    private final Optional<String> mapType;
     private final int expectedNodes;
     private final int actualNodes;
-    private final String processingStage;
-    private final String coordinateContext;
+    private final Optional<String> processingStage;
+    private final Optional<String> coordinateContext;
     
     /**
      * Creates a new MapProcessingException with a message.
@@ -34,11 +36,11 @@ public class MapProcessingException extends Exception {
      */
     public MapProcessingException(String message) {
         super(message);
-        this.mapType = null;
-        this.processingStage = null;
+        this.mapType = Optional.empty();
+        this.processingStage = Optional.empty();
         this.expectedNodes = -1;
         this.actualNodes = -1;
-        this.coordinateContext = null;
+        this.coordinateContext = Optional.empty();
     }
     
     /**
@@ -49,11 +51,11 @@ public class MapProcessingException extends Exception {
      */
     public MapProcessingException(String message, Throwable cause) {
         super(message, cause);
-        this.mapType = null;
-        this.processingStage = null;
+        this.mapType = Optional.empty();
+        this.processingStage = Optional.empty();
         this.expectedNodes = -1;
         this.actualNodes = -1;
-        this.coordinateContext = null;
+        this.coordinateContext = Optional.empty();
     }
     
     /**
@@ -64,12 +66,17 @@ public class MapProcessingException extends Exception {
      * @param processingStage the stage of processing where the failure occurred
      */
     public MapProcessingException(String message, String mapType, String processingStage) {
-        super(buildDetailedMessage(message, mapType, processingStage, -1, -1, null));
-        this.mapType = mapType;
-        this.processingStage = processingStage;
+        super(buildDetailedMessage(message,
+                Optional.ofNullable(mapType),
+                Optional.ofNullable(processingStage),
+                -1,
+                -1,
+                Optional.empty()));
+        this.mapType = Optional.ofNullable(mapType);
+        this.processingStage = Optional.ofNullable(processingStage);
         this.expectedNodes = -1;
         this.actualNodes = -1;
-        this.coordinateContext = null;
+        this.coordinateContext = Optional.empty();
     }
     
     /**
@@ -82,12 +89,17 @@ public class MapProcessingException extends Exception {
      * @param actualNodes the actual number of map nodes found
      */
     public MapProcessingException(String message, String mapType, String processingStage, int expectedNodes, int actualNodes) {
-        super(buildDetailedMessage(message, mapType, processingStage, expectedNodes, actualNodes, null));
-        this.mapType = mapType;
-        this.processingStage = processingStage;
+        super(buildDetailedMessage(message,
+                Optional.ofNullable(mapType),
+                Optional.ofNullable(processingStage),
+                expectedNodes,
+                actualNodes,
+                Optional.empty()));
+        this.mapType = Optional.ofNullable(mapType);
+        this.processingStage = Optional.ofNullable(processingStage);
         this.expectedNodes = expectedNodes;
         this.actualNodes = actualNodes;
-        this.coordinateContext = null;
+        this.coordinateContext = Optional.empty();
     }
     
     /**
@@ -99,12 +111,17 @@ public class MapProcessingException extends Exception {
      * @param coordinateContext information about the problematic coordinates
      */
     public MapProcessingException(String message, String mapType, String processingStage, String coordinateContext) {
-        super(buildDetailedMessage(message, mapType, processingStage, -1, -1, coordinateContext));
-        this.mapType = mapType;
-        this.processingStage = processingStage;
+        super(buildDetailedMessage(message,
+                Optional.ofNullable(mapType),
+                Optional.ofNullable(processingStage),
+                -1,
+                -1,
+                Optional.ofNullable(coordinateContext)));
+        this.mapType = Optional.ofNullable(mapType);
+        this.processingStage = Optional.ofNullable(processingStage);
         this.expectedNodes = -1;
         this.actualNodes = -1;
-        this.coordinateContext = coordinateContext;
+        this.coordinateContext = Optional.ofNullable(coordinateContext);
     }
     
     /**
@@ -120,24 +137,29 @@ public class MapProcessingException extends Exception {
      */
     public MapProcessingException(String message, Throwable cause, String mapType, String processingStage, 
                                 int expectedNodes, int actualNodes, String coordinateContext) {
-        super(buildDetailedMessage(message, mapType, processingStage, expectedNodes, actualNodes, coordinateContext), cause);
-        this.mapType = mapType;
-        this.processingStage = processingStage;
+        super(buildDetailedMessage(message,
+            Optional.ofNullable(mapType),
+            Optional.ofNullable(processingStage),
+            expectedNodes,
+            actualNodes,
+            Optional.ofNullable(coordinateContext)), cause);
+        this.mapType = Optional.ofNullable(mapType);
+        this.processingStage = Optional.ofNullable(processingStage);
         this.expectedNodes = expectedNodes;
         this.actualNodes = actualNodes;
-        this.coordinateContext = coordinateContext;
+        this.coordinateContext = Optional.ofNullable(coordinateContext);
     }
 
     public MapProcessingException(String message, MapDataType mapType, MapProcessingStage processingStage) {
         this(message,
-            mapType != null ? mapType.label() : null,
-            processingStage != null ? processingStage.code() : null);
+            Optional.ofNullable(mapType).map(MapDataType::label).orElse(""),
+            Optional.ofNullable(processingStage).map(MapProcessingStage::code).orElse(""));
     }
 
     public MapProcessingException(String message, MapDataType mapType, MapProcessingStage processingStage, int expectedNodes, int actualNodes) {
         this(message,
-            mapType != null ? mapType.label() : null,
-            processingStage != null ? processingStage.code() : null,
+            Optional.ofNullable(mapType).map(MapDataType::label).orElse(""),
+            Optional.ofNullable(processingStage).map(MapProcessingStage::code).orElse(""),
             expectedNodes,
             actualNodes);
     }
@@ -146,8 +168,8 @@ public class MapProcessingException extends Exception {
                                  int expectedNodes, int actualNodes, String coordinateContext) {
         this(message,
             cause,
-            mapType != null ? mapType.label() : null,
-            processingStage != null ? processingStage.code() : null,
+            Optional.ofNullable(mapType).map(MapDataType::label).orElse(""),
+            Optional.ofNullable(processingStage).map(MapProcessingStage::code).orElse(""),
             expectedNodes,
             actualNodes,
             coordinateContext);
@@ -156,30 +178,36 @@ public class MapProcessingException extends Exception {
     /**
      * Builds a detailed error message with map processing context information.
      */
-    private static String buildDetailedMessage(String message, String mapType, String processingStage, 
-                                             int expectedNodes, int actualNodes, String coordinateContext) {
+    private static String buildDetailedMessage(
+            String message,
+            Optional<String> mapType,
+            Optional<String> processingStage,
+            int expectedNodes,
+            int actualNodes,
+            Optional<String> coordinateContext
+    ) {
         StringBuilder sb = new StringBuilder("Map Processing Error: ").append(message);
-        if (mapType != null) {
-            sb.append(" [Map Type: ").append(mapType).append("]");
-        }
-        if (processingStage != null) {
-            sb.append(" [Stage: ").append(processingStage).append("]");
-        }
+        Optional.ofNullable(mapType).orElse(Optional.empty())
+                .filter(value -> !value.isBlank())
+                .ifPresent(value -> sb.append(" [Map Type: ").append(value).append("]"));
+        Optional.ofNullable(processingStage).orElse(Optional.empty())
+                .filter(value -> !value.isBlank())
+                .ifPresent(value -> sb.append(" [Stage: ").append(value).append("]"));
         if (expectedNodes > 0 && actualNodes >= 0) {
             sb.append(" [Expected Nodes: ").append(expectedNodes).append(", Actual: ").append(actualNodes).append("]");
         }
-        if (coordinateContext != null) {
-            sb.append(" [Coordinates: ").append(coordinateContext).append("]");
-        }
+        Optional.ofNullable(coordinateContext).orElse(Optional.empty())
+                .filter(value -> !value.isBlank())
+                .ifPresent(value -> sb.append(" [Coordinates: ").append(value).append("]"));
         return sb.toString();
     }
     
     // Getters for additional context information
-    public String getMapType() { return mapType; }
-    public String getProcessingStage() { return processingStage; }
+    public Optional<String> getMapType() { return mapType; }
+    public Optional<String> getProcessingStage() { return processingStage; }
     public int getExpectedNodes() { return expectedNodes; }
     public int getActualNodes() { return actualNodes; }
-    public String getCoordinateContext() { return coordinateContext; }
+    public Optional<String> getCoordinateContext() { return coordinateContext; }
     
     /**
      * Determines if this exception includes node count information.
@@ -196,7 +224,7 @@ public class MapProcessingException extends Exception {
      * @return true if coordinate context is available
      */
     public boolean hasCoordinateInfo() {
-        return coordinateContext != null && !coordinateContext.trim().isEmpty();
+        return coordinateContext.filter(text -> !text.trim().isEmpty()).isPresent();
     }
     
     /**
@@ -211,13 +239,11 @@ public class MapProcessingException extends Exception {
         if (hasNodeCountInfo() && actualNodes < expectedNodes) {
             return true; // Partial data - might be recoverable
         }
-        
-        if (processingStage != null) {
-            String stage = processingStage.toLowerCase();
-            return stage.contains("server") || stage.contains("network") || stage.contains("conversion");
-        }
-        
-        return false;
+
+        return processingStage
+                .map(String::toLowerCase)
+                .map(stage -> stage.contains("server") || stage.contains("network") || stage.contains("conversion"))
+                .orElse(false);
     }
     
     /**
@@ -229,8 +255,8 @@ public class MapProcessingException extends Exception {
         StringBuilder report = new StringBuilder();
         report.append("=== MAP PROCESSING EXCEPTION DEBUG REPORT ===\n");
         report.append("Message: ").append(getMessage()).append("\n");
-        report.append("Map Type: ").append(mapType != null ? mapType : "Unknown").append("\n");
-        report.append("Processing Stage: ").append(processingStage != null ? processingStage : "Unknown").append("\n");
+        report.append("Map Type: ").append(mapType.orElse("Unknown")).append("\n");
+        report.append("Processing Stage: ").append(processingStage.orElse("Unknown")).append("\n");
         
         if (hasNodeCountInfo()) {
             report.append("Node Count Issue: Expected ").append(expectedNodes)
@@ -238,15 +264,14 @@ public class MapProcessingException extends Exception {
         }
         
         if (hasCoordinateInfo()) {
-            report.append("Coordinate Context: ").append(coordinateContext).append("\n");
+            report.append("Coordinate Context: ").append(coordinateContext.orElse("Unknown")).append("\n");
         }
         
         report.append("Recoverable: ").append(isRecoverable() ? "Yes" : "No").append("\n");
         
-        if (getCause() != null) {
-            report.append("Underlying Cause: ").append(getCause().getClass().getSimpleName())
-                  .append(" - ").append(getCause().getMessage()).append("\n");
-        }
+        Optional.ofNullable(getCause()).ifPresent(cause -> report
+            .append("Underlying Cause: ").append(cause.getClass().getSimpleName())
+            .append(" - ").append(cause.getMessage()).append("\n"));
         
         report.append("Timestamp: ").append(java.time.LocalDateTime.now()).append("\n");
         report.append("Stack Trace: Available via printStackTrace()").append("\n");
@@ -262,10 +287,8 @@ public class MapProcessingException extends Exception {
     public String getRecoveryMessage() {
         StringBuilder recovery = new StringBuilder();
         recovery.append("🗺️  Map Processing Error: ").append(getMessage()).append("\n");
-        
-        if (mapType != null) {
-            recovery.append("📋 Map Type: ").append(mapType).append("\n");
-        }
+
+        mapType.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append("📋 Map Type: ").append(value).append("\n"));
         
         if (hasNodeCountInfo()) {
             recovery.append("📊 Expected ").append(expectedNodes)

@@ -1,5 +1,7 @@
 package client.exception;
 
+import java.util.Optional;
+
 /**
  * Checked exception for game communication failures.
  * 
@@ -22,8 +24,8 @@ public class GameCommunicationException extends Exception {
     
     private static final long serialVersionUID = 1L;
     
-    private final String serverUrl;
-    private final String operation;
+    private final Optional<String> serverUrl;
+    private final Optional<String> operation;
     private final int httpStatusCode;
     
     /**
@@ -33,8 +35,8 @@ public class GameCommunicationException extends Exception {
      */
     public GameCommunicationException(String message) {
         super(message);
-        this.serverUrl = null;
-        this.operation = null;
+        this.serverUrl = Optional.empty();
+        this.operation = Optional.empty();
         this.httpStatusCode = -1;
     }
     
@@ -46,8 +48,8 @@ public class GameCommunicationException extends Exception {
      */
     public GameCommunicationException(String message, Throwable cause) {
         super(message, cause);
-        this.serverUrl = null;
-        this.operation = null;
+        this.serverUrl = Optional.empty();
+        this.operation = Optional.empty();
         this.httpStatusCode = -1;
     }
     
@@ -61,8 +63,8 @@ public class GameCommunicationException extends Exception {
      */
     public GameCommunicationException(String message, String serverUrl, String operation, int httpStatusCode) {
         super(buildDetailedMessage(message, serverUrl, operation, httpStatusCode));
-        this.serverUrl = serverUrl;
-        this.operation = operation;
+        this.serverUrl = Optional.ofNullable(serverUrl);
+        this.operation = Optional.ofNullable(operation);
         this.httpStatusCode = httpStatusCode;
     }
     
@@ -77,17 +79,17 @@ public class GameCommunicationException extends Exception {
      */
     public GameCommunicationException(String message, Throwable cause, String serverUrl, String operation, int httpStatusCode) {
         super(buildDetailedMessage(message, serverUrl, operation, httpStatusCode), cause);
-        this.serverUrl = serverUrl;
-        this.operation = operation;
+        this.serverUrl = Optional.ofNullable(serverUrl);
+        this.operation = Optional.ofNullable(operation);
         this.httpStatusCode = httpStatusCode;
     }
 
     public GameCommunicationException(String message, String serverUrl, Operation operation, int httpStatusCode) {
-        this(message, serverUrl, operation != null ? operation.code() : null, httpStatusCode);
+        this(message, serverUrl, Optional.ofNullable(operation).map(Operation::code).orElse(""), httpStatusCode);
     }
 
     public GameCommunicationException(String message, Throwable cause, String serverUrl, Operation operation, int httpStatusCode) {
-        this(message, cause, serverUrl, operation != null ? operation.code() : null, httpStatusCode);
+        this(message, cause, serverUrl, Optional.ofNullable(operation).map(Operation::code).orElse(""), httpStatusCode);
     }
     
     /**
@@ -95,12 +97,8 @@ public class GameCommunicationException extends Exception {
      */
     private static String buildDetailedMessage(String message, String serverUrl, String operation, int httpStatusCode) {
         StringBuilder sb = new StringBuilder(message);
-        if (operation != null) {
-            sb.append(" [Operation: ").append(operation).append("]");
-        }
-        if (serverUrl != null) {
-            sb.append(" [Server: ").append(serverUrl).append("]");
-        }
+        Optional.ofNullable(operation).filter(op -> !op.isBlank()).ifPresent(op -> sb.append(" [Operation: ").append(op).append("]"));
+        Optional.ofNullable(serverUrl).filter(url -> !url.isBlank()).ifPresent(url -> sb.append(" [Server: ").append(url).append("]"));
         if (httpStatusCode > 0) {
             sb.append(" [HTTP Status: ").append(httpStatusCode).append("]");
         }
@@ -108,8 +106,8 @@ public class GameCommunicationException extends Exception {
     }
     
     // Getters for additional context information
-    public String getServerUrl() { return serverUrl; }
-    public String getOperation() { return operation; }
+    public Optional<String> getServerUrl() { return serverUrl; }
+    public Optional<String> getOperation() { return operation; }
     public int getHttpStatusCode() { return httpStatusCode; }
     
     /**

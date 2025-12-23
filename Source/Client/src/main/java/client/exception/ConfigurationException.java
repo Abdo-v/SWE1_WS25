@@ -1,5 +1,8 @@
 package client.exception;
 
+import java.util.Arrays;
+import java.util.Optional;
+
 /**
  * Unchecked exception for application configuration failures.
  * 
@@ -21,8 +24,8 @@ public class ConfigurationException extends RuntimeException {
     
     private static final long serialVersionUID = 1L;
     
-    private final String configurationKey;
-    private final String providedValue;
+    private final Optional<String> configurationKey;
+    private final Optional<String> providedValue;
     private final String[] validValues;
     
     /**
@@ -32,9 +35,9 @@ public class ConfigurationException extends RuntimeException {
      */
     public ConfigurationException(String message) {
         super(message);
-        this.configurationKey = null;
-        this.providedValue = null;
-        this.validValues = null;
+        this.configurationKey = Optional.empty();
+        this.providedValue = Optional.empty();
+        this.validValues = new String[0];
     }
     
     /**
@@ -45,9 +48,9 @@ public class ConfigurationException extends RuntimeException {
      */
     public ConfigurationException(String message, Throwable cause) {
         super(message, cause);
-        this.configurationKey = null;
-        this.providedValue = null;
-        this.validValues = null;
+        this.configurationKey = Optional.empty();
+        this.providedValue = Optional.empty();
+        this.validValues = new String[0];
     }
     
     /**
@@ -60,9 +63,9 @@ public class ConfigurationException extends RuntimeException {
      */
     public ConfigurationException(String message, String configurationKey, String providedValue, String[] validValues) {
         super(buildDetailedMessage(message, configurationKey, providedValue, validValues));
-        this.configurationKey = configurationKey;
-        this.providedValue = providedValue;
-        this.validValues = validValues != null ? validValues.clone() : null;
+        this.configurationKey = Optional.ofNullable(configurationKey);
+        this.providedValue = Optional.ofNullable(providedValue);
+        this.validValues = Optional.ofNullable(validValues).map(String[]::clone).orElseGet(() -> new String[0]);
     }
     
     /**
@@ -76,9 +79,9 @@ public class ConfigurationException extends RuntimeException {
      */
     public ConfigurationException(String message, Throwable cause, String configurationKey, String providedValue, String[] validValues) {
         super(buildDetailedMessage(message, configurationKey, providedValue, validValues), cause);
-        this.configurationKey = configurationKey;
-        this.providedValue = providedValue;
-        this.validValues = validValues != null ? validValues.clone() : null;
+        this.configurationKey = Optional.ofNullable(configurationKey);
+        this.providedValue = Optional.ofNullable(providedValue);
+        this.validValues = Optional.ofNullable(validValues).map(String[]::clone).orElseGet(() -> new String[0]);
     }
     
     /**
@@ -86,22 +89,20 @@ public class ConfigurationException extends RuntimeException {
      */
     private static String buildDetailedMessage(String message, String configurationKey, String providedValue, String[] validValues) {
         StringBuilder sb = new StringBuilder("Configuration Error: ").append(message);
-        if (configurationKey != null) {
-            sb.append(" [Parameter: ").append(configurationKey).append("]");
-        }
-        if (providedValue != null) {
-            sb.append(" [Provided: ").append(providedValue).append("]");
-        }
-        if (validValues != null && validValues.length > 0) {
-            sb.append(" [Valid options: ").append(String.join(", ", validValues)).append("]");
+        Optional.ofNullable(configurationKey).ifPresent(key -> sb.append(" [Parameter: ").append(key).append("]"));
+        Optional.ofNullable(providedValue).ifPresent(value -> sb.append(" [Provided: ").append(value).append("]"));
+
+        String[] safeValidValues = Optional.ofNullable(validValues).orElseGet(() -> new String[0]);
+        if (safeValidValues.length > 0) {
+            sb.append(" [Valid options: ").append(String.join(", ", safeValidValues)).append("]");
         }
         return sb.toString();
     }
     
     // Getters for additional context information
-    public String getConfigurationKey() { return configurationKey; }
-    public String getProvidedValue() { return providedValue; }
-    public String[] getValidValues() { return validValues != null ? validValues.clone() : null; }
+    public Optional<String> getConfigurationKey() { return configurationKey; }
+    public Optional<String> getProvidedValue() { return providedValue; }
+    public String[] getValidValues() { return validValues.clone(); }
     
     /**
      * Determines if this configuration error has suggested valid values.
@@ -109,7 +110,7 @@ public class ConfigurationException extends RuntimeException {
      * @return true if valid values are available for correction
      */
     public boolean hasValidValues() {
-        return validValues != null && validValues.length > 0;
+        return validValues.length > 0;
     }
     
     /**
@@ -120,14 +121,9 @@ public class ConfigurationException extends RuntimeException {
     public String getHelpMessage() {
         StringBuilder help = new StringBuilder();
         help.append("❌ Configuration Error: ").append(getMessage()).append("\n");
-        
-        if (configurationKey != null) {
-            help.append("📋 Parameter: ").append(configurationKey).append("\n");
-        }
-        
-        if (providedValue != null) {
-            help.append("🔍 You provided: ").append(providedValue).append("\n");
-        }
+
+        configurationKey.ifPresent(key -> help.append("📋 Parameter: ").append(key).append("\n"));
+        providedValue.ifPresent(value -> help.append("🔍 You provided: ").append(value).append("\n"));
         
         if (hasValidValues()) {
             help.append("✅ Valid options are: ").append(String.join(", ", validValues)).append("\n");

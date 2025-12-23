@@ -1,5 +1,6 @@
 package client.exception;
 
+import java.util.Objects;
 import java.util.Locale;
 
 public enum FailureReason {
@@ -32,10 +33,10 @@ public enum FailureReason {
     }
 
     public static FailureReason fromCode(String code) {
-        if (code == null) {
+        String normalized = Objects.requireNonNullElse(code, "").trim().toLowerCase(Locale.ROOT);
+        if (normalized.isEmpty()) {
             return UNKNOWN;
         }
-        String normalized = code.trim().toLowerCase(Locale.ROOT);
         for (FailureReason reason : values()) {
             if (reason.code.equals(normalized)) {
                 return reason;

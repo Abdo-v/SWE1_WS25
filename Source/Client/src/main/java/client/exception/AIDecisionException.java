@@ -1,5 +1,7 @@
 package client.exception;
 
+import java.util.Optional;
+
 /**
  * Unchecked exception for AI algorithm decision-making failures.
  * 
@@ -21,9 +23,9 @@ public class AIDecisionException extends RuntimeException {
     
     private static final long serialVersionUID = 1L;
     
-    private final String aiComponent;
-    private final String decisionContext;
-    private final Object gameStateSnapshot;
+    private final Optional<String> aiComponent;
+    private final Optional<String> decisionContext;
+    private final Optional<Object> gameStateSnapshot;
     
     /**
      * Creates a new AIDecisionException with a message.
@@ -32,9 +34,9 @@ public class AIDecisionException extends RuntimeException {
      */
     public AIDecisionException(String message) {
         super(message);
-        this.aiComponent = null;
-        this.decisionContext = null;
-        this.gameStateSnapshot = null;
+        this.aiComponent = Optional.empty();
+        this.decisionContext = Optional.empty();
+        this.gameStateSnapshot = Optional.empty();
     }
     
     /**
@@ -45,9 +47,9 @@ public class AIDecisionException extends RuntimeException {
      */
     public AIDecisionException(String message, Throwable cause) {
         super(message, cause);
-        this.aiComponent = null;
-        this.decisionContext = null;
-        this.gameStateSnapshot = null;
+        this.aiComponent = Optional.empty();
+        this.decisionContext = Optional.empty();
+        this.gameStateSnapshot = Optional.empty();
     }
     
     /**
@@ -59,9 +61,9 @@ public class AIDecisionException extends RuntimeException {
      */
     public AIDecisionException(String message, String aiComponent, String decisionContext) {
         super(buildDetailedMessage(message, aiComponent, decisionContext));
-        this.aiComponent = aiComponent;
-        this.decisionContext = decisionContext;
-        this.gameStateSnapshot = null;
+        this.aiComponent = Optional.ofNullable(aiComponent);
+        this.decisionContext = Optional.ofNullable(decisionContext);
+        this.gameStateSnapshot = Optional.empty();
     }
     
     /**
@@ -74,9 +76,9 @@ public class AIDecisionException extends RuntimeException {
      */
     public AIDecisionException(String message, String aiComponent, String decisionContext, Object gameStateSnapshot) {
         super(buildDetailedMessage(message, aiComponent, decisionContext));
-        this.aiComponent = aiComponent;
-        this.decisionContext = decisionContext;
-        this.gameStateSnapshot = gameStateSnapshot;
+        this.aiComponent = Optional.ofNullable(aiComponent);
+        this.decisionContext = Optional.ofNullable(decisionContext);
+        this.gameStateSnapshot = Optional.ofNullable(gameStateSnapshot);
     }
     
     /**
@@ -90,9 +92,9 @@ public class AIDecisionException extends RuntimeException {
      */
     public AIDecisionException(String message, Throwable cause, String aiComponent, String decisionContext, Object gameStateSnapshot) {
         super(buildDetailedMessage(message, aiComponent, decisionContext), cause);
-        this.aiComponent = aiComponent;
-        this.decisionContext = decisionContext;
-        this.gameStateSnapshot = gameStateSnapshot;
+        this.aiComponent = Optional.ofNullable(aiComponent);
+        this.decisionContext = Optional.ofNullable(decisionContext);
+        this.gameStateSnapshot = Optional.ofNullable(gameStateSnapshot);
     }
     
     /**
@@ -100,19 +102,15 @@ public class AIDecisionException extends RuntimeException {
      */
     private static String buildDetailedMessage(String message, String aiComponent, String decisionContext) {
         StringBuilder sb = new StringBuilder("AI Decision Failure: ").append(message);
-        if (aiComponent != null) {
-            sb.append(" [Component: ").append(aiComponent).append("]");
-        }
-        if (decisionContext != null) {
-            sb.append(" [Context: ").append(decisionContext).append("]");
-        }
+        Optional.ofNullable(aiComponent).ifPresent(component -> sb.append(" [Component: ").append(component).append("]"));
+        Optional.ofNullable(decisionContext).ifPresent(context -> sb.append(" [Context: ").append(context).append("]"));
         return sb.toString();
     }
     
     // Getters for additional context information
-    public String getAiComponent() { return aiComponent; }
-    public String getDecisionContext() { return decisionContext; }
-    public Object getGameStateSnapshot() { return gameStateSnapshot; }
+    public Optional<String> getAiComponent() { return aiComponent; }
+    public Optional<String> getDecisionContext() { return decisionContext; }
+    public Optional<Object> getGameStateSnapshot() { return gameStateSnapshot; }
     
     /**
      * Creates a formatted debug report for developers.
@@ -123,13 +121,12 @@ public class AIDecisionException extends RuntimeException {
         StringBuilder report = new StringBuilder();
         report.append("=== AI DECISION EXCEPTION DEBUG REPORT ===\n");
         report.append("Message: ").append(getMessage()).append("\n");
-        report.append("AI Component: ").append(aiComponent != null ? aiComponent : "Unknown").append("\n");
-        report.append("Decision Context: ").append(decisionContext != null ? decisionContext : "Unknown").append("\n");
-        report.append("Has Game State Snapshot: ").append(gameStateSnapshot != null ? "Yes" : "No").append("\n");
-        if (getCause() != null) {
-            report.append("Underlying Cause: ").append(getCause().getClass().getSimpleName())
-                  .append(" - ").append(getCause().getMessage()).append("\n");
-        }
+        report.append("AI Component: ").append(aiComponent.orElse("Unknown")).append("\n");
+        report.append("Decision Context: ").append(decisionContext.orElse("Unknown")).append("\n");
+        report.append("Has Game State Snapshot: ").append(gameStateSnapshot.isPresent() ? "Yes" : "No").append("\n");
+        Optional.ofNullable(getCause()).ifPresent(cause -> report
+                .append("Underlying Cause: ").append(cause.getClass().getSimpleName())
+                .append(" - ").append(cause.getMessage()).append("\n"));
         report.append("Stack Trace: Available via printStackTrace()").append("\n");
         report.append("=== END DEBUG REPORT ===");
         return report.toString();

@@ -10,7 +10,7 @@ package client.exception;
  * 
  * Use cases:
  * - Inconsistent player state transitions
- * - Operations on null or uninitialized game states
+ * - Operations on missing or uninitialized game states
  * - Observer pattern violations
  * - Invalid game state modifications
  * - Corrupted game state data structures
@@ -21,10 +21,10 @@ public class GameStateException extends RuntimeException {
     
     private static final long serialVersionUID = 1L;
     
-    private final String gameStateId;
-    private final String operation;
-    private final String currentState;
-    private final String expectedState;
+    private final java.util.Optional<String> gameStateId;
+    private final java.util.Optional<String> operation;
+    private final java.util.Optional<String> currentState;
+    private final java.util.Optional<String> expectedState;
     
     /**
      * Creates a new GameStateException with a message.
@@ -33,10 +33,10 @@ public class GameStateException extends RuntimeException {
      */
     public GameStateException(String message) {
         super(message);
-        this.gameStateId = null;
-        this.operation = null;
-        this.currentState = null;
-        this.expectedState = null;
+        this.gameStateId = java.util.Optional.empty();
+        this.operation = java.util.Optional.empty();
+        this.currentState = java.util.Optional.empty();
+        this.expectedState = java.util.Optional.empty();
     }
     
     /**
@@ -47,10 +47,10 @@ public class GameStateException extends RuntimeException {
      */
     public GameStateException(String message, Throwable cause) {
         super(message, cause);
-        this.gameStateId = null;
-        this.operation = null;
-        this.currentState = null;
-        this.expectedState = null;
+        this.gameStateId = java.util.Optional.empty();
+        this.operation = java.util.Optional.empty();
+        this.currentState = java.util.Optional.empty();
+        this.expectedState = java.util.Optional.empty();
     }
     
     /**
@@ -62,11 +62,15 @@ public class GameStateException extends RuntimeException {
      * @param currentState the current state when the error occurred
      */
     public GameStateException(String message, String gameStateId, String operation, String currentState) {
-        super(buildDetailedMessage(message, gameStateId, operation, currentState, null));
-        this.gameStateId = gameStateId;
-        this.operation = operation;
-        this.currentState = currentState;
-        this.expectedState = null;
+        super(buildDetailedMessage(message,
+            java.util.Optional.ofNullable(gameStateId),
+            java.util.Optional.ofNullable(operation),
+            java.util.Optional.ofNullable(currentState),
+            java.util.Optional.empty()));
+        this.gameStateId = java.util.Optional.ofNullable(gameStateId);
+        this.operation = java.util.Optional.ofNullable(operation);
+        this.currentState = java.util.Optional.ofNullable(currentState);
+        this.expectedState = java.util.Optional.empty();
     }
     
     /**
@@ -79,11 +83,15 @@ public class GameStateException extends RuntimeException {
      * @param expectedState the expected state for the operation
      */
     public GameStateException(String message, String gameStateId, String operation, String currentState, String expectedState) {
-        super(buildDetailedMessage(message, gameStateId, operation, currentState, expectedState));
-        this.gameStateId = gameStateId;
-        this.operation = operation;
-        this.currentState = currentState;
-        this.expectedState = expectedState;
+        super(buildDetailedMessage(message,
+            java.util.Optional.ofNullable(gameStateId),
+            java.util.Optional.ofNullable(operation),
+            java.util.Optional.ofNullable(currentState),
+            java.util.Optional.ofNullable(expectedState)));
+        this.gameStateId = java.util.Optional.ofNullable(gameStateId);
+        this.operation = java.util.Optional.ofNullable(operation);
+        this.currentState = java.util.Optional.ofNullable(currentState);
+        this.expectedState = java.util.Optional.ofNullable(expectedState);
     }
     
     /**
@@ -97,59 +105,72 @@ public class GameStateException extends RuntimeException {
      * @param expectedState the expected state for the operation
      */
     public GameStateException(String message, Throwable cause, String gameStateId, String operation, String currentState, String expectedState) {
-        super(buildDetailedMessage(message, gameStateId, operation, currentState, expectedState), cause);
-        this.gameStateId = gameStateId;
-        this.operation = operation;
-        this.currentState = currentState;
-        this.expectedState = expectedState;
+        super(buildDetailedMessage(message,
+            java.util.Optional.ofNullable(gameStateId),
+            java.util.Optional.ofNullable(operation),
+            java.util.Optional.ofNullable(currentState),
+            java.util.Optional.ofNullable(expectedState)), cause);
+        this.gameStateId = java.util.Optional.ofNullable(gameStateId);
+        this.operation = java.util.Optional.ofNullable(operation);
+        this.currentState = java.util.Optional.ofNullable(currentState);
+        this.expectedState = java.util.Optional.ofNullable(expectedState);
     }
 
     public GameStateException(String message, String gameStateId, Operation operation, FailureReason currentState) {
-        this(message, gameStateId, operation != null ? operation.code() : null, currentState != null ? currentState.code() : null);
+        this(message,
+            gameStateId,
+            java.util.Optional.ofNullable(operation).map(Operation::code).orElse(""),
+            java.util.Optional.ofNullable(currentState).map(FailureReason::code).orElse(""));
     }
 
     public GameStateException(String message, String gameStateId, Operation operation, FailureReason currentState, FailureReason expectedState) {
         this(message,
             gameStateId,
-            operation != null ? operation.code() : null,
-            currentState != null ? currentState.code() : null,
-            expectedState != null ? expectedState.code() : null);
+            java.util.Optional.ofNullable(operation).map(Operation::code).orElse(""),
+            java.util.Optional.ofNullable(currentState).map(FailureReason::code).orElse(""),
+            java.util.Optional.ofNullable(expectedState).map(FailureReason::code).orElse(""));
     }
 
     public GameStateException(String message, Throwable cause, String gameStateId, Operation operation, FailureReason currentState, FailureReason expectedState) {
         this(message,
             cause,
             gameStateId,
-            operation != null ? operation.code() : null,
-            currentState != null ? currentState.code() : null,
-            expectedState != null ? expectedState.code() : null);
+            java.util.Optional.ofNullable(operation).map(Operation::code).orElse(""),
+            java.util.Optional.ofNullable(currentState).map(FailureReason::code).orElse(""),
+            java.util.Optional.ofNullable(expectedState).map(FailureReason::code).orElse(""));
     }
     
     /**
      * Builds a detailed error message with game state context information.
      */
-    private static String buildDetailedMessage(String message, String gameStateId, String operation, String currentState, String expectedState) {
+    private static String buildDetailedMessage(
+            String message,
+            java.util.Optional<String> gameStateId,
+            java.util.Optional<String> operation,
+            java.util.Optional<String> currentState,
+            java.util.Optional<String> expectedState
+    ) {
         StringBuilder sb = new StringBuilder("Game State Error: ").append(message);
-        if (gameStateId != null) {
-            sb.append(" [Game: ").append(gameStateId).append("]");
-        }
-        if (operation != null) {
-            sb.append(" [Operation: ").append(operation).append("]");
-        }
-        if (currentState != null) {
-            sb.append(" [Current State: ").append(currentState).append("]");
-        }
-        if (expectedState != null) {
-            sb.append(" [Expected State: ").append(expectedState).append("]");
-        }
+        java.util.Optional.ofNullable(gameStateId).orElse(java.util.Optional.empty())
+                .filter(id -> !id.isBlank())
+                .ifPresent(id -> sb.append(" [Game: ").append(id).append("]"));
+        java.util.Optional.ofNullable(operation).orElse(java.util.Optional.empty())
+                .filter(op -> !op.isBlank())
+                .ifPresent(op -> sb.append(" [Operation: ").append(op).append("]"));
+        java.util.Optional.ofNullable(currentState).orElse(java.util.Optional.empty())
+                .filter(st -> !st.isBlank())
+                .ifPresent(st -> sb.append(" [Current State: ").append(st).append("]"));
+        java.util.Optional.ofNullable(expectedState).orElse(java.util.Optional.empty())
+                .filter(st -> !st.isBlank())
+                .ifPresent(st -> sb.append(" [Expected State: ").append(st).append("]"));
         return sb.toString();
     }
     
     // Getters for additional context information
-    public String getGameStateId() { return gameStateId; }
-    public String getOperation() { return operation; }
-    public String getCurrentState() { return currentState; }
-    public String getExpectedState() { return expectedState; }
+    public java.util.Optional<String> getGameStateId() { return gameStateId; }
+    public java.util.Optional<String> getOperation() { return operation; }
+    public java.util.Optional<String> getCurrentState() { return currentState; }
+    public java.util.Optional<String> getExpectedState() { return expectedState; }
     
     /**
      * Determines if this exception includes information about the expected state.
@@ -157,7 +178,7 @@ public class GameStateException extends RuntimeException {
      * @return true if expected state information is available
      */
     public boolean hasExpectedState() {
-        return expectedState != null && !expectedState.trim().isEmpty();
+        return expectedState.filter(state -> !state.trim().isEmpty()).isPresent();
     }
     
     /**
@@ -169,15 +190,14 @@ public class GameStateException extends RuntimeException {
         StringBuilder report = new StringBuilder();
         report.append("=== GAME STATE EXCEPTION DEBUG REPORT ===\n");
         report.append("Message: ").append(getMessage()).append("\n");
-        report.append("Game State ID: ").append(gameStateId != null ? gameStateId : "Unknown").append("\n");
-        report.append("Failed Operation: ").append(operation != null ? operation : "Unknown").append("\n");
-        report.append("Current State: ").append(currentState != null ? currentState : "Unknown").append("\n");
-        report.append("Expected State: ").append(expectedState != null ? expectedState : "Not specified").append("\n");
+        report.append("Game State ID: ").append(gameStateId.orElse("Unknown")).append("\n");
+        report.append("Failed Operation: ").append(operation.orElse("Unknown")).append("\n");
+        report.append("Current State: ").append(currentState.orElse("Unknown")).append("\n");
+        report.append("Expected State: ").append(expectedState.orElse("Not specified")).append("\n");
         
-        if (getCause() != null) {
-            report.append("Underlying Cause: ").append(getCause().getClass().getSimpleName())
-                  .append(" - ").append(getCause().getMessage()).append("\n");
-        }
+        java.util.Optional.ofNullable(getCause()).ifPresent(cause -> report
+            .append("Underlying Cause: ").append(cause.getClass().getSimpleName())
+            .append(" - ").append(cause.getMessage()).append("\n"));
         
         report.append("Timestamp: ").append(java.time.LocalDateTime.now()).append("\n");
         report.append("Stack Trace: Available via printStackTrace()").append("\n");
@@ -193,14 +213,12 @@ public class GameStateException extends RuntimeException {
     public String getUserMessage() {
         StringBuilder userMsg = new StringBuilder();
         userMsg.append("🎮 Game State Error: ").append(getMessage()).append("\n");
-        
-        if (operation != null) {
-            userMsg.append("📋 During operation: ").append(operation).append("\n");
-        }
+
+        operation.filter(op -> !op.isBlank()).ifPresent(op -> userMsg.append("📋 During operation: ").append(op).append("\n"));
         
         if (hasExpectedState()) {
-            userMsg.append("⚠️  Expected state: ").append(expectedState)
-                   .append(", but found: ").append(currentState != null ? currentState : "unknown").append("\n");
+            userMsg.append("⚠️  Expected state: ").append(expectedState.orElse(""))
+                   .append(", but found: ").append(currentState.orElse("unknown")).append("\n");
         }
         
         userMsg.append("💡 This indicates an internal error. Please try restarting the game.");
