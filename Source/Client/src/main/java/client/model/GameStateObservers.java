@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -40,14 +41,11 @@ final class GameStateObservers {
     }
 
     void addObserver(GameStateEventType eventType, Observer observer) {
-        if (observer == null) {
-            return;
-        }
-
-        GameStateEventType safeType = Optional.ofNullable(eventType).orElse(GameStateEventType.BULK_UPDATE);
-        observersByType.computeIfAbsent(safeType, ignored -> new LinkedHashSet<>()).add(observer);
-
-        notifySingleObserver(observer, new GameStateEvent(source, safeType));
+        Optional.ofNullable(observer).ifPresent(obs -> {
+            GameStateEventType safeType = Optional.ofNullable(eventType).orElse(GameStateEventType.BULK_UPDATE);
+            observersByType.computeIfAbsent(safeType, ignored -> new LinkedHashSet<>()).add(obs);
+            notifySingleObserver(obs, new GameStateEvent(source, safeType));
+        });
     }
 
     void removeObserver(Observer observer) {
@@ -58,10 +56,9 @@ final class GameStateObservers {
     }
 
     void removeObserver(GameStateEventType eventType, Observer observer) {
-        if (eventType == null || observer == null) {
-            return;
-        }
-        Optional.ofNullable(observersByType.get(eventType)).ifPresent(bucket -> bucket.remove(observer));
+        Optional.ofNullable(eventType)
+                .flatMap(type -> Optional.ofNullable(observersByType.get(type)))
+                .ifPresent(bucket -> Optional.ofNullable(observer).ifPresent(bucket::remove));
     }
 
     void notifyObservers() {
@@ -73,7 +70,7 @@ final class GameStateObservers {
     }
 
     void notifyObservers(GameStateEvent event) {
-        notifyObserversInternal(event);
+        notifyObserversInternal(Objects.requireNonNull(event, "event is required"));
     }
 
     private void notifyObserversInternal(GameStateEvent event) {
