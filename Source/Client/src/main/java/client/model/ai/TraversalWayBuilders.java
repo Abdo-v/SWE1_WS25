@@ -21,7 +21,7 @@ final class TraversalWayBuilders {
     }
 
     static LinkedHashMap<MapNode, Boolean> grassTraversal(PlayerHalfMap halfMap) {
-        Objects.requireNonNull(halfMap, "halfMap must not be null");
+        Objects.requireNonNull(halfMap, "halfMap is required");
         LinkedHashMap<MapNode, Boolean> grassTraversal = new LinkedHashMap<>();
         for (MapNode node : halfMap.getMapNodes()) {
             if (Objects.nonNull(node) && node.getTerrain() == Terrain.GRASS) {
@@ -32,7 +32,7 @@ final class TraversalWayBuilders {
     }
 
     static LinkedHashMap<MapNode, Boolean> mountainFields(GameMap map) {
-        Objects.requireNonNull(map, "map must not be null");
+        Objects.requireNonNull(map, "map is required");
         LinkedHashMap<MapNode, Boolean> mountains = new LinkedHashMap<>();
         for (MapNode node : map.getGameMapNodes()) {
             if (Objects.nonNull(node) && node.getTerrain() == Terrain.MOUNTAIN) {
@@ -43,7 +43,7 @@ final class TraversalWayBuilders {
     }
 
     static ArrayList<MapNode> toUnvisitedNodes(LinkedHashMap<MapNode, Boolean> visited) {
-        Objects.requireNonNull(visited, "visited must not be null");
+        Objects.requireNonNull(visited, "visited is required");
         ArrayList<MapNode> nodes = new ArrayList<>();
         for (MapNode node : visited.keySet()) {
             if (Boolean.TRUE.equals(visited.get(node))) {

@@ -58,8 +58,7 @@ public class WayHelper implements client.observer.util.Observer {
                 return start
                         .map(pos -> {
                             PlayerHalfMap ownHalfMap = HalfMapSnakeArranger.arrangeOwnHalf(map, pos);
-                            Map<?, ?> traversal = Optional.ofNullable(TraversalWayBuilders.grassTraversal(ownHalfMap)).orElseGet(LinkedHashMap::new);
-                            return toMapNodeBooleanMap(traversal);
+                            return toMapNodeBooleanMap(TraversalWayBuilders.grassTraversal(ownHalfMap));
                         })
                         .orElseGet(LinkedHashMap::new);
             }))
@@ -76,8 +75,7 @@ public class WayHelper implements client.observer.util.Observer {
             .flatMap(state -> state.getMap().map(map -> state.getOwnFortPosition()
                     .map(start -> {
                         PlayerHalfMap opponentHalfMap = HalfMapSnakeArranger.arrangeOpponentHalf(map, start);
-                        Map<?, ?> traversal = Optional.ofNullable(TraversalWayBuilders.grassTraversal(opponentHalfMap)).orElseGet(LinkedHashMap::new);
-                        return toMapNodeBooleanMap(traversal);
+                        return toMapNodeBooleanMap(TraversalWayBuilders.grassTraversal(opponentHalfMap));
                     })
                     .orElseGet(LinkedHashMap::new)))
             .orElseGet(LinkedHashMap::new);
@@ -93,7 +91,7 @@ public class WayHelper implements client.observer.util.Observer {
         return gameState
                 .flatMap(GameState::getMap)
                 .map(map -> HalfMapSnakeArranger.arrangeOpponentHalf(map, currentPosition))
-                .map(halfMap -> Optional.ofNullable(TraversalWayBuilders.grassTraversal(halfMap)).orElseGet(LinkedHashMap::new))
+            .map(TraversalWayBuilders::grassTraversal)
                 .map(WayHelper::toMapNodeBooleanMap)
                 .orElseGet(LinkedHashMap::new);
     }
@@ -132,7 +130,7 @@ public class WayHelper implements client.observer.util.Observer {
     public LinkedHashMap<MapNode,Boolean> getAllMountainFields(){
         return gameState
                 .flatMap(GameState::getMap)
-                .map(map -> Optional.ofNullable(TraversalWayBuilders.mountainFields(map)).orElseGet(LinkedHashMap::new))
+            .map(TraversalWayBuilders::mountainFields)
                 .map(WayHelper::toMapNodeBooleanMap)
                 .orElseGet(LinkedHashMap::new);
     }
