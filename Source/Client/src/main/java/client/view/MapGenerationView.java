@@ -16,14 +16,7 @@ import java.util.Objects;
  */
 public class MapGenerationView {
 
-    // Terrain
-    private static final String GRASS_ICON = "🟩";
-    private static final String MOUNTAIN_ICON = "⬜";
-    private static final String WATER_ICON = "🟦";
-
-    // Entities (half-map only reliably contains own fort)
-    private static final String OWN_FORT_ICON = "🏰";
-    private static final String UNKNOWN_ICON = "❓";
+    // Emojis for map elements are centralized in CliIcons.
 
     /**
      * Prints an emoji-based half map representation to {@link System#out}.
@@ -40,7 +33,7 @@ public class MapGenerationView {
         }
 
         System.out.println("\n" + title + " (Half Map):");
-        System.out.println("Legend: " + GRASS_ICON + "=grass " + MOUNTAIN_ICON + "=mountain " + WATER_ICON + "=water " + OWN_FORT_ICON + "=fort");
+        System.out.println("Legend: " + CliIcons.GRASS + "=grass " + CliIcons.MOUNTAIN + "=mountain " + CliIcons.WATER + "=water " + CliIcons.OWN_FORT + "=fort");
         System.out.println("-------------------------");
 
         Map<String, MapNode> nodeMap = new HashMap<>();
@@ -69,22 +62,22 @@ public class MapGenerationView {
 
     private static String renderNode(MapNode node) {
         if (node == null) {
-            return UNKNOWN_ICON;
+            return CliIcons.UNKNOWN;
         }
 
         if (node.isFortPresent()) {
-            return OWN_FORT_ICON;
+            return CliIcons.OWN_FORT;
         }
 
         switch (node.getTerrain()) {
             case GRASS:
-                return GRASS_ICON;
+                return CliIcons.GRASS;
             case MOUNTAIN:
-                return MOUNTAIN_ICON;
+                return CliIcons.MOUNTAIN;
             case WATER:
-                return WATER_ICON;
+                return CliIcons.WATER;
             default:
-                return UNKNOWN_ICON;
+                return CliIcons.UNKNOWN;
         }
     }
 }

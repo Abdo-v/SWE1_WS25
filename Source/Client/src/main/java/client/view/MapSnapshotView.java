@@ -16,21 +16,7 @@ import java.util.Optional;
  */
 public class MapSnapshotView {
 
-    // Terrain
-    private static final String GRASS_ICON = "🟩";
-    private static final String MOUNTAIN_ICON = "⬜";
-    private static final String WATER_ICON = "🟦";
-
-    // Entities
-    private static final String PLAYER_ICON = "🫤";
-    private static final String PLAYER_WITH_TREASURE_ICON = "🤑";
-    private static final String OPPONENT_ICON = "👿";
-    private static final String OPPONENT_WITH_TREASURE_ICON = "👹";
-    private static final String OWN_FORT_ICON = "🏰";
-    private static final String OPPONENT_FORT_ICON = "🏯";
-    private static final String TREASURE_ICON = "💎";
-    private static final String CLASH_ICON = "💥";
-    private static final String UNKNOWN_ICON = "❓";
+    // Emojis for map elements are centralized in CliIcons.
 
     public void visualize(GameState gameState, MapVisualizationType mapType) {
         Objects.requireNonNull(gameState, "gameState must not be null");
@@ -70,14 +56,14 @@ public class MapSnapshotView {
     private void printMap(GameState state, GameMap map, int minX, int minY, int maxX, int maxY, String title) {
         System.out.println("\n" + title + " (" + (maxX + 1) + "x" + (maxY + 1) + ") - Orientation: " + map.getOrientation().getName());
         System.out.println("Legend: "
-                + GRASS_ICON + "=grass "
-                + MOUNTAIN_ICON + "=mountain "
-                + WATER_ICON + "=water "
-                + OWN_FORT_ICON + "/" + OPPONENT_FORT_ICON + "=fort "
-                + TREASURE_ICON + "=treasure "
-                + PLAYER_ICON + "/" + PLAYER_WITH_TREASURE_ICON + "=you "
-                + OPPONENT_ICON + "/" + OPPONENT_WITH_TREASURE_ICON + "=opponent "
-                + CLASH_ICON + "=clash");
+            + CliIcons.GRASS + "=grass "
+            + CliIcons.MOUNTAIN + "=mountain "
+            + CliIcons.WATER + "=water "
+            + CliIcons.OWN_FORT + "/" + CliIcons.OPPONENT_FORT + "=fort "
+            + CliIcons.TREASURE + "=treasure "
+            + CliIcons.PLAYER + "/" + CliIcons.PLAYER_WITH_TREASURE + "=you "
+            + CliIcons.OPPONENT + "/" + CliIcons.OPPONENT_WITH_TREASURE + "=opponent "
+            + CliIcons.CLASH + "=clash");
         System.out.println("--------------------");
 
         var myState = state.getCurrentPlayerState();
@@ -120,43 +106,43 @@ public class MapSnapshotView {
             boolean opponentHasTreasure
     ) {
         if (node == null) {
-            return UNKNOWN_ICON;
+            return CliIcons.UNKNOWN;
         }
 
         // Same priority order as DynamicCLIGameView
         if (myPosition.filter(pos -> pos.equals(node)).isPresent()
                 && opponentPosition.filter(pos -> pos.equals(node)).isPresent()) {
-            return CLASH_ICON;
+            return CliIcons.CLASH;
         }
 
         if (myPosition.filter(pos -> pos.equals(node)).isPresent()) {
-            return myHasTreasure ? PLAYER_WITH_TREASURE_ICON : PLAYER_ICON;
+            return myHasTreasure ? CliIcons.PLAYER_WITH_TREASURE : CliIcons.PLAYER;
         }
 
         if (opponentPosition.filter(pos -> pos.equals(node)).isPresent()) {
-            return opponentHasTreasure ? OPPONENT_WITH_TREASURE_ICON : OPPONENT_ICON;
+            return opponentHasTreasure ? CliIcons.OPPONENT_WITH_TREASURE : CliIcons.OPPONENT;
         }
 
         if (!myHasTreasure && state.getTreasurePosition().filter(tp -> tp.equals(node)).isPresent()) {
-            return TREASURE_ICON;
+            return CliIcons.TREASURE;
         }
 
         if (node.isFortPresent()) {
             if (state.getOwnFortPosition().filter(fp -> fp.equals(node)).isPresent()) {
-                return OWN_FORT_ICON;
+                return CliIcons.OWN_FORT;
             }
-            return OPPONENT_FORT_ICON;
+            return CliIcons.OPPONENT_FORT;
         }
 
         switch (node.getTerrain()) {
             case GRASS:
-                return GRASS_ICON;
+                return CliIcons.GRASS;
             case MOUNTAIN:
-                return MOUNTAIN_ICON;
+                return CliIcons.MOUNTAIN;
             case WATER:
-                return WATER_ICON;
+                return CliIcons.WATER;
             default:
-                return UNKNOWN_ICON;
+                return CliIcons.UNKNOWN;
         }
     }
 }
