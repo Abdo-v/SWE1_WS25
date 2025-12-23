@@ -3,6 +3,8 @@ package client.view;
 import client.exception.GameCommunicationException;
 import client.model.GameMode;
 
+import java.util.Objects;
+
 public class ClientStartupView {
 
     public void showAutoFetchGameIdStart() {
@@ -14,7 +16,7 @@ public class ClientStartupView {
     }
 
     public void showStartupBanner(String serverBaseUrl, String gameId, String gameMode) {
-        showStartupBanner(serverBaseUrl, gameId, GameMode.fromCliValue(gameMode));
+        showStartupBanner(serverBaseUrl, gameId, GameMode.fromCLIValue(gameMode));
     }
 
     public void showStartupBanner(String serverBaseUrl, String gameId, GameMode gameMode) {
@@ -74,14 +76,12 @@ public class ClientStartupView {
     }
 
     private String describeMode(GameMode gameMode) {
-        if (gameMode == null) {
-            return "Unknown";
-        }
-        return switch (gameMode) {
+        GameMode safeMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
+        return switch (safeMode) {
             case TR -> "Terminal";
             case TRR -> "Terminal Reduced";
             case ATTR -> "Auto-Fetch Terminal";
-            default -> gameMode.cliValue();
+            default -> safeMode.cliValue();
         };
     }
 }

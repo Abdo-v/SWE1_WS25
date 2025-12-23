@@ -13,7 +13,9 @@ public class Notification {
     }
 
     public void addError(String info) {
-        errors.add(new Error(info, Optional.empty()));
+        // Capture stack trace at the call site (typically within a validator)
+        // so technical-internals views can reference the relevant validation logic.
+        errors.add(new Error(info, new Exception("Validation error")));
     }
 
     public boolean hasErrors() {

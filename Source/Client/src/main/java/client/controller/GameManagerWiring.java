@@ -18,7 +18,7 @@ final class GameManagerWiring {
     private GameManagerWiring() {
     }
 
-    static CLIHandler createCliHandler(GameMode gameMode) {
+    static CLIHandler createCLIHandler(GameMode gameMode) {
         return new CLIHandler(Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN));
     }
 
@@ -28,9 +28,22 @@ final class GameManagerWiring {
         Objects.requireNonNull(wayFinder, "wayFinder is required");
         Objects.requireNonNull(dynamicView, "dynamicView is required");
 
-        gameState.addObserver(cliHandler);
+        // Modern MVC wiring (composition): CLI only needs map updates.
+        // Keep the old behavior of setting the initial state once.
+        cliHandler.update(gameState);
+        gameState.mapChanges().subscribe(ignored -> cliHandler.update(gameState));
+
         gameState.addObserver(wayFinder);
-        gameState.addObserver(dynamicView);
+
+        // Modern MVC wiring (composition): the dynamic view subscribes to the specific model streams it needs.
+        // The view coalesces quick successive updates so bulk changes don't render multiple times.
+        dynamicView.update(gameState);
+        gameState.mapChanges().subscribe(ignored -> dynamicView.requestRender());
+        gameState.playerListChanges().subscribe(ignored -> dynamicView.requestRender());
+        gameState.treasureCollectedChanges().subscribe(ignored -> dynamicView.requestRender());
+        gameState.treasurePositionChanges().subscribe(ignored -> dynamicView.requestRender());
+        gameState.opponentFortFoundChanges().subscribe(ignored -> dynamicView.requestRender());
+        gameState.opponentFortPositionChanges().subscribe(ignored -> dynamicView.requestRender());
 
         wayFinder.setGameState(gameState);
         wayFinder.addSubObservers();

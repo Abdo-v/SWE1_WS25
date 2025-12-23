@@ -1,5 +1,8 @@
 package client.model;
 
+import client.observer.util.Changed;
+import client.observer.util.EventSource;
+import client.observer.util.EventStream;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 
@@ -20,6 +23,15 @@ public class GameState implements client.observer.util.Observable {
     private final GameStateObservers observerSupport;
     private final GameStateVisionProcessor visionProcessor;
     private final GameStateQueries queries;
+
+    // Modern, generic, lambda-friendly event streams (composition).
+    private final EventStream<GameStateEvent> events = new EventStream<>();
+    private final EventStream<Changed<Optional<GameMap>>> mapChanges = new EventStream<>();
+    private final EventStream<Changed<List<PlayerState>>> playerListChanges = new EventStream<>();
+    private final EventStream<Changed<Boolean>> treasureCollectedChanges = new EventStream<>();
+    private final EventStream<Changed<Boolean>> opponentFortFoundChanges = new EventStream<>();
+    private final EventStream<Changed<Optional<MapNode>>> treasurePositionChanges = new EventStream<>();
+    private final EventStream<Changed<Optional<MapNode>>> opponentFortPositionChanges = new EventStream<>();
 
 
     @Override
@@ -44,12 +56,48 @@ public class GameState implements client.observer.util.Observable {
 
     @Override
     public void notifyObservers() {
-        observerSupport.notifyObservers(GameStateEventType.BULK_UPDATE);
+        publish(new GameStateEvent(this, GameStateEventType.BULK_UPDATE));
     }
 
     @Override
     public void notifyObservers(GameStateEventType eventType) {
-        observerSupport.notifyObservers(eventType);
+        publish(new GameStateEvent(this, Optional.ofNullable(eventType).orElse(GameStateEventType.BULK_UPDATE)));
+    }
+
+    /**
+     * Subscribe to all emitted {@link GameStateEvent}s using a lambda.
+     */
+    public EventSource<GameStateEvent> events() {
+        return events;
+    }
+
+    public EventSource<Changed<Optional<GameMap>>> mapChanges() {
+        return mapChanges;
+    }
+
+    public EventSource<Changed<List<PlayerState>>> playerListChanges() {
+        return playerListChanges;
+    }
+
+    public EventSource<Changed<Boolean>> treasureCollectedChanges() {
+        return treasureCollectedChanges;
+    }
+
+    public EventSource<Changed<Boolean>> opponentFortFoundChanges() {
+        return opponentFortFoundChanges;
+    }
+
+    public EventSource<Changed<Optional<MapNode>>> treasurePositionChanges() {
+        return treasurePositionChanges;
+    }
+
+    public EventSource<Changed<Optional<MapNode>>> opponentFortPositionChanges() {
+        return opponentFortPositionChanges;
+    }
+
+    private void publish(GameStateEvent event) {
+        events.publish(event);
+        observerSupport.notifyObservers(event);
     }
     
     /**
@@ -107,6 +155,13 @@ public class GameState implements client.observer.util.Observable {
      * @param gameState The game state to update from
      */
     public void updateGameState(GameState gameState) {
+        List<PlayerState> oldPlayers = List.copyOf(this.players);
+        Optional<GameMap> oldMap = this.map;
+        boolean oldTreasureCollected = this.treasureCollected;
+        boolean oldOpponentFortFound = this.opponentFortFound;
+        Optional<MapNode> oldTreasurePosition = this.treasurePosition;
+        Optional<MapNode> oldOpponentFortPosition = this.opponentFortPosition;
+
         Optional.ofNullable(gameState)
                 .ifPresent(state -> {
                     this.players = new ArrayList<>(state.getPlayers());
@@ -116,7 +171,15 @@ public class GameState implements client.observer.util.Observable {
                     this.treasurePosition = state.getTreasurePosition();
                     this.opponentFortPosition = state.getOpponentFortPosition();
                 });
-        notifyObservers(GameStateEventType.BULK_UPDATE);
+
+        playerListChanges.publish(new Changed<>(oldPlayers, List.copyOf(this.players)));
+        mapChanges.publish(new Changed<>(oldMap, this.map));
+        treasureCollectedChanges.publish(new Changed<>(oldTreasureCollected, this.treasureCollected));
+        opponentFortFoundChanges.publish(new Changed<>(oldOpponentFortFound, this.opponentFortFound));
+        treasurePositionChanges.publish(new Changed<>(oldTreasurePosition, this.treasurePosition));
+        opponentFortPositionChanges.publish(new Changed<>(oldOpponentFortPosition, this.opponentFortPosition));
+
+        publish(new GameStateEvent(this, GameStateEventType.BULK_UPDATE));
     }
     
     /**
@@ -154,11 +217,12 @@ public class GameState implements client.observer.util.Observable {
         this.opponentFortPosition = newPosition;
         this.opponentFortPosition.ifPresent(ignored -> this.opponentFortFound = true);
 
-        observerSupport.notifyObservers(new GameStateEvent(
-                this,
-                GameStateEventType.OPPONENT_FORT_POSITION_CHANGED,
-                oldPosition.map(pos -> (Object) pos),
-                newPosition.map(pos -> (Object) pos)
+        opponentFortPositionChanges.publish(new Changed<>(oldPosition, newPosition));
+        publish(new GameStateEvent(
+            this,
+            GameStateEventType.OPPONENT_FORT_POSITION_CHANGED,
+            oldPosition.map(pos -> (Object) pos),
+            newPosition.map(pos -> (Object) pos)
         ));
     }
     
@@ -171,11 +235,12 @@ public class GameState implements client.observer.util.Observable {
         this.players = new ArrayList<>(Optional.ofNullable(players).orElseGet(ArrayList::new));
         List<PlayerState> newPlayers = List.copyOf(this.players);
 
-        observerSupport.notifyObservers(new GameStateEvent(
-                this,
-                GameStateEventType.PLAYERS_CHANGED,
-                Optional.of(oldPlayers),
-                Optional.of(newPlayers)
+        playerListChanges.publish(new Changed<>(oldPlayers, newPlayers));
+        publish(new GameStateEvent(
+            this,
+            GameStateEventType.PLAYERS_CHANGED,
+            Optional.of(oldPlayers),
+            Optional.of(newPlayers)
         ));
     }
 
@@ -199,11 +264,12 @@ public class GameState implements client.observer.util.Observable {
 
         this.map = newMap;
 
-        observerSupport.notifyObservers(new GameStateEvent(
-                this,
-                GameStateEventType.MAP_CHANGED,
-                oldMap.map(m -> (Object) m),
-                newMap.map(m -> (Object) m)
+        mapChanges.publish(new Changed<>(oldMap, newMap));
+        publish(new GameStateEvent(
+            this,
+            GameStateEventType.MAP_CHANGED,
+            oldMap.map(m -> (Object) m),
+            newMap.map(m -> (Object) m)
         ));
     }
     
@@ -215,11 +281,12 @@ public class GameState implements client.observer.util.Observable {
         boolean oldValue = this.treasureCollected;
         this.treasureCollected = treasureCollected;
 
-        observerSupport.notifyObservers(new GameStateEvent(
-                this,
-                GameStateEventType.TREASURE_COLLECTED_CHANGED,
-                Optional.of(oldValue),
-                Optional.of(this.treasureCollected)
+        treasureCollectedChanges.publish(new Changed<>(oldValue, this.treasureCollected));
+        publish(new GameStateEvent(
+            this,
+            GameStateEventType.TREASURE_COLLECTED_CHANGED,
+            Optional.of(oldValue),
+            Optional.of(this.treasureCollected)
         ));
     }
 
@@ -231,11 +298,12 @@ public class GameState implements client.observer.util.Observable {
         boolean oldValue = this.opponentFortFound;
         this.opponentFortFound = opponentFortFound;
 
-        observerSupport.notifyObservers(new GameStateEvent(
-                this,
-                GameStateEventType.OPPONENT_FORT_FOUND_CHANGED,
-                Optional.of(oldValue),
-                Optional.of(this.opponentFortFound)
+        opponentFortFoundChanges.publish(new Changed<>(oldValue, this.opponentFortFound));
+        publish(new GameStateEvent(
+            this,
+            GameStateEventType.OPPONENT_FORT_FOUND_CHANGED,
+            Optional.of(oldValue),
+            Optional.of(this.opponentFortFound)
         ));
     }
 
@@ -249,11 +317,12 @@ public class GameState implements client.observer.util.Observable {
 
         this.treasurePosition = newPosition;
 
-        observerSupport.notifyObservers(new GameStateEvent(
-                this,
-                GameStateEventType.TREASURE_POSITION_CHANGED,
-                oldPosition.map(pos -> (Object) pos),
-                newPosition.map(pos -> (Object) pos)
+        treasurePositionChanges.publish(new Changed<>(oldPosition, newPosition));
+        publish(new GameStateEvent(
+            this,
+            GameStateEventType.TREASURE_POSITION_CHANGED,
+            oldPosition.map(pos -> (Object) pos),
+            newPosition.map(pos -> (Object) pos)
         ));
     }
     

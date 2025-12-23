@@ -3,7 +3,6 @@ package client.model.ai;
 import client.exception.AIDecisionException;
 import client.model.Direction;
 import client.model.GameState;
-import client.model.StaticColors;
 import client.model.mapper.MapNode;
 import client.view.CLIHandler;
 
@@ -53,7 +52,7 @@ final class TreasureTargetingUseCase {
 
             if (!stateHolder.isTreasureAlreadyFound()) {
                 if (CLIHandler.isGameModeReduced()) {
-                    System.out.println(StaticColors.ORANGE + "treasure found at: (" + treasureNode.getX() + "," + treasureNode.getY() + "), moving towards it." + StaticColors.RESET);
+                    System.out.println("treasure found at: (" + treasureNode.getX() + "," + treasureNode.getY() + "), moving towards it.");
                 }
                 stateHolder.setTreasureAlreadyFound(true);
             }

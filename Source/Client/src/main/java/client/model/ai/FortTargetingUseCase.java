@@ -3,7 +3,6 @@ package client.model.ai;
 import client.exception.AIDecisionException;
 import client.model.Direction;
 import client.model.GameState;
-import client.model.StaticColors;
 import client.model.mapper.MapNode;
 import client.view.CLIHandler;
 
@@ -46,7 +45,7 @@ final class FortTargetingUseCase {
 
             if (!stateHolder.isFortAlreadyFound()) {
                 if (CLIHandler.isGameModeReduced()) {
-                    System.out.println(StaticColors.PURPLE + "enemy fort found at: (" + fortNode.getX() + "," + fortNode.getY() + "), moving towards it." + StaticColors.RESET);
+                    System.out.println("enemy fort found at: (" + fortNode.getX() + "," + fortNode.getY() + "), moving towards it.");
                 }
                 stateHolder.setFortAlreadyFound(true);
             }

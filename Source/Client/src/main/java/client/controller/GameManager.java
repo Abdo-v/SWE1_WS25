@@ -43,7 +43,7 @@ public class GameManager {
     }
 
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode, GameOutput output){
-        this(state, serverBaseUrl, GameMode.fromCliValue(gameMode), output);
+        this(state, serverBaseUrl, GameMode.fromCLIValue(gameMode), output);
     }
 
     public GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){
@@ -52,7 +52,7 @@ public class GameManager {
         this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
         this.playerId = Optional.empty();
 
-        var cliHandler = GameManagerWiring.createCliHandler(gameMode);
+        var cliHandler = GameManagerWiring.createCLIHandler(gameMode);
         GameManagerWiring.wireObservers(state, cliHandler, wayFinder, dynamicView);
 
         this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
@@ -62,7 +62,7 @@ public class GameManager {
 
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
-        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView, this.gameState);
         this.playerTurnService = new PlayerTurnService();
     }
 
@@ -82,7 +82,7 @@ public class GameManager {
         this.playerId = Optional.of(playerId.getUniquePlayerID());
         this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
 
-        var cliHandler = GameManagerWiring.createCliHandler(GameMode.UNKNOWN);
+        var cliHandler = GameManagerWiring.createCLIHandler(GameMode.UNKNOWN);
         GameManagerWiring.wireObservers(this.gameState, cliHandler, wayFinder, dynamicView);
 
         this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
@@ -92,7 +92,7 @@ public class GameManager {
 
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
-        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView, this.gameState);
         this.playerTurnService = new PlayerTurnService();
     }
 
@@ -111,7 +111,7 @@ public class GameManager {
         this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
         this.playerId = Optional.empty();
 
-        var cliHandler = GameManagerWiring.createCliHandler(GameMode.UNKNOWN);
+        var cliHandler = GameManagerWiring.createCLIHandler(GameMode.UNKNOWN);
         GameManagerWiring.wireObservers(this.gameState, cliHandler, wayFinder, dynamicView);
 
         this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);
@@ -121,7 +121,7 @@ public class GameManager {
 
         this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
-        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView);
+        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView, this.gameState);
         this.playerTurnService = new PlayerTurnService();
     }
 
@@ -193,7 +193,7 @@ public class GameManager {
      * @throws GameStateException If the game state is invalid for making moves.
      */
     public void makeMove(String gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
-        makeMove(GameMode.fromCliValue(gameMode));
+        makeMove(GameMode.fromCLIValue(gameMode));
     }
 
     public void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
