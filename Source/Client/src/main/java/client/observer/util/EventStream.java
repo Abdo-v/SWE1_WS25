@@ -16,7 +16,7 @@ public final class EventStream<E> implements EventSource<E> {
 
     @Override
     public Subscription subscribe(Consumer<? super E> listener) {
-        Objects.requireNonNull(listener, "listener must not be null");
+        Objects.requireNonNull(listener, "listener is required");
         listeners.add(listener);
         return () -> listeners.remove(listener);
     }

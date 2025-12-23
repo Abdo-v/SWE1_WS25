@@ -10,7 +10,7 @@ import java.util.Objects;
 public record Changed<T>(T oldValue, T newValue) {
 
     public Changed {
-        Objects.requireNonNull(oldValue, "oldValue must not be null");
-        Objects.requireNonNull(newValue, "newValue must not be null");
+        Objects.requireNonNull(oldValue, "oldValue is required");
+        Objects.requireNonNull(newValue, "newValue is required");
     }
 }
