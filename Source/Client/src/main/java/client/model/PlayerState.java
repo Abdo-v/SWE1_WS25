@@ -75,15 +75,16 @@ public class PlayerState {
      * @param playerState The player state to update from.
      */
     public void updatePlayerState(PlayerState playerState) {
-        Optional.ofNullable(playerState)
-                .filter(state -> this.playerID.equals(state.getPlayerID()))
-                .ifPresent(state -> {
-                    this.firstName = state.getFirstName();
-                    this.lastName = state.getLastName();
-                    this.uAccount = state.getUAccount();
-                    this.status = state.getStatus();
-                    this.collectedTreasure = state.hasCollectedTreasure();
-                });
+        PlayerState requiredState = Objects.requireNonNull(playerState, "player state is required");
+        if (!this.playerID.equals(requiredState.getPlayerID())) {
+            return;
+        }
+
+        this.firstName = requiredState.getFirstName();
+        this.lastName = requiredState.getLastName();
+        this.uAccount = requiredState.getUAccount();
+        this.status = requiredState.getStatus();
+        this.collectedTreasure = requiredState.hasCollectedTreasure();
     }
 
     /**

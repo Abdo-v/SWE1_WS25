@@ -3,6 +3,7 @@ package client.observer.util;
 import client.model.GameStateEvent;
 import client.model.GameState;
 
+import java.util.Objects;
 import java.util.Optional;
 
 @FunctionalInterface
@@ -14,6 +15,6 @@ public interface Observer {
      * to preserve backwards compatibility with classic observers.
      */
     default void update(GameStateEvent event) {
-        Optional.ofNullable(event).ifPresent(e -> update(e.source()));
+        update(Objects.requireNonNull(event, "event is required").source());
     }
 }

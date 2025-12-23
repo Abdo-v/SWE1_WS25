@@ -109,7 +109,7 @@ public class GameState implements client.observer.util.Observable {
      * @param players Array of player states
      */
     public GameState(String ID, ArrayList<PlayerState> players) {
-        this(ID, players, Optional.empty());
+        this(Objects.requireNonNull(ID, "game state ID is required"), Objects.requireNonNull(players, "players are required"), Optional.empty());
     }
 
     /**
@@ -118,7 +118,7 @@ public class GameState implements client.observer.util.Observable {
      * @param ID The game state ID
      */
     public GameState(String ID) {
-        this(ID, new ArrayList<>(), Optional.empty());
+        this(Objects.requireNonNull(ID, "game state ID is required"), new ArrayList<>(), Optional.empty());
     }
 
     /**
@@ -129,7 +129,11 @@ public class GameState implements client.observer.util.Observable {
      * @param map The game map
      */
     public GameState(String ID, ArrayList<PlayerState> players, GameMap map) {
-        this(ID, players, Optional.ofNullable(map));
+        this(
+                Objects.requireNonNull(ID, "game state ID is required"),
+                Objects.requireNonNull(players, "players are required"),
+                Optional.of(Objects.requireNonNull(map, "map is required"))
+        );
     }
 
     public GameState() {
@@ -137,9 +141,9 @@ public class GameState implements client.observer.util.Observable {
     }
 
     private GameState(String ID, ArrayList<PlayerState> players, Optional<GameMap> map) {
-        this.gameStateID = ID;
-        this.players = new ArrayList<>(Optional.ofNullable(players).orElseGet(ArrayList::new));
-        this.map = Optional.ofNullable(map).orElseGet(Optional::empty);
+        this.gameStateID = Objects.requireNonNull(ID, "game state ID is required");
+        this.players = new ArrayList<>(Objects.requireNonNull(players, "players are required"));
+        this.map = Objects.requireNonNull(map, "map is required");
         this.treasureCollected = false;
         this.opponentFortFound = false;
         this.treasurePosition = Optional.empty();
@@ -157,6 +161,7 @@ public class GameState implements client.observer.util.Observable {
      * @param gameState The game state to update from
      */
     public void updateGameState(GameState gameState) {
+        GameState requiredState = Objects.requireNonNull(gameState, "game state is required");
         List<PlayerState> oldPlayers = List.copyOf(this.players);
         Optional<GameMap> oldMap = this.map;
         boolean oldTreasureCollected = this.treasureCollected;
@@ -164,15 +169,12 @@ public class GameState implements client.observer.util.Observable {
         Optional<MapNode> oldTreasurePosition = this.treasurePosition;
         Optional<MapNode> oldOpponentFortPosition = this.opponentFortPosition;
 
-        Optional.ofNullable(gameState)
-                .ifPresent(state -> {
-                    this.players = new ArrayList<>(state.getPlayers());
-                    this.map = state.getMap();
-                    this.treasureCollected = state.isTreasureCollected();
-                    this.opponentFortFound = state.isOpponentFortFound();
-                    this.treasurePosition = state.getTreasurePosition();
-                    this.opponentFortPosition = state.getOpponentFortPosition();
-                });
+        this.players = new ArrayList<>(requiredState.getPlayers());
+        this.map = requiredState.getMap();
+        this.treasureCollected = requiredState.isTreasureCollected();
+        this.opponentFortFound = requiredState.isOpponentFortFound();
+        this.treasurePosition = requiredState.getTreasurePosition();
+        this.opponentFortPosition = requiredState.getOpponentFortPosition();
 
         playerListChanges.publish(new Changed<>(oldPlayers, List.copyOf(this.players)));
         mapChanges.publish(new Changed<>(oldMap, this.map));
@@ -191,8 +193,7 @@ public class GameState implements client.observer.util.Observable {
      * @param currentPosition The current position of the player
      */
     public void processVision(MapNode currentPosition) {
-        Optional.ofNullable(currentPosition)
-                .ifPresent(position -> visionProcessor.processVision(this, position));
+        visionProcessor.processVision(this, Objects.requireNonNull(currentPosition, "current position is required"));
     }
 
     void discoverOpponentFortAt(MapNode node) {
@@ -214,7 +215,7 @@ public class GameState implements client.observer.util.Observable {
     
     public void setOpponentFortPosition(MapNode opponentFortPosition) {
         Optional<MapNode> oldPosition = this.opponentFortPosition;
-        Optional<MapNode> newPosition = Optional.ofNullable(opponentFortPosition);
+        Optional<MapNode> newPosition = Optional.of(Objects.requireNonNull(opponentFortPosition, "opponent fort position is required"));
 
         this.opponentFortPosition = newPosition;
         this.opponentFortPosition.ifPresent(ignored -> this.opponentFortFound = true);
@@ -234,7 +235,7 @@ public class GameState implements client.observer.util.Observable {
     
     public void setPlayers(ArrayList<PlayerState> players) {
         List<PlayerState> oldPlayers = List.copyOf(this.players);
-        this.players = new ArrayList<>(Optional.ofNullable(players).orElseGet(ArrayList::new));
+        this.players = new ArrayList<>(Objects.requireNonNull(players, "players are required"));
         List<PlayerState> newPlayers = List.copyOf(this.players);
 
         playerListChanges.publish(new Changed<>(oldPlayers, newPlayers));
@@ -252,7 +253,7 @@ public class GameState implements client.observer.util.Observable {
      * @param player The player to add.
      */
     public void addPlayer(PlayerState player) {
-        Optional.ofNullable(player).ifPresent(players::add);
+        players.add(Objects.requireNonNull(player, "player is required"));
     }
     
 
@@ -262,7 +263,7 @@ public class GameState implements client.observer.util.Observable {
     
     public void setMap(GameMap map) {
         Optional<GameMap> oldMap = this.map;
-        Optional<GameMap> newMap = Optional.ofNullable(map);
+        Optional<GameMap> newMap = Optional.of(Objects.requireNonNull(map, "map is required"));
 
         this.map = newMap;
 
@@ -315,7 +316,7 @@ public class GameState implements client.observer.util.Observable {
     
     public void setTreasurePosition(MapNode treasurePosition) {
         Optional<MapNode> oldPosition = this.treasurePosition;
-        Optional<MapNode> newPosition = Optional.ofNullable(treasurePosition);
+        Optional<MapNode> newPosition = Optional.of(Objects.requireNonNull(treasurePosition, "treasure position is required"));
 
         this.treasurePosition = newPosition;
 

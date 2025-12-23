@@ -23,6 +23,7 @@ public final class EventStream<E> implements EventSource<E> {
 
     /** Publish an event to all subscribers. */
     public void publish(E event) {
+        Objects.requireNonNull(event, "event is required");
         for (Consumer<? super E> listener : listeners) {
             listener.accept(event);
         }

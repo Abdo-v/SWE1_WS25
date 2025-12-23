@@ -21,17 +21,17 @@ public record GameStateEvent(
     }
 
     public GameStateEvent {
-        Objects.requireNonNull(source, "source must not be null");
-        Objects.requireNonNull(type, "type must not be null");
-        oldValue = Optional.ofNullable(oldValue).orElseGet(Optional::empty);
-        newValue = Optional.ofNullable(newValue).orElseGet(Optional::empty);
+        Objects.requireNonNull(source, "source is required");
+        Objects.requireNonNull(type, "type is required");
+        oldValue = Objects.requireNonNull(oldValue, "oldValue is required");
+        newValue = Objects.requireNonNull(newValue, "newValue is required");
     }
 
     /**
      * Type-safe accessor for {@link #oldValue()}.
      */
     public <T> Optional<T> oldValueAs(Class<T> type) {
-        Objects.requireNonNull(type, "type must not be null");
+        Objects.requireNonNull(type, "type is required");
         return oldValue.filter(type::isInstance).map(type::cast);
     }
 
@@ -39,7 +39,7 @@ public record GameStateEvent(
      * Type-safe accessor for {@link #newValue()}.
      */
     public <T> Optional<T> newValueAs(Class<T> type) {
-        Objects.requireNonNull(type, "type must not be null");
+        Objects.requireNonNull(type, "type is required");
         return newValue.filter(type::isInstance).map(type::cast);
     }
 }
