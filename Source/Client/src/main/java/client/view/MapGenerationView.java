@@ -16,8 +16,6 @@ import java.util.Objects;
  */
 public class MapGenerationView {
 
-    // Emojis for map elements are centralized in CliIcons.
-
     /**
      * Prints an emoji-based half map representation to {@link System#out}.
      *
@@ -33,7 +31,7 @@ public class MapGenerationView {
         }
 
         System.out.println("\n" + title + " (Half Map):");
-        System.out.println("Legend: " + CliIcons.GRASS + "=grass " + CliIcons.MOUNTAIN + "=mountain " + CliIcons.WATER + "=water " + CliIcons.OWN_FORT + "=fort");
+        System.out.println("Legend: " + CLIIcons.GRASS + "=grass " + CLIIcons.MOUNTAIN + "=mountain " + CLIIcons.WATER + "=water " + CLIIcons.OWN_FORT + "=fort");
         System.out.println("-------------------------");
 
         Map<String, MapNode> nodeMap = new HashMap<>();
@@ -62,22 +60,22 @@ public class MapGenerationView {
 
     private static String renderNode(MapNode node) {
         if (node == null) {
-            return CliIcons.UNKNOWN;
+            return CLIIcons.UNKNOWN;
         }
 
         if (node.isFortPresent()) {
-            return CliIcons.OWN_FORT;
+            return CLIIcons.OWN_FORT;
         }
 
         switch (node.getTerrain()) {
             case GRASS:
-                return CliIcons.GRASS;
+                return CLIIcons.GRASS;
             case MOUNTAIN:
-                return CliIcons.MOUNTAIN;
+                return CLIIcons.MOUNTAIN;
             case WATER:
-                return CliIcons.WATER;
+                return CLIIcons.WATER;
             default:
-                return CliIcons.UNKNOWN;
+                return CLIIcons.UNKNOWN;
         }
     }
 }

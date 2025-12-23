@@ -16,8 +16,6 @@ import java.util.Optional;
  */
 public class MapSnapshotView {
 
-    // Emojis for map elements are centralized in CliIcons.
-
     public void visualize(GameState gameState, MapVisualizationType mapType) {
         Objects.requireNonNull(gameState, "gameState must not be null");
         Objects.requireNonNull(mapType, "mapType must not be null");
@@ -56,14 +54,14 @@ public class MapSnapshotView {
     private void printMap(GameState state, GameMap map, int minX, int minY, int maxX, int maxY, String title) {
         System.out.println("\n" + title + " (" + (maxX + 1) + "x" + (maxY + 1) + ") - Orientation: " + map.getOrientation().getName());
         System.out.println("Legend: "
-            + CliIcons.GRASS + "=grass "
-            + CliIcons.MOUNTAIN + "=mountain "
-            + CliIcons.WATER + "=water "
-            + CliIcons.OWN_FORT + "/" + CliIcons.OPPONENT_FORT + "=fort "
-            + CliIcons.TREASURE + "=treasure "
-            + CliIcons.PLAYER + "/" + CliIcons.PLAYER_WITH_TREASURE + "=you "
-            + CliIcons.OPPONENT + "/" + CliIcons.OPPONENT_WITH_TREASURE + "=opponent "
-            + CliIcons.CLASH + "=clash");
+            + CLIIcons.GRASS + "=grass "
+            + CLIIcons.MOUNTAIN + "=mountain "
+            + CLIIcons.WATER + "=water "
+            + CLIIcons.OWN_FORT + "/" + CLIIcons.OPPONENT_FORT + "=fort "
+            + CLIIcons.TREASURE + "=treasure "
+            + CLIIcons.PLAYER + "/" + CLIIcons.PLAYER_WITH_TREASURE + "=you "
+            + CLIIcons.OPPONENT + "/" + CLIIcons.OPPONENT_WITH_TREASURE + "=opponent "
+            + CLIIcons.CLASH + "=clash");
         System.out.println("--------------------");
 
         var myState = state.getCurrentPlayerState();
@@ -106,43 +104,43 @@ public class MapSnapshotView {
             boolean opponentHasTreasure
     ) {
         if (node == null) {
-            return CliIcons.UNKNOWN;
+            return CLIIcons.UNKNOWN;
         }
 
         // Same priority order as DynamicCLIGameView
         if (myPosition.filter(pos -> pos.equals(node)).isPresent()
                 && opponentPosition.filter(pos -> pos.equals(node)).isPresent()) {
-            return CliIcons.CLASH;
+            return CLIIcons.CLASH;
         }
 
         if (myPosition.filter(pos -> pos.equals(node)).isPresent()) {
-            return myHasTreasure ? CliIcons.PLAYER_WITH_TREASURE : CliIcons.PLAYER;
+            return myHasTreasure ? CLIIcons.PLAYER_WITH_TREASURE : CLIIcons.PLAYER;
         }
 
         if (opponentPosition.filter(pos -> pos.equals(node)).isPresent()) {
-            return opponentHasTreasure ? CliIcons.OPPONENT_WITH_TREASURE : CliIcons.OPPONENT;
+            return opponentHasTreasure ? CLIIcons.OPPONENT_WITH_TREASURE : CLIIcons.OPPONENT;
         }
 
         if (!myHasTreasure && state.getTreasurePosition().filter(tp -> tp.equals(node)).isPresent()) {
-            return CliIcons.TREASURE;
+            return CLIIcons.TREASURE;
         }
 
         if (node.isFortPresent()) {
             if (state.getOwnFortPosition().filter(fp -> fp.equals(node)).isPresent()) {
-                return CliIcons.OWN_FORT;
+                return CLIIcons.OWN_FORT;
             }
-            return CliIcons.OPPONENT_FORT;
+            return CLIIcons.OPPONENT_FORT;
         }
 
         switch (node.getTerrain()) {
             case GRASS:
-                return CliIcons.GRASS;
+                return CLIIcons.GRASS;
             case MOUNTAIN:
-                return CliIcons.MOUNTAIN;
+                return CLIIcons.MOUNTAIN;
             case WATER:
-                return CliIcons.WATER;
+                return CLIIcons.WATER;
             default:
-                return CliIcons.UNKNOWN;
+                return CLIIcons.UNKNOWN;
         }
     }
 }
