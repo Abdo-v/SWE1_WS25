@@ -9,6 +9,9 @@ import client.view.GameOutput;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+import java.util.Optional;
+
 
 // please note that most methodes are made
 // public to allow easy testing with JUnit 5,
@@ -147,11 +150,12 @@ public class MainClient {
      * @throws ConfigurationException if the game mode is invalid
      */
     public static void validateGameMode(String gameMode) throws ConfigurationException {
-        if (gameMode == null || gameMode.trim().isEmpty()) {
+        String normalizedMode = Objects.requireNonNullElse(gameMode, "").trim();
+        if (normalizedMode.isEmpty()) {
             throw new ConfigurationException(
-                "Game mode cannot be null or empty",
+                "Game mode is required",
                 "gameMode",
-                gameMode,
+                normalizedMode,
                 new String[]{"TR", "TRR", "ATTR"}
             );
         }
@@ -159,7 +163,7 @@ public class MainClient {
         String[] validModes = {"TR", "TRR", "ATTR"};
         boolean isValid = false;
         for (String validMode : validModes) {
-            if (validMode.equals(gameMode)) {
+            if (validMode.equals(normalizedMode)) {
                 isValid = true;
                 break;
             }
@@ -169,7 +173,7 @@ public class MainClient {
             throw new ConfigurationException(
                 "Invalid game mode provided",
                 "gameMode",
-                gameMode,
+                normalizedMode,
                 validModes
             );
         }
@@ -282,38 +286,41 @@ public class MainClient {
      */
     /* LOGGING DISABLED
     public static void validateLogFilePath(String filePath) throws ConfigurationException {
-        if (filePath == null || filePath.trim().isEmpty()) {
+        String normalizedPath = Objects.requireNonNullElse(filePath, "").trim();
+        if (normalizedPath.isEmpty()) {
             throw new ConfigurationException(
-                "Log file path cannot be null or empty",
+                "Log file path is required",
                 "log-file",
-                filePath,
+                normalizedPath,
                 new String[]{"logs/my-game.log", "debug.log", "/path/to/game.log"}
             );
         }
         
         // Check if the parent directory can be created
-        java.io.File file = new java.io.File(filePath);
+        java.io.File file = new java.io.File(normalizedPath);
         java.io.File parentDir = file.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            try {
-                if (!parentDir.mkdirs()) {
-                    throw new ConfigurationException(
-                        "Cannot create parent directories for log file",
-                        "log-file",
-                        filePath,
-                        new String[]{"Use existing directory", "Check write permissions"}
-                    );
-                }
-            } catch (SecurityException e) {
-                throw new ConfigurationException(
-                    "Permission denied creating log file directory: " + e.getMessage(),
-                    e,
-                    "log-file",
-                    filePath,
-                    new String[]{"Check file permissions", "Use different directory"}
-                );
-            }
-        }
+        Optional.ofNullable(parentDir)
+                .filter(dir -> !dir.exists())
+                .ifPresent(dir -> {
+                    try {
+                        if (!dir.mkdirs()) {
+                            throw new ConfigurationException(
+                                    "Cannot create parent directories for log file",
+                                    "log-file",
+                                    normalizedPath,
+                                    new String[]{"Use existing directory", "Check write permissions"}
+                            );
+                        }
+                    } catch (SecurityException e) {
+                        throw new ConfigurationException(
+                                "Permission denied creating log file directory: " + e.getMessage(),
+                                e,
+                                "log-file",
+                                normalizedPath,
+                                new String[]{"Check file permissions", "Use different directory"}
+                        );
+                    }
+                });
     }
     */
 
