@@ -60,11 +60,11 @@ public class WayFinder implements client.observer.util.Observer{
      */
     public void update(GameState state) {
         // logger.debug("WayFinder received GameState update");
-        Optional.ofNullable(state).ifPresent(this::updateFromState);
+        updateFromState(Objects.requireNonNull(state, "state is required"));
     }
 
     private void updateFromState(GameState state) {
-        this.gameState = Optional.of(Objects.requireNonNull(state, "state must not be null"));
+        this.gameState = Optional.of(Objects.requireNonNull(state, "state is required"));
 
         wayHelper.update(state);
         stateHolder.update(state);

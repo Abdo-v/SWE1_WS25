@@ -49,7 +49,7 @@ public class GameManager {
     public GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){
         this.gameState = Objects.requireNonNull(state, "state is required");
         this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), this.gameState.getGameStateID());
-        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+        this.output = Objects.requireNonNull(output, "output is required");
         this.playerId = Optional.empty();
 
         var cliHandler = GameManagerWiring.createCLIHandler(gameMode);
@@ -80,7 +80,7 @@ public class GameManager {
         this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), Objects.requireNonNull(gameId, "gameId is required"), Objects.requireNonNull(playerId, "playerId is required"));
         this.gameState = new client.model.GameState(gameId);
         this.playerId = Optional.of(playerId.getUniquePlayerID());
-        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+        this.output = Objects.requireNonNull(output, "output is required");
 
         var cliHandler = GameManagerWiring.createCLIHandler(GameMode.UNKNOWN);
         GameManagerWiring.wireObservers(this.gameState, cliHandler, wayFinder, dynamicView);
@@ -108,7 +108,7 @@ public class GameManager {
     public GameManager(String gameId, String serverBaseUrl, GameOutput output) {
         this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), Objects.requireNonNull(gameId, "gameId is required"));
         this.gameState = new client.model.GameState(gameId);
-        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+        this.output = Objects.requireNonNull(output, "output is required");
         this.playerId = Optional.empty();
 
         var cliHandler = GameManagerWiring.createCLIHandler(GameMode.UNKNOWN);

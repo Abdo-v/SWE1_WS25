@@ -151,18 +151,18 @@ public class GameStateException extends RuntimeException {
             java.util.Optional<String> expectedState
     ) {
         StringBuilder sb = new StringBuilder("Game State Error: ").append(message);
-        java.util.Optional.ofNullable(gameStateId).orElse(java.util.Optional.empty())
-                .filter(id -> !id.isBlank())
-                .ifPresent(id -> sb.append(" [Game: ").append(id).append("]"));
-        java.util.Optional.ofNullable(operation).orElse(java.util.Optional.empty())
-                .filter(op -> !op.isBlank())
-                .ifPresent(op -> sb.append(" [Operation: ").append(op).append("]"));
-        java.util.Optional.ofNullable(currentState).orElse(java.util.Optional.empty())
-                .filter(st -> !st.isBlank())
-                .ifPresent(st -> sb.append(" [Current State: ").append(st).append("]"));
-        java.util.Optional.ofNullable(expectedState).orElse(java.util.Optional.empty())
-                .filter(st -> !st.isBlank())
-                .ifPresent(st -> sb.append(" [Expected State: ").append(st).append("]"));
+        java.util.Objects.requireNonNull(gameStateId, "gameStateId is required")
+            .filter(id -> !id.isBlank())
+            .ifPresent(id -> sb.append(" [Game: ").append(id).append("]"));
+        java.util.Objects.requireNonNull(operation, "operation is required")
+            .filter(op -> !op.isBlank())
+            .ifPresent(op -> sb.append(" [Operation: ").append(op).append("]"));
+        java.util.Objects.requireNonNull(currentState, "currentState is required")
+            .filter(st -> !st.isBlank())
+            .ifPresent(st -> sb.append(" [Current State: ").append(st).append("]"));
+        java.util.Objects.requireNonNull(expectedState, "expectedState is required")
+            .filter(st -> !st.isBlank())
+            .ifPresent(st -> sb.append(" [Expected State: ").append(st).append("]"));
         return sb.toString();
     }
     

@@ -25,7 +25,7 @@ final class MoveExecutionService {
     MoveExecutionService(NetworkCenter networkCenter, WayFinder wayFinder, GameOutput output) {
         this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
         this.wayFinder = Objects.requireNonNull(wayFinder, "wayFinder is required");
-        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+        this.output = Objects.requireNonNull(output, "output is required");
     }
 
     void makeMove(GameState gameState, String playerId, GameMode gameMode)

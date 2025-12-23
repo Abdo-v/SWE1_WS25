@@ -30,7 +30,7 @@ public class HalfMapService {
     public HalfMapService(NetworkCenter networkCenter, CLIHandler cliHandler, GameOutput output) {
         this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
         this.cliHandler = Objects.requireNonNull(cliHandler, "cliHandler is required");
-        this.output = Optional.ofNullable(output).orElseGet(NoOpGameOutput::new);
+        this.output = Objects.requireNonNull(output, "output is required");
         this.mapValidator = new MapValidator();
         this.mapGenerationView = new MapGenerationView();
         this.mapValidationInternalsView = new MapValidationInternalsView();
@@ -40,7 +40,7 @@ public class HalfMapService {
      * Generates, validates, and sends the player's half map to the server.
      */
     public void generateAndSendHalfMap(String playerId, String gameStateId) throws GameCommunicationException, GameStateException {
-        String safeGameStateId = Optional.ofNullable(gameStateId).filter(id -> !id.isBlank()).orElse("unknown");
+        String safeGameStateId = Objects.requireNonNull(gameStateId, "gameStateId is required").isBlank() ? "unknown" : gameStateId;
         String safePlayerId = Optional.ofNullable(playerId).filter(id -> !id.isBlank()).orElseThrow(() -> new GameStateException(
                 "Cannot generate half map: player ID is missing",
                 safeGameStateId,

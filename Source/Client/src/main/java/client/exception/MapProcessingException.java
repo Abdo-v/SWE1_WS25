@@ -1,5 +1,6 @@
 package client.exception;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -187,18 +188,18 @@ public class MapProcessingException extends Exception {
             Optional<String> coordinateContext
     ) {
         StringBuilder sb = new StringBuilder("Map Processing Error: ").append(message);
-        Optional.ofNullable(mapType).orElse(Optional.empty())
-                .filter(value -> !value.isBlank())
-                .ifPresent(value -> sb.append(" [Map Type: ").append(value).append("]"));
-        Optional.ofNullable(processingStage).orElse(Optional.empty())
-                .filter(value -> !value.isBlank())
-                .ifPresent(value -> sb.append(" [Stage: ").append(value).append("]"));
+        Objects.requireNonNull(mapType, "mapType is required")
+            .filter(value -> !value.isBlank())
+            .ifPresent(value -> sb.append(" [Map Type: ").append(value).append("]"));
+        Objects.requireNonNull(processingStage, "processingStage is required")
+            .filter(value -> !value.isBlank())
+            .ifPresent(value -> sb.append(" [Stage: ").append(value).append("]"));
         if (expectedNodes > 0 && actualNodes >= 0) {
             sb.append(" [Expected Nodes: ").append(expectedNodes).append(", Actual: ").append(actualNodes).append("]");
         }
-        Optional.ofNullable(coordinateContext).orElse(Optional.empty())
-                .filter(value -> !value.isBlank())
-                .ifPresent(value -> sb.append(" [Coordinates: ").append(value).append("]"));
+        Objects.requireNonNull(coordinateContext, "coordinateContext is required")
+            .filter(value -> !value.isBlank())
+            .ifPresent(value -> sb.append(" [Coordinates: ").append(value).append("]"));
         return sb.toString();
     }
     
