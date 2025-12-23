@@ -14,7 +14,7 @@ public class ClientStartupView {
     }
 
     public void showStartupBanner(String serverBaseUrl, String gameId, String gameMode) {
-        showStartupBanner(serverBaseUrl, gameId, GameMode.fromCliValue(gameMode));
+        showStartupBanner(serverBaseUrl, gameId, GameMode.fromCLIValue(gameMode));
     }
 
     public void showStartupBanner(String serverBaseUrl, String gameId, GameMode gameMode) {

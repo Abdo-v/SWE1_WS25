@@ -31,7 +31,7 @@ public enum GameMode {
         return this == TR || this == ATTR;
     }
 
-    public static GameMode fromCliValue(String value) {
+    public static GameMode fromCLIValue(String value) {
         return Optional.ofNullable(value)
                 .map(v -> v.trim().toUpperCase(Locale.ROOT))
                 .flatMap(normalized -> {

@@ -21,7 +21,7 @@ final class GameVisualizationService {
     }
 
     void visualizeMap(String mapType) {
-        visualizeMap(MapVisualizationType.fromCliValue(mapType));
+        visualizeMap(MapVisualizationType.fromCLIValue(mapType));
     }
 
     void visualizeMap(MapVisualizationType mapType) {

@@ -18,7 +18,7 @@ public enum MapVisualizationType {
         return cliValue;
     }
 
-    public static MapVisualizationType fromCliValue(String value) {
+    public static MapVisualizationType fromCLIValue(String value) {
         if (value == null) {
             return UNKNOWN;
         }

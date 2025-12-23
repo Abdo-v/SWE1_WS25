@@ -18,7 +18,7 @@ final class GameManagerWiring {
     private GameManagerWiring() {
     }
 
-    static CLIHandler createCliHandler(GameMode gameMode) {
+    static CLIHandler createCLIHandler(GameMode gameMode) {
         return new CLIHandler(Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN));
     }
 

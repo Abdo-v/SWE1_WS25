@@ -27,7 +27,7 @@ public class GameLoopService {
     }
 
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
-        startGameLoop(GameMode.fromCliValue(gameMode));
+        startGameLoop(GameMode.fromCLIValue(gameMode));
     }
 
     public void startGameLoop(GameMode gameMode) throws GameCommunicationException, GameStateException {
