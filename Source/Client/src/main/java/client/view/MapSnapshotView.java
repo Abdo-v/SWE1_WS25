@@ -53,16 +53,8 @@ public class MapSnapshotView {
 
     private void printMap(GameState state, GameMap map, int minX, int minY, int maxX, int maxY, String title) {
         System.out.println("\n" + title + " (" + (maxX + 1) + "x" + (maxY + 1) + ") - Orientation: " + map.getOrientation().getName());
-        System.out.println("Legend: "
-            + CLIIcons.GRASS + "=grass "
-            + CLIIcons.MOUNTAIN + "=mountain "
-            + CLIIcons.WATER + "=water "
-            + CLIIcons.OWN_FORT + "/" + CLIIcons.OPPONENT_FORT + "=fort "
-            + CLIIcons.TREASURE + "=treasure "
-            + CLIIcons.PLAYER + "/" + CLIIcons.PLAYER_WITH_TREASURE + "=you "
-            + CLIIcons.OPPONENT + "/" + CLIIcons.OPPONENT_WITH_TREASURE + "=opponent "
-            + CLIIcons.CLASH + "=clash");
-        System.out.println("--------------------");
+        System.out.println(CLILegends.fullMapLegend());
+        System.out.println(CLITexts.SEPARATOR_SHORT);
 
         var myState = state.getCurrentPlayerState();
         var opponentState = state.getEnemyPlayerState();
@@ -82,7 +74,7 @@ public class MapSnapshotView {
                     node = null;
                 }
 
-                row.append(renderCell(state, node, myPosition, opponentPosition, myHasTreasure, opponentHasTreasure));
+                row.append(MapCellRenderer.renderCell(state, node, myPosition, opponentPosition, myHasTreasure, opponentHasTreasure));
 
                 if (x < maxX) {
                     row.append(' ');
@@ -92,55 +84,6 @@ public class MapSnapshotView {
             System.out.println(row);
         }
 
-        System.out.println("--------------------");
-    }
-
-    private String renderCell(
-            GameState state,
-            MapNode node,
-            Optional<MapNode> myPosition,
-            Optional<MapNode> opponentPosition,
-            boolean myHasTreasure,
-            boolean opponentHasTreasure
-    ) {
-        if (node == null) {
-            return CLIIcons.UNKNOWN;
-        }
-
-        // Same priority order as DynamicCLIGameView
-        if (myPosition.filter(pos -> pos.equals(node)).isPresent()
-                && opponentPosition.filter(pos -> pos.equals(node)).isPresent()) {
-            return CLIIcons.CLASH;
-        }
-
-        if (myPosition.filter(pos -> pos.equals(node)).isPresent()) {
-            return myHasTreasure ? CLIIcons.PLAYER_WITH_TREASURE : CLIIcons.PLAYER;
-        }
-
-        if (opponentPosition.filter(pos -> pos.equals(node)).isPresent()) {
-            return opponentHasTreasure ? CLIIcons.OPPONENT_WITH_TREASURE : CLIIcons.OPPONENT;
-        }
-
-        if (!myHasTreasure && state.getTreasurePosition().filter(tp -> tp.equals(node)).isPresent()) {
-            return CLIIcons.TREASURE;
-        }
-
-        if (node.isFortPresent()) {
-            if (state.getOwnFortPosition().filter(fp -> fp.equals(node)).isPresent()) {
-                return CLIIcons.OWN_FORT;
-            }
-            return CLIIcons.OPPONENT_FORT;
-        }
-
-        switch (node.getTerrain()) {
-            case GRASS:
-                return CLIIcons.GRASS;
-            case MOUNTAIN:
-                return CLIIcons.MOUNTAIN;
-            case WATER:
-                return CLIIcons.WATER;
-            default:
-                return CLIIcons.UNKNOWN;
-        }
+        System.out.println(CLITexts.SEPARATOR_SHORT);
     }
 }

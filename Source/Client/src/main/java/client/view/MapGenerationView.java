@@ -31,8 +31,8 @@ public class MapGenerationView {
         }
 
         System.out.println("\n" + title + " (Half Map):");
-        System.out.println("Legend: " + CLIIcons.GRASS + "=grass " + CLIIcons.MOUNTAIN + "=mountain " + CLIIcons.WATER + "=water " + CLIIcons.OWN_FORT + "=fort");
-        System.out.println("-------------------------");
+        System.out.println(CLILegends.halfMapLegend());
+        System.out.println(CLITexts.SEPARATOR_HALF_MAP);
 
         Map<String, MapNode> nodeMap = new HashMap<>();
         for (MapNode node : halfMap.getMapNodes()) {
@@ -55,7 +55,7 @@ public class MapGenerationView {
             System.out.println(row);
         }
 
-        System.out.println("-------------------------");
+        System.out.println(CLITexts.SEPARATOR_HALF_MAP);
     }
 
     private static String renderNode(MapNode node) {

@@ -105,7 +105,7 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
         var myState = currentGameState.getCurrentPlayerState();
         var opponentState = currentGameState.getEnemyPlayerState();
 
-        out.println("--- Game State ---"); lines++;
+        out.println(CLITexts.GAME_STATE_HEADER); lines++;
 
         if (myState.isPresent()) {
             final boolean myHasTreasure = myState.get().hasCollectedTreasure();
@@ -144,7 +144,7 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
             out.println(); lines++;
             out.println(CLIIcons.OPPONENT + " Opponent: Data N/A"); lines++;
         }
-        out.println("--------------------"); lines++;
+        out.println(CLITexts.GAME_STATE_FOOTER); lines++;
         return lines;
     }
 
@@ -154,7 +154,7 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
         
         var mapOptional = currentGameState.getMap();
         if (mapOptional.isEmpty()) {
-            out.println("Map data not available."); lines++;
+            out.println(CLITexts.MAP_NOT_AVAILABLE); lines++;
             return lines;
         }
 
@@ -166,7 +166,7 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
         // The loop condition should be r <= mapHeight if mapHeight is the max index (e.g., 0 to 4 for 5 rows)
         // The loop condition should be c <= mapWidth if mapWidth is the max index
         if (mapHeight < 0 || mapWidth < 0) { // Adjusted check for 0-indexed max
-             out.println("Map dimensions are invalid (max indices are negative)."); lines++;
+             out.println(CLITexts.MAP_DIMENSIONS_INVALID); lines++;
              return lines;
         }
 
@@ -200,47 +200,6 @@ public class DynamicCLIGameView implements client.observer.util.Observer {
         final boolean myHasTreasure = myPlayerState.map(PlayerState::hasCollectedTreasure).orElse(false);
         final boolean opponentHasTreasure = opponentState.map(PlayerState::hasCollectedTreasure).orElse(false);
 
-        // Priority 1: Clash
-        if (myPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()
-                && opponentPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()) {
-            return CLIIcons.CLASH;
-        }
-
-        // Priority 2: Player
-        if (myPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()) {
-            return myHasTreasure ? CLIIcons.PLAYER_WITH_TREASURE : CLIIcons.PLAYER;
-        }
-
-        // Priority 3: Opponent
-        if (opponentPosition.filter(pos -> pos.equals(currentCellNode)).isPresent()) {
-            return opponentHasTreasure ? CLIIcons.OPPONENT_WITH_TREASURE : CLIIcons.OPPONENT;
-        }
-        
-        MapNode node = currentCellNode; // We already fetched it
-
-        // Priority 4: Treasure
-        final boolean treasureAlreadyCollected = myHasTreasure;
-
-        if (!treasureAlreadyCollected
-            && fullGameState.getTreasurePosition().filter(tp -> tp.equals(node)).isPresent()) {
-            return CLIIcons.TREASURE;
-        }
-
-        // Priority 5: Forts
-        if (node.isFortPresent()) {
-            if (myPlayerState.isPresent() && fullGameState.getOwnFortPosition().filter(fp -> fp.equals(node)).isPresent()) {
-                return CLIIcons.OWN_FORT;
-            } else {
-                return CLIIcons.OPPONENT_FORT;
-            }
-        }
-        
-        // Priority 6: Terrain
-        switch (node.getTerrain()) {
-            case GRASS: return CLIIcons.GRASS;
-            case MOUNTAIN: return CLIIcons.MOUNTAIN;
-            case WATER: return CLIIcons.WATER;
-            default: return CLIIcons.UNKNOWN;
-        }
+        return MapCellRenderer.renderCell(fullGameState, currentCellNode, myPosition, opponentPosition, myHasTreasure, opponentHasTreasure);
     }
 }
