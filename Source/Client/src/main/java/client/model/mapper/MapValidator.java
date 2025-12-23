@@ -2,6 +2,7 @@ package client.model.mapper;
 
 import client.model.common.Notification;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -13,22 +14,54 @@ public class MapValidator {
     private static final double MIN_WATER_PERCENTAGE = 0.14;
     private static final double FORT_PERCENTAGE = 0.02; // Default: 1 fort (castle)
 
+    private final List<HalfMapValidationRule> halfMapRules;
+    private final List<CrossHalfMapValidationRule> crossHalfMapRules;
+
+    /**
+     * Creates a MapValidator with the default rule set.
+     */
+    public MapValidator() {
+        this(
+                MapValidationRuleSets.defaultHalfMapRules(
+                        HALF_MAP_TOTAL_NODES,
+                        MIN_MOUNTAIN_PERCENTAGE,
+                        MIN_GRASS_PERCENTAGE,
+                        MIN_WATER_PERCENTAGE,
+                        FORT_PERCENTAGE),
+                MapValidationRuleSets.defaultCrossHalfMapRules()
+        );
+    }
+
+    /**
+     * Creates a MapValidator with injected rule sets (OCP-friendly extension point).
+     *
+     * <p>To add new business rules, provide additional {@link HalfMapValidationRule} and/or
+     * {@link CrossHalfMapValidationRule} implementations.
+     */
+    public MapValidator(List<HalfMapValidationRule> halfMapRules, List<CrossHalfMapValidationRule> crossHalfMapRules) {
+        this.halfMapRules = List.copyOf(Objects.requireNonNull(halfMapRules, "halfMapRules"));
+        this.crossHalfMapRules = List.copyOf(Objects.requireNonNull(crossHalfMapRules, "crossHalfMapRules"));
+    }
+
     /**
      * Validates a PlayerHalfMap according to game rules and structural requirements.
      * Performs comprehensive validation including:
-        * - Structural integrity (presence checks, node count, coordinates)
-    * - Map dimensions (WIDTHxHEIGHT or HEIGHTxWIDTH)
+     * - Structural integrity (presence checks, node count, coordinates)
+     * - Map dimensions (WIDTHxHEIGHT or HEIGHTxWIDTH)
      * - Terrain distribution (minimum percentages for each terrain type)
-    * - Fort placement and count
+     * - Fort placement and count
      * - Reachability of all walkable nodes
      * - Edge walkability requirements
-     * 
+     *
+     * <p>The concrete business rules are implemented as rule objects and orchestrated in phases
+     * (basic vs. advanced) to support the Open-Closed Principle.
+     *
      * @param halfMap The PlayerHalfMap to validate
      * @return A Notification object containing any validation errors found
      */
     public Notification validate(PlayerHalfMap halfMap) {
         Notification notification = new Notification();
-        if (Objects.isNull(halfMap)) {
+        if (Optional.ofNullable(halfMap).isEmpty()) {
             notification.addError("PlayerHalfMap must be provided.");
             return notification;
         }
@@ -46,35 +79,37 @@ public class MapValidator {
         int maxX = bounds.maxX();
         int maxY = bounds.maxY();
 
-        HalfMapTerrainValidator.validateTerrainAndFort(
-                halfMap,
-                notification,
-                HALF_MAP_TOTAL_NODES,
-                MIN_MOUNTAIN_PERCENTAGE,
-                MIN_GRASS_PERCENTAGE,
-                MIN_WATER_PERCENTAGE,
-                FORT_PERCENTAGE);
-        
-        // Only proceed with complex validations if basic structure and terrain are okay
+        HalfMapValidationContext context = new HalfMapValidationContext(maxX, maxY);
+
+        runHalfMapRules(HalfMapRulePhase.BASIC, halfMap, context, notification);
+
+        // Only proceed with expensive validations if basic rules are okay.
         if (!notification.hasErrors()) {
-            HalfMapReachabilityValidator.validateReachability(
-                    halfMap,
-                    notification,
-                    maxX,
-                    maxY,
-                    MIN_GRASS_PERCENTAGE,
-                    MIN_MOUNTAIN_PERCENTAGE);
-            HalfMapEdgeValidator.validateEdgeConstraints(halfMap, notification, maxX, maxY);
+            runHalfMapRules(HalfMapRulePhase.ADVANCED, halfMap, context, notification);
         }
 
         return notification;
+    }
+
+    private void runHalfMapRules(
+            HalfMapRulePhase phase,
+            PlayerHalfMap halfMap,
+            HalfMapValidationContext context,
+            Notification notification
+    ) {
+        Objects.requireNonNull(phase, "phase");
+        for (HalfMapValidationRule rule : halfMapRules) {
+            if (rule.phase() == phase) {
+                rule.validate(halfMap, context, notification);
+            }
+        }
     }
 
     /**
      * Validates a PlayerHalfMap and also checks edge-crossing compatibility with an existing half-map.
      * This is intended for the client that generates the second half-map.
      *
-    * Rule: For each edge of the new half-map, at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of edge fields must allow a successful
+     * Rule: For each edge of the new half-map, at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of edge fields must allow a successful
      * transition to the corresponding opposite edge of the existing half-map (walkable on both sides).
      *
      * Pairings checked:
@@ -89,7 +124,12 @@ public class MapValidator {
             return notification;
         }
 
-        PlayerHalfMap existing = Objects.requireNonNull(existingHalfMap, "existingHalfMap is required");
+        Optional<PlayerHalfMap> existingHalfMapOpt = Optional.ofNullable(existingHalfMap);
+        if (existingHalfMapOpt.isEmpty()) {
+            return notification;
+        }
+
+        PlayerHalfMap existing = existingHalfMapOpt.get();
 
         int[] newDims = HalfMapDimensionUtil.determineDimensions(newHalfMap);
         int[] existingDims = HalfMapDimensionUtil.determineDimensions(existing);
@@ -103,7 +143,11 @@ public class MapValidator {
 
         int maxX = newDims[0] - 1;
         int maxY = newDims[1] - 1;
-        HalfMapEdgeValidator.validateEdgeCrossingCompatibility(newHalfMap, existing, notification, maxX, maxY);
+
+        CrossHalfMapValidationContext context = new CrossHalfMapValidationContext(maxX, maxY);
+        for (CrossHalfMapValidationRule rule : crossHalfMapRules) {
+            rule.validate(newHalfMap, existing, context, notification);
+        }
         return notification;
     }
 }

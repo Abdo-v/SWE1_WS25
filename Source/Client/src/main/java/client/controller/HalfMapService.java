@@ -7,7 +7,7 @@ import client.exception.GameStateException;
 import client.exception.Operation;
 import client.model.common.Notification;
 import client.model.mapper.HalfMapDimensions;
-import client.model.mapper.MapGenerator;
+import client.model.mapper.generator.MapGenerator;
 import client.model.mapper.MapValidator;
 import client.model.mapper.PlayerHalfMap;
 import client.view.CLIHandler;
