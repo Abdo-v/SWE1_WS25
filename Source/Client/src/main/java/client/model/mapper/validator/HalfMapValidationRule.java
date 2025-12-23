@@ -1,15 +1,12 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
 import client.model.common.Notification;
+import client.model.mapper.PlayerHalfMap;
 
 import java.util.Objects;
 
 /**
  * A single half-map business rule.
- *
- * <p>Rules are designed to follow the Open-Closed Principle (OCP):
- * add a new rule by introducing a new implementation and registering it, without
- * modifying the {@link MapValidator} orchestration.
  */
 interface HalfMapValidationRule {
 

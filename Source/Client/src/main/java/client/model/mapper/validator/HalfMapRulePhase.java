@@ -1,4 +1,4 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
 /**
  * Validation phases used by {@link MapValidator} to keep fast/basic checks separate from

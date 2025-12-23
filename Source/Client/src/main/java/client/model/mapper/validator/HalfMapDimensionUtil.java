@@ -1,7 +1,10 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
-import java.util.Objects;
+import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
+
 import java.util.List;
+import java.util.Objects;
 
 final class HalfMapDimensionUtil {
     private HalfMapDimensionUtil() {

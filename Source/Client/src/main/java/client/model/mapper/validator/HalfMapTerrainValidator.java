@@ -1,6 +1,9 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
 import client.model.common.Notification;
+import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
+import client.model.mapper.Terrain;
 
 import java.util.List;
 import java.util.Objects;

@@ -1,6 +1,8 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
 import client.model.common.Notification;
+import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
 
 import java.util.HashSet;
 import java.util.LinkedList;

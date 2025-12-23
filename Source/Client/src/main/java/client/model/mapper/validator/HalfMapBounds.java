@@ -1,4 +1,4 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
 final class HalfMapBounds {
     private final int maxX;

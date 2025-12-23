@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import client.model.common.Notification;
 import client.model.mapper.HalfMapDimensions;
 import client.model.mapper.MapNode;
-import client.model.mapper.MapValidator;
+import client.model.mapper.validator.MapValidator;
 import client.model.mapper.PlayerHalfMap;
 import client.model.mapper.Terrain;
 

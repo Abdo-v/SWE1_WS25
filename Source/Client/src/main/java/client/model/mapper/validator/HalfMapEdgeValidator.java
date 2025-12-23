@@ -1,6 +1,7 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
 import client.model.common.Notification;
+import client.model.mapper.PlayerHalfMap;
 
 final class HalfMapEdgeValidator {
     private HalfMapEdgeValidator() {

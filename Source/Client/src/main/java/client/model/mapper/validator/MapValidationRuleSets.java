@@ -1,12 +1,9 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
 import java.util.List;
 
 /**
  * Central registration point for map validation rules.
- *
- * <p>To extend validation, register additional rules here (or inject custom rule lists via
- * {@link MapValidator#MapValidator(List, List)}).
  */
 final class MapValidationRuleSets {
 

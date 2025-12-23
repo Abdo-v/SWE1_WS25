@@ -3,7 +3,7 @@ package client.model.mapper.generator;
 import client.model.common.Notification;
 import client.model.mapper.MapNode;
 import client.model.mapper.MapRules;
-import client.model.mapper.MapValidator;
+import client.model.mapper.validator.MapValidator;
 import client.model.mapper.PlayerHalfMap;
 import client.model.mapper.Terrain;
 

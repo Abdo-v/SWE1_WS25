@@ -1,11 +1,20 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
 import client.model.common.Notification;
+import client.model.mapper.HalfMapDimensions;
+import client.model.mapper.MapRules;
+import client.model.mapper.PlayerHalfMap;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Validates half-maps against map-related business rules.
+ *
+ * <p>The concrete business rules are implemented as rule objects and orchestrated in phases
+ * (basic vs. advanced) to support the Open-Closed Principle.
+ */
 public class MapValidator {
 
     private static final int HALF_MAP_TOTAL_NODES = HalfMapDimensions.TOTAL_NODES;
@@ -33,12 +42,12 @@ public class MapValidator {
     }
 
     /**
-     * Creates a MapValidator with injected rule sets (OCP-friendly extension point).
+     * Creates a MapValidator with injected rule sets.
      *
-     * <p>To add new business rules, provide additional {@link HalfMapValidationRule} and/or
-     * {@link CrossHalfMapValidationRule} implementations.
+     * <p>This constructor is intentionally package-private: rules are an internal extension point
+     * of the validator module.
      */
-    public MapValidator(List<HalfMapValidationRule> halfMapRules, List<CrossHalfMapValidationRule> crossHalfMapRules) {
+    MapValidator(List<HalfMapValidationRule> halfMapRules, List<CrossHalfMapValidationRule> crossHalfMapRules) {
         this.halfMapRules = List.copyOf(Objects.requireNonNull(halfMapRules, "halfMapRules"));
         this.crossHalfMapRules = List.copyOf(Objects.requireNonNull(crossHalfMapRules, "crossHalfMapRules"));
     }
@@ -52,9 +61,6 @@ public class MapValidator {
      * - Fort placement and count
      * - Reachability of all walkable nodes
      * - Edge walkability requirements
-     *
-     * <p>The concrete business rules are implemented as rule objects and orchestrated in phases
-     * (basic vs. advanced) to support the Open-Closed Principle.
      *
      * @param halfMap The PlayerHalfMap to validate
      * @return A Notification object containing any validation errors found
@@ -76,10 +82,7 @@ public class MapValidator {
         }
 
         HalfMapBounds bounds = boundsOpt.get();
-        int maxX = bounds.maxX();
-        int maxY = bounds.maxY();
-
-        HalfMapValidationContext context = new HalfMapValidationContext(maxX, maxY);
+        HalfMapValidationContext context = new HalfMapValidationContext(bounds.maxX(), bounds.maxY());
 
         runHalfMapRules(HalfMapRulePhase.BASIC, halfMap, context, notification);
 

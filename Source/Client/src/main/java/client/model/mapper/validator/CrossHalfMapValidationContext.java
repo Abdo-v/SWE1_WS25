@@ -1,4 +1,4 @@
-package client.model.mapper;
+package client.model.mapper.validator;
 
 /**
  * Derived values used by validations that compare a newly generated half-map
