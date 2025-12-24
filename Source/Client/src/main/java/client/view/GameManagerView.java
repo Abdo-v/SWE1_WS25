@@ -62,13 +62,13 @@ public class GameManagerView implements GameOutput {
     }
 
     @Override
-    public void showWon(PlayerState playerState, int loops, boolean showLoops) {
+    public void showWon(PlayerState playerState, int loops) {
         // Keep the signature for wiring compatibility; present user-friendly info.
         gameWonView.show(Objects.requireNonNull(playerState, "playerState is required"), loops);
     }
 
     @Override
-    public void showLost(PlayerState playerState, int loops, boolean showLoops) {
+    public void showLost(PlayerState playerState, int loops) {
         // Keep the signature for wiring compatibility; present user-friendly info.
         gameLostView.show(Objects.requireNonNull(playerState, "playerState is required"), loops);
     }
