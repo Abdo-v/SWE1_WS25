@@ -15,11 +15,4 @@ public enum Terrain {
         this.name = name;
     }
 
-    /**
-     * Gets the name of the terrain.
-     * @return The name of the terrain.
-     */
-    public String getName() {
-        return name;
-    }
 }
