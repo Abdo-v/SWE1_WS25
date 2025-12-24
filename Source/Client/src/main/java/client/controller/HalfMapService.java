@@ -21,7 +21,6 @@ import java.util.Optional;
 class HalfMapService {
 
     private final NetworkCenter networkCenter;
-    private final CLIHandler cliHandler;
     private final GameOutput output;
     private final MapValidator mapValidator;
     private final MapGenerationView mapGenerationView;
@@ -29,7 +28,6 @@ class HalfMapService {
 
     public HalfMapService(NetworkCenter networkCenter, CLIHandler cliHandler, GameOutput output) {
         this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
-        this.cliHandler = Objects.requireNonNull(cliHandler, "cliHandler is required");
         this.output = Objects.requireNonNull(output, "output is required");
         this.mapValidator = new MapValidator();
         this.mapGenerationView = new MapGenerationView();

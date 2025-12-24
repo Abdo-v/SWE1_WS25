@@ -27,19 +27,4 @@ public record GameStateEvent(
         newValue = Objects.requireNonNull(newValue, "newValue is required");
     }
 
-    /**
-     * Type-safe accessor for {@link #oldValue()}.
-     */
-    public <T> Optional<T> oldValueAs(Class<T> type) {
-        Objects.requireNonNull(type, "type is required");
-        return oldValue.filter(type::isInstance).map(type::cast);
-    }
-
-    /**
-     * Type-safe accessor for {@link #newValue()}.
-     */
-    public <T> Optional<T> newValueAs(Class<T> type) {
-        Objects.requireNonNull(type, "type is required");
-        return newValue.filter(type::isInstance).map(type::cast);
-    }
 }

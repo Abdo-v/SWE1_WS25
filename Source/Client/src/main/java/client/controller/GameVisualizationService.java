@@ -8,13 +8,11 @@ import client.view.MapSnapshotView;
 
 final class GameVisualizationService {
 
-    private final CLIHandler cliHandler;
     private final DynamicCLIGameView dynamicView;
     private final GameState gameState;
     private final MapSnapshotView snapshotView;
 
     GameVisualizationService(CLIHandler cliHandler, DynamicCLIGameView dynamicView, GameState gameState) {
-        this.cliHandler = cliHandler;
         this.dynamicView = dynamicView;
         this.gameState = gameState;
         this.snapshotView = new MapSnapshotView();

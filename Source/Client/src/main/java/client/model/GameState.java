@@ -65,13 +65,6 @@ public class GameState implements client.observer.util.Observable {
         publish(new GameStateEvent(this, Objects.requireNonNull(eventType, "event type is required")));
     }
 
-    /**
-     * Subscribe to all emitted {@link GameStateEvent}s using a lambda.
-     */
-    public EventSource<GameStateEvent> events() {
-        return events;
-    }
-
     public EventSource<Changed<Optional<GameMap>>> mapChanges() {
         return mapChanges;
     }
@@ -101,16 +94,6 @@ public class GameState implements client.observer.util.Observable {
         events.publish(requiredEvent);
         observerSupport.notifyObservers(requiredEvent);
     }
-    
-    /**
-     * Constructs a new GameState with the given ID and players.
-     * 
-     * @param ID The game state ID
-     * @param players Array of player states
-     */
-    public GameState(String ID, ArrayList<PlayerState> players) {
-        this(Objects.requireNonNull(ID, "game state ID is required"), Objects.requireNonNull(players, "players are required"), Optional.empty());
-    }
 
     /**
      * Constructs a new GameState with the given ID.
@@ -134,10 +117,6 @@ public class GameState implements client.observer.util.Observable {
                 Objects.requireNonNull(players, "players are required"),
                 Optional.of(Objects.requireNonNull(map, "map is required"))
         );
-    }
-
-    public GameState() {
-        this("default", new ArrayList<>(), Optional.empty());
     }
 
     private GameState(String ID, ArrayList<PlayerState> players, Optional<GameMap> map) {
@@ -185,16 +164,6 @@ public class GameState implements client.observer.util.Observable {
 
         publish(new GameStateEvent(this, GameStateEventType.BULK_UPDATE));
     }
-    
-    /**
-     * Process vision for the current player position based on terrain type.
-     * This method should be called whenever the player moves to a new position.
-     * 
-     * @param currentPosition The current position of the player
-     */
-    public void processVision(MapNode currentPosition) {
-        visionProcessor.processVision(this, Objects.requireNonNull(currentPosition, "current position is required"));
-    }
 
     void discoverOpponentFortAt(MapNode node) {
         this.opponentFortFound = true;
@@ -232,20 +201,6 @@ public class GameState implements client.observer.util.Observable {
     public ArrayList<PlayerState> getPlayers() {
         return players;
     }
-    
-    public void setPlayers(ArrayList<PlayerState> players) {
-        List<PlayerState> oldPlayers = List.copyOf(this.players);
-        this.players = new ArrayList<>(Objects.requireNonNull(players, "players are required"));
-        List<PlayerState> newPlayers = List.copyOf(this.players);
-
-        playerListChanges.publish(new Changed<>(oldPlayers, newPlayers));
-        publish(new GameStateEvent(
-            this,
-            GameStateEventType.PLAYERS_CHANGED,
-            Optional.of(oldPlayers),
-            Optional.of(newPlayers)
-        ));
-    }
 
     /**
      * Adds a player to the game state.
@@ -260,22 +215,7 @@ public class GameState implements client.observer.util.Observable {
     public Optional<GameMap> getMap() {
         return map;
     }
-    
-    public void setMap(GameMap map) {
-        Optional<GameMap> oldMap = this.map;
-        Optional<GameMap> newMap = Optional.of(Objects.requireNonNull(map, "map is required"));
 
-        this.map = newMap;
-
-        mapChanges.publish(new Changed<>(oldMap, newMap));
-        publish(new GameStateEvent(
-            this,
-            GameStateEventType.MAP_CHANGED,
-            oldMap.map(m -> (Object) m),
-            newMap.map(m -> (Object) m)
-        ));
-    }
-    
     public boolean isTreasureCollected() {
         return treasureCollected;
     }
@@ -328,25 +268,9 @@ public class GameState implements client.observer.util.Observable {
             newPosition.map(pos -> (Object) pos)
         ));
     }
-    
-    /**
-     * Gets the player state for a specific player ID.
-     * 
-     * @param playerID The ID of the player to find.
-     * @return The player's state, or empty if not found.
-     */
-    public Optional<PlayerState> getPlayerByID(String playerID) {
-        return players.stream()
-                .filter(player -> player.getPlayerID().equals(playerID))
-                .findFirst();
-    }
 
     public Optional<MapNode> getOwnFortPosition(){
         return map.flatMap(queries::getOwnFortPosition);
-    }
-
-    public Optional<MapNode> getEnemyFortPosition(){
-        return map.flatMap(queries::getEnemyFortPosition);
     }
 
     public Optional<MapNode> getEnemyCurrentPosition(){
