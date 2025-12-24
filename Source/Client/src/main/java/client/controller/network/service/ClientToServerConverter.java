@@ -12,7 +12,7 @@ import java.util.List;
 /**
  * Converts client/internal model types to network (messagesbase) types.
  */
-public class ClientToServerConverter {
+class ClientToServerConverter {
 
     private final ClientToServerTerrainConverter terrainConverter = new ClientToServerTerrainConverter();
     private final ClientToServerHalfMapNodeConverter halfMapNodeConverter = new ClientToServerHalfMapNodeConverter(terrainConverter);

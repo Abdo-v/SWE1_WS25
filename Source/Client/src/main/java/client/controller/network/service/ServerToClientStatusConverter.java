@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * Converts network (messagesbase) player game state to client/internal player status.
  */
-public class ServerToClientStatusConverter {
+class ServerToClientStatusConverter {
 
     public PlayerStatus convert(EPlayerGameState serverStatus) {
         Objects.requireNonNull(serverStatus, "Server status must be provided");

@@ -6,7 +6,7 @@ import messagesbase.messagesfromclient.ETerrain;
 /**
  * Converts network (messagesbase) terrain to client/internal terrain.
  */
-public class ServerToClientTerrainConverter {
+class ServerToClientTerrainConverter {
 
     public Terrain convert(ETerrain serverTerrain) {
         if (serverTerrain == ETerrain.Mountain) {

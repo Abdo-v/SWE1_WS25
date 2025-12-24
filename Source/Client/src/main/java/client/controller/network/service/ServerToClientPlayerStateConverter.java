@@ -7,7 +7,7 @@ import client.model.mapper.MapNode;
 /**
  * Converts a server player state to the client/internal player state.
  */
-public class ServerToClientPlayerStateConverter {
+class ServerToClientPlayerStateConverter {
 
     private final ServerToClientStatusConverter statusConverter;
 

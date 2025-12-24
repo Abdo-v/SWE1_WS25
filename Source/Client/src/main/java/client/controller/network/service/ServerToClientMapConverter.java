@@ -14,7 +14,7 @@ import java.util.Optional;
 /**
  * Converts a server full map to the client/internal game map.
  */
-public class ServerToClientMapConverter {
+class ServerToClientMapConverter {
 
     private final ServerToClientMapNodeConverter mapNodeConverter;
 

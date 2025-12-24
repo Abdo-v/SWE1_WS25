@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Converts internal map nodes to server half-map nodes.
  */
-public class ClientToServerHalfMapNodeConverter {
+class ClientToServerHalfMapNodeConverter {
 
     private final ClientToServerTerrainConverter terrainConverter;
 

@@ -11,7 +11,7 @@ import java.util.Optional;
 /**
  * Queries and extracts information from server full maps/nodes.
  */
-public class ServerToClientFullMapQueries {
+class ServerToClientFullMapQueries {
 
     private final ServerToClientTerrainConverter terrainConverter;
 

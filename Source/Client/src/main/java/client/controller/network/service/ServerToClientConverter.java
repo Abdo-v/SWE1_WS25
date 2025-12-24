@@ -11,7 +11,7 @@ import java.util.Collection;
 /**
  * Converts network (messagesbase) types to client/internal model types.
  */
-public class ServerToClientConverter {
+class ServerToClientConverter {
 
     private final ServerToClientTerrainConverter terrainConverter = new ServerToClientTerrainConverter();
     private final ServerToClientStatusConverter statusConverter = new ServerToClientStatusConverter();

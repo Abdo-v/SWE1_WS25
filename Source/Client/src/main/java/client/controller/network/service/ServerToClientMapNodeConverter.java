@@ -6,7 +6,7 @@ import messagesbase.messagesfromserver.FullMapNode;
 /**
  * Converts a server full-map node to the client/internal map node.
  */
-public class ServerToClientMapNodeConverter {
+class ServerToClientMapNodeConverter {
 
     private final ServerToClientTerrainConverter terrainConverter;
     private final ServerToClientFullMapQueries nodeQueries;

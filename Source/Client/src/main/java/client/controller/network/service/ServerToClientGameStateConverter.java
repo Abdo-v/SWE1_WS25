@@ -14,7 +14,7 @@ import java.util.Optional;
 /**
  * Converts a server game state to the client/internal game state.
  */
-public class ServerToClientGameStateConverter {
+class ServerToClientGameStateConverter {
 
     private final ServerToClientPlayerStateConverter playerStateConverter;
     private final ServerToClientMapConverter mapConverter;

@@ -6,7 +6,7 @@ import messagesbase.messagesfromclient.EMove;
 /**
  * Converts client/internal movement direction to network (messagesbase) move.
  */
-public class ClientToServerMoveConverter {
+class ClientToServerMoveConverter {
 
     public EMove convert(Direction direction) {
         if (direction == Direction.UP) {

@@ -6,7 +6,7 @@ import messagesbase.UniquePlayerIdentifier;
 /**
  * Converts the internal half map to the server message format.
  */
-public class ClientToServerHalfMapConverter {
+class ClientToServerHalfMapConverter {
 
     private final ClientToServerHalfMapNodeConverter nodeConverter;
 
