@@ -12,7 +12,7 @@ import java.util.Optional;
  * <p>Both snapshot output and dynamic output should use the same priority rules:
  * clash > player > opponent > treasure > forts > terrain.
  */
-public final class MapCellRenderer {
+final class MapCellRenderer {
 
     private MapCellRenderer() {
     }
