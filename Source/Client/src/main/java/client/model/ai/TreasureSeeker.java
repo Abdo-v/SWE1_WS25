@@ -1,17 +1,13 @@
 package client.model.ai;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import client.model.GameState;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
-import client.model.mapper.OwnToOppMapOrientation;
 import client.model.mapper.PlayerHalfMap;
-import client.model.mapper.Terrain;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -22,14 +18,6 @@ public class TreasureSeeker implements client.observer.util.Observer {
     private boolean treasureFound = false;
     private WayHelper wayHelper;
 
-    /**
-     * Constructs a TreasureSeeker with a non-null game state.
-     * @param gameState The current game state.
-     */
-    public TreasureSeeker(GameState gameState) {
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
-        this.wayHelper = new WayHelper(gameState);
-    }
     /**
      * Constructs a TreasureSeeker with no null game state.
      */
@@ -82,11 +70,6 @@ public class TreasureSeeker implements client.observer.util.Observer {
             .ifPresent(pos -> treasureFound = true);
         
         //System.err.print(StaticColors.BLUE + "T" + StaticColors.RESET);
-    }
-
-    // for testing, TDD
-    public Optional<GameState> getGameState() {
-        return gameState;
     }
 
 }
