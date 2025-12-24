@@ -31,31 +31,6 @@ public class PlayerState {
         this(ID, firstName, lastName, acc, false, Optional.empty(), DEFAULT_STATUS);
     }
 
-    /**
-     * Constructs a new PlayerState with the given parameters, including treasure collection status.
-     * @param ID The player's unique ID.
-     * @param firstName The player's first name.
-     * @param lastName The player's last name.
-     * @param acc The player's university account.
-     * @param collectedTreasure Whether the player has collected the treasure.
-     */
-    public PlayerState(String ID, String firstName, String lastName, String acc, boolean collectedTreasure) {
-        this(ID, firstName, lastName, acc, collectedTreasure, Optional.empty(), DEFAULT_STATUS);
-    }
-
-    /**
-     * Constructs a new PlayerState with the given parameters, including treasure collection status and map node.
-     * @param uniquePlayerID The player's unique ID.
-     * @param firstName2 The player's first name.
-     * @param lastName2 The player's last name.
-     * @param uAccount2 The player's university account.
-     * @param hasCollectedTreasure Whether the player has collected the treasure.
-     * @param playerMapNode The player's map node.
-     */
-    public PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, MapNode playerMapNode) {
-        this(uniquePlayerID, firstName2, lastName2, uAccount2, hasCollectedTreasure, Optional.ofNullable(playerMapNode), DEFAULT_STATUS);
-    }
-
     public PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, MapNode playerMapNode, PlayerStatus status) {
         this(uniquePlayerID, firstName2, lastName2, uAccount2, hasCollectedTreasure, Optional.ofNullable(playerMapNode), status);
     }
@@ -68,23 +43,6 @@ public class PlayerState {
         this.collectedTreasure = hasCollectedTreasure;
         this.currentPosition = Objects.requireNonNullElse(playerMapNode, Optional.empty());
         this.status = Objects.requireNonNullElse(status, DEFAULT_STATUS);
-    }
-
-    /**
-     * Updates this player state with data from another player state.
-     * @param playerState The player state to update from.
-     */
-    public void updatePlayerState(PlayerState playerState) {
-        PlayerState requiredState = Objects.requireNonNull(playerState, "player state is required");
-        if (!this.playerID.equals(requiredState.getPlayerID())) {
-            return;
-        }
-
-        this.firstName = requiredState.getFirstName();
-        this.lastName = requiredState.getLastName();
-        this.uAccount = requiredState.getUAccount();
-        this.status = requiredState.getStatus();
-        this.collectedTreasure = requiredState.hasCollectedTreasure();
     }
 
     /**
@@ -112,27 +70,11 @@ public class PlayerState {
     }
 
     /**
-     * Sets the first name of the player.
-     * @param firstName The first name of the player.
-     */
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    /**
      * Gets the last name of the player.
      * @return The last name of the player.
      */
     public String getLastName() {
         return lastName;
-    }
-
-    /**
-     * Sets the last name of the player.
-     * @param lastName The last name of the player.
-     */
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
     }
 
     /**
@@ -144,14 +86,6 @@ public class PlayerState {
     }
 
     /**
-     * Sets the university account of the player.
-     * @param uAccount The university account of the player.
-     */
-    public void setUAccount(String uAccount) {
-        this.uAccount = uAccount;
-    }
-
-    /**
      * Gets the status of the player.
      * @return The status of the player.
      */
@@ -160,27 +94,11 @@ public class PlayerState {
     }
 
     /**
-     * Sets the status of the player.
-     * @param status The status of the player.
-     */
-    public void setStatus(PlayerStatus status) {
-        this.status = status;
-    }
-
-    /**
      * Checks if the player has collected the treasure.
      * @return true if the player has collected the treasure, false otherwise.
      */
     public boolean hasCollectedTreasure() {
         return collectedTreasure;
-    }
-
-    /**
-     * Sets the treasure collected status of the player.
-     * @param collectedTreasure Whether the player has collected the treasure.
-     */
-    public void setCollectedTreasure(boolean collectedTreasure) {
-        this.collectedTreasure = collectedTreasure;
     }
 
     /**
