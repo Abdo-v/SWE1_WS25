@@ -25,7 +25,7 @@ public class WayFinder implements client.observer.util.Observer{
     private TreasureSeeker treasureSeeker;
     private FortSeeker fortSeeker;
     private StrategyGuide strategyGuide;
-    int movesMade = 0;
+    private int movesMade = 0;
     
     /**
      * Constructs a WayFinder with a given GameState.
@@ -170,7 +170,7 @@ public class WayFinder implements client.observer.util.Observer{
         return getCostToVisionRatio(node, strategy ? Objective.TREASURE : Objective.FORT);
     }
 
-    public float getCostToVisionRatio(MapNode node, Objective objective) {
+    private float getCostToVisionRatio(MapNode node, Objective objective) {
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized before scoring"));
         MapNode current = currentMapNode.orElseThrow(() -> new IllegalStateException("Current position must be initialized before scoring"));
         return logic().getCostToVisionRatio(state, current, node, objective);

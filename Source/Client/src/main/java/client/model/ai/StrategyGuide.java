@@ -80,7 +80,7 @@ public class StrategyGuide implements client.observer.util.Observer {
      * @param position The MapNode position from which to find surrounding nodes.
      * @return An ArrayList of MapNode objects representing the surrounding nodes.
      */
-    public ArrayList<MapNode> getSurroundingNodes(MapNode position) {
+    private ArrayList<MapNode> getSurroundingNodes(MapNode position) {
         if (Objects.isNull(position)) return new ArrayList<>();
         
         // logger.trace("Getting surrounding nodes for position: {}", position.printCoordinates());
