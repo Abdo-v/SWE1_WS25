@@ -11,9 +11,7 @@ import client.model.GameMode;
 import client.model.ai.WayFinder;
 import client.view.DynamicCLIGameView;
 import client.view.GameOutput;
-import client.view.MapVisualizationType;
 import client.controller.network.service.NetworkCenter;
-import client.model.mapper.GameMap;
 import messagesbase.UniquePlayerIdentifier;
 
 import java.util.Optional;
@@ -156,15 +154,6 @@ public class GameManager {
     }
 
     /**
-     * Checks if the full map is available from the server.
-     * @return true if the full map is available, false otherwise.
-     * @throws GameCommunicationException If polling fails due to network issues.
-     */
-    public boolean fullMapAvailable() throws GameCommunicationException {
-        return gameStateQueryService.isFullMapAvailable();
-    }
-
-    /**
      * Updates the game state with the latest data from the server.
      * @throws GameCommunicationException If polling fails due to network issues.
      * @throws MapProcessingException If the received data cannot be processed.
@@ -182,35 +171,6 @@ public class GameManager {
     public void waitForFullMap(Duration timeout, Duration pollInterval)
             throws GameCommunicationException, MapProcessingException, FullMapNotAvailableException {
         fullMapWaitService.waitForFullMap(this.gameState, timeout, pollInterval);
-    }
-
-    /**
-     * Polls the server for the current game state.
-     * @return The current game state from the server.
-     * @throws GameCommunicationException If polling fails due to network issues.
-     */
-    public messagesbase.messagesfromserver.GameState managerpollGameState() throws GameCommunicationException {
-        return gameStateQueryService.pollGameState();
-    }
-
-    /**
-     * Polls the server for the current player's status.
-     * @return The player's game state.
-     * @throws GameCommunicationException If polling fails due to network issues.
-     * @throws GameStateException If the player is not found in the game state.
-     */
-    public messagesbase.messagesfromserver.EPlayerGameState pollMyStatus() throws GameCommunicationException, GameStateException {
-        return gameStateQueryService.pollPlayerStatus(requirePlayerId(), requireGameStateId());
-    }
-
-    /**
-     * Makes a move using the WayFinder and sends it to the server.
-     * @throws GameCommunicationException If sending the move fails due to network issues.
-     * @throws AIDecisionException If the AI fails to determine a valid move.
-     * @throws GameStateException If the game state is invalid for making moves.
-     */
-    public void makeMove(String gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
-        makeMove(GameMode.fromCLIValue(gameMode));
     }
 
     public void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
@@ -235,41 +195,12 @@ public class GameManager {
         gameLoopService.startGameLoop(gameMode);
     }
 
-    public void startGameLoop(GameMode gameMode) throws GameCommunicationException, GameStateException {
-        gameLoopService.startGameLoop(gameMode);
-    }
-
     /**
      * Gets the current game state.
      * @return The current game state.
      */
     public client.model.GameState getGameState() {
         return gameState;
-    }
-
-    /**
-     * Sets the current game state.
-     * @param gameState The game state to set.
-     */
-    public void setGameState(client.model.GameState gameState) {
-        this.gameState = Objects.requireNonNull(gameState, "gameState is required");
-    }
-
-    /**
-     * Gets the full game map.
-     * @return The full game map.
-     */
-    public GameMap getMap() {
-        GameMap map = gameState.getMap().orElse(new GameMap());
-        return map;
-    }
-
-    /**
-     * Gets the player ID.
-     * @return The player ID.
-     */
-    public String getPlayerId() {
-        return playerId.orElse("");
     }
 
     /**
@@ -281,28 +212,7 @@ public class GameManager {
                 .filter(id -> !id.isBlank());
     }
 
-    /**
-     * Checks if the server map is empty.
-     * @return true if the server map is empty, false otherwise.
-     * @throws GameCommunicationException If polling fails due to network issues.
-     */
-    public boolean isServerMapEmpty() throws GameCommunicationException {
-        return gameStateQueryService.isServerMapEmpty();
-    }
-
-    public boolean shouldAct() {
-        return playerTurnService.shouldAct(this.gameState);
-    }
-
-    public boolean shouldWait() {
-        return playerTurnService.shouldWait(this.gameState);
-    }
-
     public void visualizeMap(String mapType) {
-        visualizationService.visualizeMap(mapType);
-    }
-
-    public void visualizeMap(MapVisualizationType mapType) {
         visualizationService.visualizeMap(mapType);
     }
 
