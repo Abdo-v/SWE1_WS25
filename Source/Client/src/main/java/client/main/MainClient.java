@@ -145,7 +145,7 @@ public class MainClient {
      * @param args Command line arguments
      * @throws ConfigurationException if arguments are insufficient or invalid
      */
-    public static void validateBasicArguments(String[] args) throws ConfigurationException {
+    private static void validateBasicArguments(String[] args) throws ConfigurationException {
         if (args.length < 2) {
             throw new ConfigurationException(
                 "Insufficient arguments provided. Expected: <gameMode> <serverBaseUrl>",
@@ -164,7 +164,7 @@ public class MainClient {
      * @param gameMode The game mode to validate
      * @throws ConfigurationException if the game mode is invalid
      */
-    public static void validateGameMode(String gameMode) throws ConfigurationException {
+    private static void validateGameMode(String gameMode) throws ConfigurationException {
         String normalizedMode = Objects.requireNonNullElse(gameMode, "").trim();
         if (normalizedMode.isEmpty()) {
             throw new ConfigurationException(
