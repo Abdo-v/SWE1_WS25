@@ -62,10 +62,6 @@ public class ClientStartupView {
         System.out.println("Starting main game loop...");
     }
 
-    public void showConfigurationError(String helpMessage) {
-        System.err.println(helpMessage);
-    }
-
     public void showConfigurationError(ConfigurationException e) {
         Objects.requireNonNull(e, "configuration exception is required");
 

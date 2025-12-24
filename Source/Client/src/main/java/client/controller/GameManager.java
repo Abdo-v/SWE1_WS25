@@ -39,10 +39,6 @@ public class GameManager {
 
     private static final String UNKNOWN_GAME_STATE_ID = "unknown";
 
-    public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode){
-        this(state, serverBaseUrl, gameMode, new client.view.GameManagerView());
-    }
-
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode, GameOutput output){
         this(state, serverBaseUrl, GameMode.fromCLIValue(gameMode), output);
     }
@@ -68,16 +64,6 @@ public class GameManager {
         this.playerTurnService = new PlayerTurnService();
     }
 
-    /**
-     * Constructs a new GameManager with the given game ID, server URL, and player ID.
-     * @param gameId The ID of the game.
-     * @param serverBaseUrl The base URL of the server.
-     * @param playerId The unique player identifier.
-     */
-    public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId) {
-        this(gameId, serverBaseUrl, playerId, new client.view.GameManagerView());
-    }
-
     private GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId, GameOutput output) {
         this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), Objects.requireNonNull(gameId, "gameId is required"), Objects.requireNonNull(playerId, "playerId is required"));
         this.gameState = new client.model.GameState(gameId);
@@ -97,15 +83,6 @@ public class GameManager {
         this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);
         this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView, this.gameState);
         this.playerTurnService = new PlayerTurnService();
-    }
-
-    /**
-     * Constructs a new GameManager with the given game ID and server URL.
-     * @param gameId The ID of the game.
-     * @param serverBaseUrl The base URL of the server.
-     */
-    public GameManager(String gameId, String serverBaseUrl) {
-        this(gameId, serverBaseUrl, new client.view.GameManagerView());
     }
 
     private GameManager(String gameId, String serverBaseUrl, GameOutput output) {
