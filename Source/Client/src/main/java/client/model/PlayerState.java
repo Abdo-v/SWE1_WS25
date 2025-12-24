@@ -60,7 +60,7 @@ public class PlayerState {
         this(uniquePlayerID, firstName2, lastName2, uAccount2, hasCollectedTreasure, Optional.ofNullable(playerMapNode), status);
     }
 
-    public PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, Optional<MapNode> playerMapNode, PlayerStatus status) {
+    private PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, Optional<MapNode> playerMapNode, PlayerStatus status) {
         this.playerID = Objects.requireNonNullElse(uniquePlayerID, "");
         this.firstName = Objects.requireNonNullElse(firstName2, "");
         this.lastName = Objects.requireNonNullElse(lastName2, "");
