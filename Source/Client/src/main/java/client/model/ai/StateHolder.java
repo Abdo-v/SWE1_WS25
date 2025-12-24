@@ -60,10 +60,6 @@ public class StateHolder implements client.observer.util.Observer {
         this.treasureAlreadyFound = treasureAlreadyFound;
     }
 
-    public boolean isTreasureAlreadyCollected() {
-        return treasureAlreadyCollected;
-    }
-
     public void setTreasureAlreadyCollected(boolean treasureAlreadyCollected) {
         this.treasureAlreadyCollected = treasureAlreadyCollected;
     }
@@ -84,7 +80,4 @@ public class StateHolder implements client.observer.util.Observer {
         this.enemyFirstTruePosition = Objects.requireNonNull(enemyFirstTruePosition, "enemyFirstTruePosition must not be null");
     }
 
-    public Optional<GameState> getGameState() {
-        return gameState;
-    }
 }

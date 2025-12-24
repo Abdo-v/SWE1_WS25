@@ -16,16 +16,7 @@ public class StrategyGuide implements client.observer.util.Observer {
 
     private Optional<GameState> gameState;
     private WayHelper wayHelper;
-    
-    /**
-     * Constructs a StrategyGuide with the given GameState.
-     * @param gameState The current game state to be used by the strategy guide.
-     */
-    public StrategyGuide(GameState gameState) {
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
-        this.wayHelper = new WayHelper(gameState);
-    }
-    
+
     /**
      * Default constructor for StrategyGuide.
      * Initializes the gameState to empty.
@@ -136,9 +127,5 @@ public class StrategyGuide implements client.observer.util.Observer {
      */
     public LinkedHashMap<MapNode,Boolean> getAllMountainFields(){
         return wayHelper.getAllMountainFields();
-    }
-    // for testing purposes, TDD
-    public Optional<GameState> getGameState() {
-        return gameState;
     }
 }
