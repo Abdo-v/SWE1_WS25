@@ -43,14 +43,8 @@ final class NoOpGameOutput implements GameOutput {
     public void showWon(PlayerState playerState, int loops) {
     }
 
-    public void showWon(PlayerState playerState, int loops, boolean showLoops) {
-    }
-
     @Override
     public void showLost(PlayerState playerState, int loops) {
-    }
-
-    public void showLost(PlayerState playerState, int loops, boolean showLoops) {
     }
 
     @Override
