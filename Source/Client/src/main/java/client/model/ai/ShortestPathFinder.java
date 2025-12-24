@@ -16,10 +16,6 @@ public class ShortestPathFinder implements client.observer.util.Observer {
     // private static final Logger logger = LoggerFactory.getLogger(ShortestPathFinder.class);
     private Optional<GameState> gameState;
 
-    public ShortestPathFinder(GameState gameState) {
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
-    }
-
     public ShortestPathFinder() {
         this.gameState = Optional.empty();
     }
@@ -162,10 +158,6 @@ public class ShortestPathFinder implements client.observer.util.Observer {
         // logger.trace("ShortestPathFinder received GameState update");
           this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
         //System.out.print(StaticColors.BLUE + "S" + StaticColors.RESET);
-    }
-    // for testing purposes, TDD
-     public Optional<GameState> getGameState() {
-         return gameState;
     }
 
 }
