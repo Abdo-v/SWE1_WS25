@@ -16,10 +16,6 @@ final class MapEssentials {
     private int maxY;
     private final ArrayList<MapNode> nodes;
 
-    public MapEssentials() {
-        this(new ArrayList<>(), 0, 0);
-    }
-
     public MapEssentials(List<MapNode> initialNodes, int maxX, int maxY) {
         Objects.requireNonNull(initialNodes, "initialNodes");
         for (MapNode node : initialNodes) {
@@ -42,36 +38,17 @@ final class MapEssentials {
      * Returns an unmodifiable view of the current nodes.
      *
      * <p>This prevents callers from mutating internal state without updating bounds/invariants.
-     * Use {@link #addNode(MapNode)} or {@link #setNodes(List)} to mutate.
      */
     public List<MapNode> getNodes() {
         return Collections.unmodifiableList(nodes);
-    }
-
-    public void setNodes(List<MapNode> newNodes) {
-        Objects.requireNonNull(newNodes, "newNodes");
-        for (MapNode node : newNodes) {
-            Objects.requireNonNull(node, "node");
-        }
-        nodes.clear();
-        nodes.addAll(newNodes);
-        recomputeBoundsFromNodes();
     }
 
     public int getMaxX() {
         return maxX;
     }
 
-    public void setMaxX(int maxX) {
-        this.maxX = maxX;
-    }
-
     public int getMaxY() {
         return maxY;
-    }
-
-    public void setMaxY(int maxY) {
-        this.maxY = maxY;
     }
 
     public int size() {
