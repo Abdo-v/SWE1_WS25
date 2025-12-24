@@ -47,7 +47,7 @@ public class MapValidator {
      * <p>This constructor is intentionally package-private: rules are an internal extension point
      * of the validator module.
      */
-    MapValidator(List<HalfMapValidationRule> halfMapRules, List<CrossHalfMapValidationRule> crossHalfMapRules) {
+    private MapValidator(List<HalfMapValidationRule> halfMapRules, List<CrossHalfMapValidationRule> crossHalfMapRules) {
         this.halfMapRules = List.copyOf(Objects.requireNonNull(halfMapRules, "halfMapRules"));
         this.crossHalfMapRules = List.copyOf(Objects.requireNonNull(crossHalfMapRules, "crossHalfMapRules"));
     }

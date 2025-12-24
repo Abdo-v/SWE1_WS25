@@ -36,7 +36,7 @@ public class MapGenerator {
      * <p>Inject a deterministic {@link Random} supplier (e.g. {@code () -> new Random(123)})
      * and a {@link MapValidator} to make generation predictable and easier to test.
      */
-    public MapGenerator(MapGenerationConfig config, Supplier<Random> randomSupplier, MapValidator validator) {
+    private MapGenerator(MapGenerationConfig config, Supplier<Random> randomSupplier, MapValidator validator) {
         this.config = Objects.requireNonNull(config, "config");
         this.randomSupplier = Objects.requireNonNull(randomSupplier, "randomSupplier");
         this.validator = Objects.requireNonNull(validator, "validator");
@@ -74,7 +74,7 @@ public class MapGenerator {
      * that edge transitions are possible on at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of each edge
      * (walkable on both sides).
      */
-    public PlayerHalfMap generateMap(int width, int height, String playerID, Optional<PlayerHalfMap> existingHalfMap) {
+    private PlayerHalfMap generateMap(int width, int height, String playerID, Optional<PlayerHalfMap> existingHalfMap) {
         if (width <= 0 || height <= 0) {
             throw new IllegalArgumentException("Width and height must be positive");
         }

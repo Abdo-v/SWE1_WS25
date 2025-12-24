@@ -10,7 +10,7 @@ import java.util.Objects;
  *
  * <p>Intentionally contains no game rules (e.g. half-map size limits).
  */
-public final class MapEssentials {
+final class MapEssentials {
 
     private int maxX;
     private int maxY;
