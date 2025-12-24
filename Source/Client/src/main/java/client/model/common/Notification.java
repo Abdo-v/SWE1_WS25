@@ -46,12 +46,12 @@ public class Notification {
         public final String info;
         public final Optional<Exception> cause;
 
-        public Error(String info, Optional<Exception> cause) {
+        Error(String info, Optional<Exception> cause) {
             this.info = Objects.requireNonNull(info, "info is required");
             this.cause = Objects.requireNonNull(cause, "cause is required");
         }
 
-        public Error(String info, Exception cause) {
+        Error(String info, Exception cause) {
             this(info, Optional.of(Objects.requireNonNull(cause, "exception is required")));
         }
 
