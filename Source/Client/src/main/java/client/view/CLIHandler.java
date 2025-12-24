@@ -2,7 +2,6 @@ package client.view;
 
 import client.model.GameState;
 import client.model.GameMode;
-import client.model.mapper.PlayerHalfMap;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -26,20 +25,9 @@ public class CLIHandler implements client.observer.util.Observer {
     private final MapSnapshotView snapshotView = new MapSnapshotView();
     private final MapGenerationView mapGenerationView = new MapGenerationView();
 
-    public CLIHandler() {
-    }
-
-    public CLIHandler(String gameMode){
-        this(GameMode.fromCLIValue(gameMode));
-    }
-
     public CLIHandler(GameMode gameMode) {
         GameMode safeMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
         CLIHandler.reduced = safeMode.isReduced();
-    }
-
-    public CLIHandler(GameState gameState) {
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
     }
 
     @Override
@@ -50,14 +38,6 @@ public class CLIHandler implements client.observer.util.Observer {
 
     public static boolean isGameModeReduced() {
         return CLIHandler.reduced;
-    }
-
-    /**
-     * Visualizes the half map or full map in console output.
-     * @param mapType The type of map to visualize: "own", "opponent", or "full".
-     */
-    public void visualizeMap(String mapType) {
-        visualizeMap(MapVisualizationType.fromCLIValue(mapType));
     }
 
     private void visualizeMap(MapVisualizationType mapType) {
@@ -83,19 +63,5 @@ public class CLIHandler implements client.observer.util.Observer {
         snapshotView.visualize(this.gameState.orElseThrow(), safeType);
     }
 
-    /**
-     * Prints a half map representation to the console.
-     * @param halfMap The half map to print.
-     * @param title Title for the map visualization.
-     */
-    public void printHalfMap(PlayerHalfMap halfMap, String title) {
-        mapGenerationView.printHalfMap(halfMap, title);
-    }
-
-    //for testing purposes, TDD
-    public Object getGameState() {
-        return gameState;
-    }
-    
 
 }

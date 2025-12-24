@@ -19,9 +19,6 @@ class Converter {
     private final ClientToServerConverter clientToServer = new ClientToServerConverter();
     private final ServerToClientConverter serverToClient = new ServerToClientConverter();
 
-    Converter() {
-    }
-
     /**
      * Converts the server game state to the internal representation.
      * @param serverGameState The server game state.

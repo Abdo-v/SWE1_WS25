@@ -13,33 +13,7 @@ public class GameMap {
     private static final String ORIENTATION_REQUIRED_MESSAGE = "Map orientation must be set";
 
     /**
-     * Constructs a GameMap with the given parameters.
-     * @param own The player's own half map.
-     * @param opponent The opponent's half map.
-     * @param orientation The orientation of the map.
-     */
-    public GameMap(ArrayList<MapNode> nodes, OwnToOppMapOrientation orientation) {
-        this.orientation = Optional.of(Objects.requireNonNull(orientation, "orientation"));
-
-        int width;
-        int height;
-        if (orientation == OwnToOppMapOrientation.UP_DOWN || orientation == OwnToOppMapOrientation.DOWN_UP) {
-            width = HalfMapDimensions.WIDTH;
-            height = HalfMapDimensions.HEIGHT * 2;
-        } else {
-            width = HalfMapDimensions.WIDTH * 2;
-            height = HalfMapDimensions.HEIGHT;
-        }
-
-        int maxX = width - 1;
-        int maxY = height - 1;
-        this.map = new MapEssentials(Objects.requireNonNull(nodes, "nodes"), maxX, maxY);
-    }
-
-    /**
      * Constructs a GameMap with the given parameters and dimensions.
-     * @param own The player's own half map.
-     * @param opponent The opponent's half map.
      * @param orientation The orientation of the map.
      * @param maxX The maximum X coordinate.
      * @param maxY The maximum Y coordinate.
@@ -87,14 +61,6 @@ public class GameMap {
     }
 
     /**
-     * Sets the map orientation.
-     * @param orientation The map orientation.
-     */
-    public void setOrientation(OwnToOppMapOrientation orientation) {
-        this.orientation = Optional.of(Objects.requireNonNull(orientation, "orientation"));
-    }
-
-    /**
      * Gets the maximum X coordinate.
      * @return The maximum X coordinate.
      */
@@ -103,27 +69,11 @@ public class GameMap {
     }
 
     /**
-     * Sets the maximum X coordinate.
-     * @param maxX The maximum X coordinate.
-     */
-    public void setMaxX(int maxX) {
-        map.setMaxX(maxX);
-    }
-
-    /**
      * Gets the maximum Y coordinate.
      * @return The maximum Y coordinate.
      */
     public int getMaxY() {
         return map.getMaxY();
-    }
-
-    /**
-     * Sets the maximum Y coordinate.
-     * @param maxY The maximum Y coordinate.
-     */
-    public void setMaxY(int maxY) {
-        map.setMaxY(maxY);
     }
 
     /**
@@ -148,16 +98,6 @@ public class GameMap {
             }
         }
         throw new IllegalArgumentException("Invalid coordinates: (" + x + ", " + y + "), not found in gameMap");
-    }
-
-    /**
-     * Gets the half map MapNode that contains the player's own fort.
-     *
-     * @return An {@link Optional} containing the MapNode with the player's own fort.
-     */
-    public Optional<MapNode> getOwnFortMapNode() {
-        PlayerHalfMap ownHalfMap = getOwnHalfMap();
-        return ownHalfMap.getFortNode();
     }
 
     /**

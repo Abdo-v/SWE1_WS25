@@ -23,10 +23,6 @@ public enum GameMode {
         return this == TRR;
     }
 
-    public boolean usesAutoFetchGameId() {
-        return this == ATTR;
-    }
-
     public boolean isDynamicVisualization() {
         return this == TR || this == ATTR;
     }
