@@ -6,7 +6,7 @@ package client.view;
  * <p>Keeping these in one place avoids duplicates across different views
  * (generation snapshot, full snapshot, dynamic view).
  */
-public final class CLIIcons {
+final class CLIIcons {
 
     private CLIIcons() {
     }

@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * View responsible for printing the "game lost" screen.
  */
-public final class GameLostView {
+final class GameLostView {
 
     private final PrintStream out;
     private final PlayerSummaryFormatter playerSummaryFormatter;

@@ -60,7 +60,7 @@ public class CLIHandler implements client.observer.util.Observer {
         visualizeMap(MapVisualizationType.fromCLIValue(mapType));
     }
 
-    public void visualizeMap(MapVisualizationType mapType) {
+    private void visualizeMap(MapVisualizationType mapType) {
         MapVisualizationType safeType = Objects.requireNonNullElse(mapType, MapVisualizationType.UNKNOWN);
 
         if (this.gameState.isEmpty()) {

@@ -18,7 +18,7 @@ public class GameManagerView implements GameOutput {
         this(System.out, System.err);
     }
 
-    public GameManagerView(PrintStream out, PrintStream err) {
+    private GameManagerView(PrintStream out, PrintStream err) {
         this.out = Objects.requireNonNull(out, "out is required");
         this.err = Objects.requireNonNull(err, "err is required");
         this.gameWonView = new GameWonView(this.out);

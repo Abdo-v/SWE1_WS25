@@ -8,7 +8,7 @@ import java.util.Objects;
 /**
  * View responsible for printing the "game won" screen.
  */
-public final class GameWonView {
+final class GameWonView {
 
     private final PrintStream out;
     private final PlayerSummaryFormatter playerSummaryFormatter;
