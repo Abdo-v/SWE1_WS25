@@ -13,7 +13,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import client.exception.GameCommunicationException;
 import client.exception.MapProcessingException;
 import client.model.Direction;
-import client.model.mapper.MapNode;
 import client.model.mapper.PlayerHalfMap;
 import messagesbase.ResponseEnvelope;
 import messagesbase.UniquePlayerIdentifier;
@@ -23,7 +22,6 @@ import messagesbase.messagesfromserver.GameState;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 
 public class NetworkCenter {
@@ -400,43 +398,6 @@ public class NetworkCenter {
     }
 
     /**
-     * Converts the internal half map to the network message format.
-     * @param halfMap Our internal half map representation.
-     * @return A half map in the format expected by the server.
-     */
-    public messagesbase.messagesfromclient.PlayerHalfMap convertClientHalfMap(PlayerHalfMap halfMap) {
-    // logger.trace("Converting client half map to server format for player: {}", playerId.map(UniquePlayerIdentifier::getUniquePlayerID).orElse("unknown"));
-        return clientToServerConverter.convertClientHalfMap(halfMap, playerId.orElseThrow(() -> new IllegalStateException("Player must be registered before converting a half map")));
-    }
-
-    /**
-     * Converts a list of internal map nodes to network map nodes.
-     * @param nodes List of internal map nodes.
-     * @return Collection of network map nodes.
-     */
-    public Collection<messagesbase.messagesfromclient.PlayerHalfMapNode> convertToServerNodes(List<MapNode> nodes) {
-        return clientToServerConverter.convertClientNodes(nodes);
-    }
-
-    /**
-     * Converts client terrain to network terrain.
-     * @param clientTerrain The client terrain.
-     * @return The corresponding network terrain.
-     */
-    public messagesbase.messagesfromclient.ETerrain convertClientTerrain(client.model.mapper.Terrain clientTerrain) {
-        return clientToServerConverter.convertClientTerrain(clientTerrain);
-    }
-
-    /**
-     * Converts server terrain to client terrain.
-     * @param serverTerrain The server terrain.
-     * @return The corresponding client terrain.
-     */
-    public client.model.mapper.Terrain convertServerTerrain(messagesbase.messagesfromclient.ETerrain serverTerrain) {
-        return serverToClientConverter.convertServerTerrain(serverTerrain);
-    }
-
-    /**
      * Converts the server game state to the internal representation.
      * @param serverGameState The server game state.
      * @return The internal game state.
@@ -444,49 +405,6 @@ public class NetworkCenter {
     public client.model.GameState convertServerGamestate(messagesbase.messagesfromserver.GameState serverGameState) {
     // logger.trace("Converting server game state to client format for player: {}", playerId.map(UniquePlayerIdentifier::getUniquePlayerID).orElse("unknown"));
         return serverToClientConverter.convertServerGamestate(serverGameState, playerId.orElseThrow(() -> new IllegalStateException("Player must be registered before converting game state")));
-    }
-
-    /**
-     * Checks if the server map has an enemy fort.
-     * @param serverMap The server map.
-     * @return True if enemy fort is present, false otherwise.
-     */
-    public boolean serverMapHasEnemyFort(messagesbase.messagesfromserver.FullMap serverMap) {
-     // logger.trace("Checking for enemy fort in server map");
-        return serverToClientConverter.serverMapHasEnemyFort(serverMap);
-    }
-
-    /**
-     * Converts the server map to the internal game map.
-     * @param serverMap The server map.
-     * @return The internal game map.
-     */
-    public client.model.mapper.GameMap convertServerMap(messagesbase.messagesfromserver.FullMap serverMap) {
-    // logger.debug("Converting server map to client format, nodes: {}", Optional.ofNullable(serverMap).map(m -> m.getMapNodes().size()).orElse(0));
-        return serverToClientConverter.convertServerMap(serverMap);
-    }
-
-    /**
-     * Converts the server player state to the internal representation.
-     * @param serverPlayerState The server player state.
-     * @param playerMapNode The player's map node.
-     * @return The internal player state.
-     */
-    public client.model.PlayerState convertServerPlayerState(messagesbase.messagesfromserver.PlayerState serverPlayerState, MapNode playerMapNode) {
-        return serverToClientConverter.convertServerPlayerState(serverPlayerState, playerMapNode);
-    }
-
-    public client.model.PlayerStatus convertServerStatus(messagesbase.messagesfromserver.EPlayerGameState serverStatus){
-        return serverToClientConverter.convertServerStatus(serverStatus);
-    }
-
-    /**
-     * Converts the server map node to the internal map node.
-     * @param serverMapNode The server map node.
-     * @return The internal map node.
-     */
-    public MapNode convertServerMapNode(messagesbase.messagesfromserver.FullMapNode serverMapNode) {
-        return serverToClientConverter.convertServerMapNode(serverMapNode);
     }
 
     /**
@@ -499,19 +417,4 @@ public class NetworkCenter {
         return clientToServerConverter.convertClientDirection(d);
     }
 
-    /**
-     * Gets the game ID.
-     * @return The game ID.
-     */
-    public String getGameId() {
-        return gameId;
-    }
-
-    /**
-     * Gets the player ID.
-     * @return The player ID.
-     */
-    public Optional<UniquePlayerIdentifier> getPlayerId() {
-        return playerId;
-    }
 }
