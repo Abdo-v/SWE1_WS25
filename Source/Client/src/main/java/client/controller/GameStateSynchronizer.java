@@ -8,7 +8,7 @@ import client.model.GameState;
 import java.util.Objects;
 import java.util.Optional;
 
-public class GameStateSynchronizer {
+class GameStateSynchronizer {
 
     private final NetworkCenter networkCenter;
 

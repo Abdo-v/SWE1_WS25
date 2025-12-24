@@ -10,7 +10,7 @@ import java.util.Objects;
 /**
  * SRP service responsible for waiting until the server provides a full map.
  */
-public class FullMapWaitService {
+class FullMapWaitService {
 
     private static final String UNKNOWN_GAME_STATE_ID = "unknown";
 

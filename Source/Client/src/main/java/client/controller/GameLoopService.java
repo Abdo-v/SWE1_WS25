@@ -14,7 +14,7 @@ import client.view.GameOutput;
 import java.time.Duration;
 import java.util.Objects;
 
-public class GameLoopService {
+class GameLoopService {
 
     private static final Duration DYNAMIC_VISUALIZATION_START_DELAY = Duration.ofSeconds(1);
 

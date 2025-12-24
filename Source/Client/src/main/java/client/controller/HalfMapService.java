@@ -18,7 +18,7 @@ import client.view.MapValidationInternalsView;
 import java.util.Objects;
 import java.util.Optional;
 
-public class HalfMapService {
+class HalfMapService {
 
     private final NetworkCenter networkCenter;
     private final CLIHandler cliHandler;

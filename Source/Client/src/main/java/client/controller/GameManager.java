@@ -49,7 +49,7 @@ public class GameManager {
         this(state, serverBaseUrl, GameMode.fromCLIValue(gameMode), output);
     }
 
-    public GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){
+    private GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){
         this.gameState = Objects.requireNonNull(state, "state is required");
         this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), this.gameState.getGameStateID());
         this.output = Objects.requireNonNull(output, "output is required");
@@ -80,7 +80,7 @@ public class GameManager {
         this(gameId, serverBaseUrl, playerId, new client.view.GameManagerView());
     }
 
-    public GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId, GameOutput output) {
+    private GameManager(String gameId, String serverBaseUrl, UniquePlayerIdentifier playerId, GameOutput output) {
         this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), Objects.requireNonNull(gameId, "gameId is required"), Objects.requireNonNull(playerId, "playerId is required"));
         this.gameState = new client.model.GameState(gameId);
         this.playerId = Optional.of(playerId.getUniquePlayerID());
@@ -110,7 +110,7 @@ public class GameManager {
         this(gameId, serverBaseUrl, new client.view.GameManagerView());
     }
 
-    public GameManager(String gameId, String serverBaseUrl, GameOutput output) {
+    private GameManager(String gameId, String serverBaseUrl, GameOutput output) {
         this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), Objects.requireNonNull(gameId, "gameId is required"));
         this.gameState = new client.model.GameState(gameId);
         this.output = Objects.requireNonNull(output, "output is required");
