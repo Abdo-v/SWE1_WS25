@@ -150,12 +150,6 @@ public class WayFinder implements client.observer.util.Observer{
         }
     }
 
-    private float getCostToVisionRatio(MapNode node, Objective objective) {
-        GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized before scoring"));
-        MapNode current = currentMapNode.orElseThrow(() -> new IllegalStateException("Current position must be initialized before scoring"));
-        return logic().getCostToVisionRatio(state, current, node, objective);
-    }
-
     private WayFinderLogic logic() {
         return new WayFinderLogic(wayHelper, stateHolder, shortestPathFinder, treasureSeeker, fortSeeker, strategyGuide);
     }
