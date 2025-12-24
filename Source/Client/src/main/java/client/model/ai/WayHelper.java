@@ -22,17 +22,6 @@ public class WayHelper implements client.observer.util.Observer {
     private LinkedHashMap<MapNode, Boolean> allMountainFields;
 
     /**
-     * Constructs a WayHelper with a given GameState.
-     * @param gameState The current game state.
-     */
-    public WayHelper(GameState gameState) {
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
-        this.halfMapVisitedGrassFields = new LinkedHashMap<>();
-        this.oppHalfMapVisitedGrassFields = new LinkedHashMap<>();
-        this.allMountainFields = new LinkedHashMap<>();
-    }
-
-    /**
      * Default constructor for WayHelper.
      */
     public WayHelper() {
@@ -163,20 +152,6 @@ public class WayHelper implements client.observer.util.Observer {
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized"));
         return state.getMap()
             .map(map -> HalfMapSnakeArranger.arrangeOwnHalf(map, currentPosition))
-            .orElseThrow(() -> new IllegalStateException("GameMap must be initialized"));
-    }
-
-    /**
-     * gets the opponent half map arranged from the corner nearest to current (start) position in a Y-snake pattern.
-     * The outer loop iterates X, and the inner loop Y, with Y direction alternating.
-     * @param currentPosition the current position of the player (in their own half).
-     * @return the arranged opponent half map.
-     */
-    public PlayerHalfMap getArrangedOpponentHalfMap(MapNode currentPosition){
-        Objects.requireNonNull(currentPosition, "currentPosition must not be null");
-        GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized"));
-        return state.getMap()
-            .map(map -> HalfMapSnakeArranger.arrangeOpponentHalf(map, currentPosition))
             .orElseThrow(() -> new IllegalStateException("GameMap must be initialized"));
     }
 
