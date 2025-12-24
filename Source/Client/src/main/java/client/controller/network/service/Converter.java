@@ -14,7 +14,7 @@ import java.util.List;
  * <p>New code should prefer {@link ClientToServerConverter} and {@link ServerToClientConverter}
  * directly. This class remains to keep existing callers functional.
  */
-public class Converter {
+class Converter {
 
     private final ClientToServerConverter clientToServer = new ClientToServerConverter();
     private final ServerToClientConverter serverToClient = new ServerToClientConverter();

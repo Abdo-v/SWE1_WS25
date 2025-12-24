@@ -47,7 +47,7 @@ public class NetworkCenter {
         this(serverBaseUrl, gameId, playerId, NetworkCenterConfig.defaultConfig());
     }
 
-    public NetworkCenter(String serverBaseUrl, String gameId, UniquePlayerIdentifier playerId, NetworkCenterConfig config) {
+    private NetworkCenter(String serverBaseUrl, String gameId, UniquePlayerIdentifier playerId, NetworkCenterConfig config) {
      // logger.debug("Creating NetworkCenter with server: {}, gameId: {}, playerId: {}", serverBaseUrl, gameId, playerId.getUniquePlayerID());
         this.gameId = gameId;
         this.serverBaseUrl = serverBaseUrl;
@@ -70,7 +70,7 @@ public class NetworkCenter {
         this(serverBaseUrl, gameId, NetworkCenterConfig.defaultConfig());
     }
 
-    public NetworkCenter(String serverBaseUrl, String gameId, NetworkCenterConfig config) {
+    private NetworkCenter(String serverBaseUrl, String gameId, NetworkCenterConfig config) {
      // logger.debug("Creating NetworkCenter with server: {}, gameId: {}", serverBaseUrl, gameId);
         this.gameId = gameId;
         this.serverBaseUrl = serverBaseUrl;
@@ -494,7 +494,7 @@ public class NetworkCenter {
      * @param d The client direction.
      * @return The network move.
      */
-    public messagesbase.messagesfromclient.EMove convertClientDirection(Direction d){
+    private messagesbase.messagesfromclient.EMove convertClientDirection(Direction d){
      // logger.trace("Converting client direction {} to server move", d);
         return clientToServerConverter.convertClientDirection(d);
     }
