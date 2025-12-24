@@ -20,20 +20,6 @@ public class NoValidMoveAvailableException extends Exception {
     private final Optional<String> decisionContext;
     private final Optional<Direction> suggestedFallbackDirection;
 
-    public NoValidMoveAvailableException(String message) {
-        super(Objects.requireNonNull(message, "message is required"));
-        this.aiComponent = Optional.empty();
-        this.decisionContext = Optional.empty();
-        this.suggestedFallbackDirection = Optional.empty();
-    }
-
-    public NoValidMoveAvailableException(String message, Throwable cause) {
-        super(Objects.requireNonNull(message, "message is required"), cause);
-        this.aiComponent = Optional.empty();
-        this.decisionContext = Optional.empty();
-        this.suggestedFallbackDirection = Optional.empty();
-    }
-
     public NoValidMoveAvailableException(
             String message,
             String aiComponent,
@@ -41,19 +27,6 @@ public class NoValidMoveAvailableException extends Exception {
             Optional<Direction> suggestedFallbackDirection
     ) {
         super(Objects.requireNonNull(message, "message is required"));
-        this.aiComponent = Optional.ofNullable(aiComponent);
-        this.decisionContext = Optional.ofNullable(decisionContext);
-        this.suggestedFallbackDirection = Objects.requireNonNull(suggestedFallbackDirection, "suggestedFallbackDirection is required");
-    }
-
-    public NoValidMoveAvailableException(
-            String message,
-            Throwable cause,
-            String aiComponent,
-            String decisionContext,
-            Optional<Direction> suggestedFallbackDirection
-    ) {
-        super(Objects.requireNonNull(message, "message is required"), cause);
         this.aiComponent = Optional.ofNullable(aiComponent);
         this.decisionContext = Optional.ofNullable(decisionContext);
         this.suggestedFallbackDirection = Objects.requireNonNull(suggestedFallbackDirection, "suggestedFallbackDirection is required");

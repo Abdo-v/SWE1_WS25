@@ -1,8 +1,5 @@
 package client.exception;
 
-import java.util.Objects;
-import java.util.Locale;
-
 public enum Operation {
     PLAYER_REGISTRATION("PLAYER_REGISTRATION"),
     SEND_HALF_MAP("SEND_HALF_MAP"),
@@ -28,25 +25,4 @@ public enum Operation {
         return code;
     }
 
-    public static Operation fromCode(String code) {
-        String normalized = Objects.requireNonNullElse(code, "").trim();
-        if (normalized.isEmpty()) {
-            return UNKNOWN;
-        }
-        for (Operation op : values()) {
-            if (op.code.equals(normalized)) {
-                return op;
-            }
-        }
-
-        // fallback: try case-insensitive match for typical ALL_CAPS codes
-        String upper = normalized.toUpperCase(Locale.ROOT);
-        for (Operation op : values()) {
-            if (op.code.toUpperCase(Locale.ROOT).equals(upper)) {
-                return op;
-            }
-        }
-
-        return UNKNOWN;
-    }
 }

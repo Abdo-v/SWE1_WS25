@@ -74,19 +74,4 @@ public class PlayerHalfMap {
         return map.getNodes();
     }
 
-    public int getMaxX() {
-        return map.getMaxX();
-    }
-
-    public void setMaxX(int maxX) {
-        map.setMaxX(maxX);
-    }
-
-    public int getMaxY() {
-        return map.getMaxY();
-    }
-
-    public void setMaxY(int maxY) {
-        map.setMaxY(maxY);
-    }
 }
