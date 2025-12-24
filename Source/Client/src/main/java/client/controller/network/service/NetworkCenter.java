@@ -35,16 +35,6 @@ public class NetworkCenter {
     private final ClientToServerConverter clientToServerConverter = new ClientToServerConverter();
     private final ServerToClientConverter serverToClientConverter = new ServerToClientConverter();
 
-    /**
-     * Constructs a NetworkCenter with the given server base URL, game ID, and player ID.
-     * @param serverBaseUrl The base URL of the server.
-     * @param gameId The ID of the game.
-     * @param playerId The unique player identifier.
-     */
-    public NetworkCenter(String serverBaseUrl, String gameId, UniquePlayerIdentifier playerId) {
-        this(serverBaseUrl, gameId, playerId, NetworkCenterConfig.defaultConfig());
-    }
-
     private NetworkCenter(String serverBaseUrl, String gameId, UniquePlayerIdentifier playerId, NetworkCenterConfig config) {
      // logger.debug("Creating NetworkCenter with server: {}, gameId: {}, playerId: {}", serverBaseUrl, gameId, playerId.getUniquePlayerID());
         this.gameId = gameId;

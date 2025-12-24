@@ -22,15 +22,6 @@ public class MapGenerator {
     }
 
     /**
-     * Constructs a MapGenerator with custom generation parameters.
-     *
-     * @param config configuration object that contains generation values.
-     */
-    public MapGenerator(MapGenerationConfig config) {
-        this(config, Random::new, new MapValidator());
-    }
-
-    /**
      * Constructs a MapGenerator with injected dependencies.
      *
      * <p>Inject a deterministic {@link Random} supplier (e.g. {@code () -> new Random(123)})
@@ -53,18 +44,6 @@ public class MapGenerator {
      */
     public PlayerHalfMap generateMap(int width, int height, String playerID) {
         return generateMap(width, height, playerID, Optional.empty());
-    }
-
-    /**
-     * Generates a half map with the specified width, height, and player ID.
-     *
-     * <p>If an existing half map is provided (for the "second" client), generation also tries to ensure
-     * that edge transitions are possible on at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of each edge
-     * (walkable on both sides).
-     */
-    public PlayerHalfMap generateMap(int width, int height, String playerID, PlayerHalfMap existingHalfMap) {
-        Objects.requireNonNull(existingHalfMap, "existingHalfMap is required");
-        return generateMap(width, height, playerID, Optional.of(existingHalfMap));
     }
 
     /**

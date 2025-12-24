@@ -109,15 +109,7 @@ public class MapNode {
     public boolean isTreasurePresent() {
         return treasurePresent;
     }
-    
-    /**
-     * Sets whether a treasure is present on the node.
-     * @param treasurePresent Whether a treasure is present on the node.
-     */
 
-    public void setTreasurePresent(boolean treasurePresent) {
-        this.treasurePresent = treasurePresent;
-    }
     /**
      * Returns a string representation of the MapNode.
      * @return A string representation of the MapNode.
@@ -141,18 +133,6 @@ public class MapNode {
         Objects.requireNonNull(other, "other");
         if (this == other) return true;
         return this.getX() == other.getX() && this.getY() == other.getY();
-    }
-
-    /**
-     * Localizes the MapNode to half maps.
-     * mainly used in way finding.
-     * @return A new MapNode with localized coordinates.
-     */
-
-    public MapNode localize(){
-        int localizedX = Math.floorMod(x, HalfMapDimensions.WIDTH);
-        int localizedY = Math.floorMod(y, HalfMapDimensions.HEIGHT);
-        return new MapNode(localizedX, localizedY, terrain, fortPresent, treasurePresent);
     }
 
     /**

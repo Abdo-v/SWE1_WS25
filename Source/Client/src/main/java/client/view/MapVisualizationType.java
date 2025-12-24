@@ -15,10 +15,6 @@ public enum MapVisualizationType {
         this.cliValue = cliValue;
     }
 
-    public String cliValue() {
-        return cliValue;
-    }
-
     public static MapVisualizationType fromCLIValue(String value) {
         String normalized = Objects.requireNonNullElse(value, "").trim().toLowerCase(Locale.ROOT);
         for (MapVisualizationType type : values()) {
