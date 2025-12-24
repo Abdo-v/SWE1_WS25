@@ -79,8 +79,7 @@ class GameLoopService {
                         gameManager.disableDynamicVisualization();
                         output.showWon(
                                 gameManager.getGameState().getCurrentPlayerState().orElseThrow(),
-                                loops,
-                                dynamicMode
+                                loops
                         );
                         gameIsRunning = false;
                         break;
@@ -88,8 +87,7 @@ class GameLoopService {
                         gameManager.disableDynamicVisualization();
                         output.showLost(
                                 gameManager.getGameState().getCurrentPlayerState().orElseThrow(),
-                                loops,
-                                dynamicMode
+                                loops
                         );
                         gameIsRunning = false;
                         break;

@@ -20,9 +20,9 @@ public interface GameOutput {
 
     void showNetworkError(String message);
 
-    void showWon(PlayerState playerState, int loops, boolean showLoops);
+    void showWon(PlayerState playerState, int loops);
 
-    void showLost(PlayerState playerState, int loops, boolean showLoops);
+    void showLost(PlayerState playerState, int loops);
 
     void showUnhandledStatus(PlayerStatus status);
 
