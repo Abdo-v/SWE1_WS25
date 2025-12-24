@@ -210,7 +210,4 @@ public class WayHelper implements client.observer.util.Observer {
         this.allMountainFields = Objects.requireNonNull(allMountainFields, "allMountainFields must not be null");
     }
 
-    public Optional<GameState> getGameState() {
-        return gameState;
-    }
 }

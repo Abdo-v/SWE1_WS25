@@ -104,10 +104,6 @@ final class WayFinderLogic {
         }
     }
 
-    float getCostToVisionRatio(GameState gameState, MapNode currentMapNode, MapNode node, Objective objective) {
-        return visionCostScorer.score(gameState, currentMapNode, node, objective);
-    }
-
     private Optional<Direction> suggestFallbackDirection(MapNode currentMapNode) {
         Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
 
