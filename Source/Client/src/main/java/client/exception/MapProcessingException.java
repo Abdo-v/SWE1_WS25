@@ -89,7 +89,7 @@ public class MapProcessingException extends Exception {
      * @param expectedNodes the expected number of map nodes
      * @param actualNodes the actual number of map nodes found
      */
-    public MapProcessingException(String message, String mapType, String processingStage, int expectedNodes, int actualNodes) {
+    private MapProcessingException(String message, String mapType, String processingStage, int expectedNodes, int actualNodes) {
         super(buildDetailedMessage(message,
                 Optional.ofNullable(mapType),
                 Optional.ofNullable(processingStage),
@@ -215,7 +215,7 @@ public class MapProcessingException extends Exception {
      * 
      * @return true if both expected and actual node counts are available
      */
-    public boolean hasNodeCountInfo() {
+    private boolean hasNodeCountInfo() {
         return expectedNodes > 0 && actualNodes >= 0;
     }
     
@@ -224,7 +224,7 @@ public class MapProcessingException extends Exception {
      * 
      * @return true if coordinate context is available
      */
-    public boolean hasCoordinateInfo() {
+    private boolean hasCoordinateInfo() {
         return coordinateContext.filter(text -> !text.trim().isEmpty()).isPresent();
     }
     

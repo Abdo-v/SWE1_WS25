@@ -177,7 +177,7 @@ public class GameStateException extends RuntimeException {
      * 
      * @return true if expected state information is available
      */
-    public boolean hasExpectedState() {
+    private boolean hasExpectedState() {
         return expectedState.filter(state -> !state.trim().isEmpty()).isPresent();
     }
     
