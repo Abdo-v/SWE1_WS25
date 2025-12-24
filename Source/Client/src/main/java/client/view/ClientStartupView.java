@@ -21,7 +21,7 @@ public class ClientStartupView {
         showStartupBanner(serverBaseUrl, gameId, GameMode.fromCLIValue(gameMode));
     }
 
-    public void showStartupBanner(String serverBaseUrl, String gameId, GameMode gameMode) {
+    private void showStartupBanner(String serverBaseUrl, String gameId, GameMode gameMode) {
         System.out.println("🎮 GAME CLIENT STARTING");
         System.out.println("========================");
         System.out.println("📡 Server: " + serverBaseUrl);
