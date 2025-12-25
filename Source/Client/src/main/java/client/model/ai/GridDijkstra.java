@@ -24,6 +24,8 @@ final class GridDijkstra {
         // utility
     }
 
+    private static final int[][] DIRECTIONS = { {0, -1}, {0, 1}, {-1, 0}, {1, 0} };
+
     private static Optional<MapNode> getNodeSafely(GameMap map, int x, int y) {
         try {
             return Optional.ofNullable(map.getNode(x, y));
@@ -61,35 +63,7 @@ final class GridDijkstra {
             }
             settledNodes.add(u);
 
-            int currentX = u.getX();
-            int currentY = u.getY();
-            int[][] directions = { {0, -1}, {0, 1}, {-1, 0}, {1, 0} };
-
-            for (int[] dir : directions) {
-                int newX = currentX + dir[0];
-                int newY = currentY + dir[1];
-
-                getNodeSafely(map, newX, newY).ifPresent(neighbor -> {
-                    if (settledNodes.contains(neighbor)) {
-                        return;
-                    }
-
-                    int edgeCost = costProfile.cost(u, neighbor);
-                    if (edgeCost == Integer.MAX_VALUE) {
-                        return;
-                    }
-
-                    int currentDistanceU = distances.getOrDefault(u, Integer.MAX_VALUE);
-                    int newDist = currentDistanceU + edgeCost;
-                    int oldDist = distances.getOrDefault(neighbor, Integer.MAX_VALUE);
-
-                    if (newDist < oldDist) {
-                        distances.put(neighbor, newDist);
-                        pq.remove(neighbor);
-                        pq.add(neighbor);
-                    }
-                });
-            }
+            relaxNeighbors(map, u, settledNodes, distances, pq, costProfile, null);
         }
 
         return Integer.MAX_VALUE;
@@ -131,35 +105,7 @@ final class GridDijkstra {
             }
             settledNodes.add(u);
 
-            int currentX = u.getX();
-            int currentY = u.getY();
-            int[][] directions = { {0, -1}, {0, 1}, {-1, 0}, {1, 0} };
-
-            for (int[] dir : directions) {
-                int newX = currentX + dir[0];
-                int newY = currentY + dir[1];
-
-                getNodeSafely(map, newX, newY).ifPresent(v -> {
-                    if (settledNodes.contains(v)) {
-                        return;
-                    }
-
-                    int costUV = costProfile.cost(u, v);
-                    if (costUV == Integer.MAX_VALUE) {
-                        return;
-                    }
-
-                    int distanceU = distances.getOrDefault(u, Integer.MAX_VALUE);
-                    int newDistToV = distanceU + costUV;
-
-                    if (newDistToV < distances.getOrDefault(v, Integer.MAX_VALUE)) {
-                        distances.put(v, newDistToV);
-                        predecessors.put(v, u);
-                        pq.remove(v);
-                        pq.add(v);
-                    }
-                });
-            }
+            relaxNeighbors(map, u, settledNodes, distances, pq, costProfile, predecessors);
         }
 
         if (pathEndNode.isEmpty()) {
@@ -174,5 +120,43 @@ final class GridDijkstra {
         }
         java.util.Collections.reverse(path);
         return path;
+    }
+
+    private static void relaxNeighbors(
+            GameMap map,
+            MapNode current,
+            Set<MapNode> settledNodes,
+            Map<MapNode, Integer> distances,
+            PriorityQueue<MapNode> pq,
+            MovementCostProfile costProfile,
+            Map<MapNode, MapNode> predecessors) {
+        for (int[] dir : DIRECTIONS) {
+            int newX = current.getX() + dir[0];
+            int newY = current.getY() + dir[1];
+
+            getNodeSafely(map, newX, newY).ifPresent(neighbor -> {
+                if (settledNodes.contains(neighbor)) {
+                    return;
+                }
+
+                int edgeCost = costProfile.cost(current, neighbor);
+                if (edgeCost == Integer.MAX_VALUE) {
+                    return;
+                }
+
+                int currentDistance = distances.getOrDefault(current, Integer.MAX_VALUE);
+                int updatedDistance = currentDistance + edgeCost;
+                int previousDistance = distances.getOrDefault(neighbor, Integer.MAX_VALUE);
+
+                if (updatedDistance < previousDistance) {
+                    distances.put(neighbor, updatedDistance);
+                    if (predecessors != null) {
+                        predecessors.put(neighbor, current);
+                    }
+                    pq.remove(neighbor);
+                    pq.add(neighbor);
+                }
+            });
+        }
     }
 }
