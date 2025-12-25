@@ -46,7 +46,9 @@ final class TraversalWayBuilders {
         Objects.requireNonNull(visited, "visited is required");
         ArrayList<MapNode> nodes = new ArrayList<>();
         for (MapNode node : visited.keySet()) {
-            if (Boolean.TRUE.equals(visited.get(node))) {
+            // Convention in this codebase: map value == true means "already visited".
+            // Therefore, "unvisited" is anything that is not explicitly true.
+            if (!Boolean.TRUE.equals(visited.get(node))) {
                 nodes.add(node);
             }
         }

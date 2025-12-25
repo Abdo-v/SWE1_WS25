@@ -30,54 +30,57 @@ final class ExplorationTargetUseCase {
         this.scorer = Objects.requireNonNull(scorer, "scorer must not be null");
     }
 
-        MapNode selectBestNode(
-            GameState gameState,
-            MapNode currentMapNode,
-            Objective objective,
-            Map<MapNode, Integer> costMap
-        ) throws AIDecisionException {
+    MapNode selectBestNode(
+        GameState gameState,
+        MapNode currentMapNode,
+        Objective objective,
+        Map<MapNode, Integer> costMap
+    ) throws AIDecisionException {
         try {
             Objects.requireNonNull(gameState, "gameState must not be null");
             Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
             Objects.requireNonNull(objective, "objective must not be null");
             Objects.requireNonNull(costMap, "costMap must not be null");
 
-            ArrayList<MapNode> visitedHalfMapNodes = new ArrayList<>();
-
+            // IMPORTANT: TraversalWayBuilders.toUnvisitedNodes(...) returns nodes where value != true.
+            ArrayList<MapNode> unvisitedHalfMapNodes = new ArrayList<>();
             if (objective == Objective.TREASURE) {
-                visitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getHalfMapVisitedGrassFields()));
-                visitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getAllMountainFieldsMap()));
+                unvisitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getHalfMapVisitedGrassFields()));
             } else {
-                visitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getOppHalfMapVisitedGrassFields()));
-                visitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getAllMountainFieldsMap()));
+                unvisitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getOppHalfMapVisitedGrassFields()));
             }
+            unvisitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getAllMountainFieldsMap()));
 
-                float[] bestValue = {0};
+            float[] bestValue = {0};
             int[] candidatesEvaluated = {0};
             Optional<MapNode> bestNode = Optional.empty();
-                int[] bestCost = {Integer.MAX_VALUE};
-                int[] bestDepth = {Integer.MIN_VALUE};
-                boolean[] bestIsMountain = {false};
+            int[] bestCost = {Integer.MAX_VALUE};
+            int[] bestDepth = {Integer.MIN_VALUE};
+            boolean[] bestIsMountain = {false};
 
             if (objective == Objective.TREASURE) {
                 bestNode = findBestNode(
                     treasureSeeker.getArrangedOwnHalfMap(currentMapNode).getMapNodes(),
-                    visitedHalfMapNodes, gameState, currentMapNode, objective, costMap, scorer,
+                    unvisitedHalfMapNodes, gameState, currentMapNode, objective, costMap, scorer,
                     bestValue, bestCost, bestDepth, bestIsMountain, candidatesEvaluated
                 );
             } else {
-                bestNode = findBestNode(
-                    wayHelper.getOppHalfMapVisitedGrassFields().keySet(),
-                    visitedHalfMapNodes, gameState, currentMapNode, objective, costMap, scorer,
-                    bestValue, bestCost, bestDepth, bestIsMountain, candidatesEvaluated
-                );
-                bestNode = bestNode.or(() -> findBestNode(
+                // Fort seeking: DO NOT short-circuit after finding any positive-scoring grass.
+                // Mountains can have a much higher benefit/cost (vision reveal), so grass and mountains
+                // must compete in the same ranking.
+                ArrayList<MapNode> fortCandidates = new ArrayList<>();
+                fortCandidates.addAll(wayHelper.getOppHalfMapVisitedGrassFields().keySet());
+                fortCandidates.addAll(
                     wayHelper.getAllMountainFieldsMap().keySet().stream()
                         .filter(tile -> gameState.getMap().map(map -> !map.isNodeInOwnHalf(tile)).orElse(false))
-                        .toList(),
-                    visitedHalfMapNodes, gameState, currentMapNode, objective, costMap, scorer,
+                        .toList()
+                );
+
+                bestNode = findBestNode(
+                    fortCandidates,
+                    unvisitedHalfMapNodes, gameState, currentMapNode, objective, costMap, scorer,
                     bestValue, bestCost, bestDepth, bestIsMountain, candidatesEvaluated
-                ));
+                );
             }
 
             if (bestNode.isEmpty()) {
@@ -132,7 +135,7 @@ final class ExplorationTargetUseCase {
 
     private Optional<MapNode> findBestNode(
         Iterable<MapNode> candidates,
-        ArrayList<MapNode> visitedHalfMapNodes,
+        ArrayList<MapNode> unvisitedHalfMapNodes,
         GameState gameState,
         MapNode currentMapNode,
         Objective objective,
@@ -150,9 +153,8 @@ final class ExplorationTargetUseCase {
         GameMap map = gameState.getMap().orElse(null);
         for (MapNode tile : candidates) {
             if (tile.getTerrain() == Terrain.WATER) continue;
-            // NOTE: visitedHalfMapNodes actually contains the *unvisited* nodes.
-            // We only want to evaluate nodes that are still unvisited.
-            if (visitedHalfMapNodes.contains(tile)) {
+            // Evaluate only nodes that are still considered unvisited.
+            if (unvisitedHalfMapNodes.contains(tile)) {
                 candidatesEvaluated[0]++;
 
                 float ratio = scorer.score(gameState, currentMapNode, tile, objective, costMap);
