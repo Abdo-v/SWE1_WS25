@@ -75,7 +75,7 @@ public class WayHelper implements client.observer.util.Observer {
      * @param currentPosition The current position from which to arrange the opponent half-map.
      * @return A LinkedHashMap of grass nodes with their visited status.
      */
-    public LinkedHashMap<MapNode, Boolean> getTraverseWayForOpponentHalf(MapNode currentPosition){
+    private LinkedHashMap<MapNode, Boolean> getTraverseWayForOpponentHalf(MapNode currentPosition){
         Objects.requireNonNull(currentPosition, "currentPosition must not be null");
         return gameState
                 .flatMap(GameState::getMap)

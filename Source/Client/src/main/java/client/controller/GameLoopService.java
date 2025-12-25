@@ -30,7 +30,7 @@ class GameLoopService {
         startGameLoop(GameMode.fromCLIValue(gameMode));
     }
 
-    public void startGameLoop(GameMode gameMode) throws GameCommunicationException, GameStateException {
+    private void startGameLoop(GameMode gameMode) throws GameCommunicationException, GameStateException {
         GameMode effectiveMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
         boolean dynamicMode = effectiveMode.isDynamicVisualization();
         if (dynamicMode) {

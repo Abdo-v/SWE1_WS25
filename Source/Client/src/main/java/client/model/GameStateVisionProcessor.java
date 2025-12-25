@@ -2,28 +2,11 @@ package client.model;
 
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
-import client.model.mapper.Terrain;
-
-import java.util.Objects;
 
 /**
  * Encapsulates vision/discovery logic derived from player position and terrain.
  */
 final class GameStateVisionProcessor {
-
-    void processVision(GameState state, MapNode currentPosition) {
-        Objects.requireNonNull(state, "state");
-        Objects.requireNonNull(currentPosition, "currentPosition");
-
-        state.getMap().ifPresent(map -> {
-            Terrain terrain = currentPosition.getTerrain();
-            checkForDiscoveries(state, currentPosition);
-
-            if (terrain == Terrain.MOUNTAIN) {
-                processExtendedVision(state, map, currentPosition);
-            }
-        });
-    }
 
     private void processExtendedVision(GameState state, GameMap map, MapNode center) {
         int x = center.getX();

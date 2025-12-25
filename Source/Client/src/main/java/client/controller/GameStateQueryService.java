@@ -35,7 +35,7 @@ class GameStateQueryService {
         }
     }
 
-    public messagesbase.messagesfromserver.GameState pollGameState() throws GameCommunicationException {
+    private messagesbase.messagesfromserver.GameState pollGameState() throws GameCommunicationException {
         try {
             return networkCenter.pollGameState();
         } catch (GameCommunicationException e) {

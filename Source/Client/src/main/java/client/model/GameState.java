@@ -22,7 +22,6 @@ public class GameState implements client.observer.util.Observable {
     private Optional<MapNode> opponentFortPosition;
 
     private final GameStateObservers observerSupport;
-    private final GameStateVisionProcessor visionProcessor;
     private final GameStateQueries queries;
 
     // Modern, generic, lambda-friendly event streams (composition).
@@ -129,7 +128,6 @@ public class GameState implements client.observer.util.Observable {
         this.opponentFortPosition = Optional.empty();
 
         this.observerSupport = new GameStateObservers(this);
-        this.visionProcessor = new GameStateVisionProcessor();
         this.queries = new GameStateQueries();
     }
 

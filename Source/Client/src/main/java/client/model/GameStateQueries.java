@@ -26,16 +26,6 @@ final class GameStateQueries {
         return Optional.empty();
     }
 
-    Optional<MapNode> getEnemyFortPosition(GameMap map) {
-        Objects.requireNonNull(map, "map");
-        for (MapNode node : map.getOpponentHalfMap().getMapNodes()) {
-            if (node.isFortPresent()) {
-                return Optional.of(node);
-            }
-        }
-        return Optional.empty();
-    }
-
     Optional<MapNode> getEnemyCurrentPosition(GameState state) {
         Objects.requireNonNull(state, "state");
         if (state.getPlayers().size() < 2) {

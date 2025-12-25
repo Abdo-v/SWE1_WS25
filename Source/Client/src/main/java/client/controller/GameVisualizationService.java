@@ -22,7 +22,7 @@ final class GameVisualizationService {
         visualizeMap(MapVisualizationType.fromCLIValue(mapType));
     }
 
-    void visualizeMap(MapVisualizationType mapType) {
+    private void visualizeMap(MapVisualizationType mapType) {
         if (CLIHandler.isGameModeReduced()) {
             return;
         }
