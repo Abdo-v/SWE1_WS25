@@ -42,14 +42,10 @@ final class GridDijkstra {
             return 0;
         }
 
-        Map<MapNode, Integer> distances = new HashMap<>();
-        Set<MapNode> settledNodes = new HashSet<>();
-
-        Comparator<MapNode> nodeComparator = Comparator.comparingInt(node -> distances.getOrDefault(node, Integer.MAX_VALUE));
-        PriorityQueue<MapNode> pq = new PriorityQueue<>(nodeComparator);
-
-        distances.put(start, 0);
-        pq.add(start);
+        SearchState stateOne = createSearchState(start);
+        Map<MapNode, Integer> distances = stateOne.distances();
+        Set<MapNode> settledNodes = stateOne.settledNodes();
+        PriorityQueue<MapNode> pq = stateOne.priorityQueue();
 
         while (!pq.isEmpty()) {
             MapNode u = pq.poll();
@@ -80,15 +76,11 @@ final class GridDijkstra {
             return path;
         }
 
-        Map<MapNode, Integer> distances = new HashMap<>();
+        SearchState stateTwo = createSearchState(start);
+        Map<MapNode, Integer> distances = stateTwo.distances();
         Map<MapNode, MapNode> predecessors = new HashMap<>();
-        Set<MapNode> settledNodes = new HashSet<>();
-
-        Comparator<MapNode> nodeComparator = Comparator.comparingInt(node -> distances.getOrDefault(node, Integer.MAX_VALUE));
-        PriorityQueue<MapNode> pq = new PriorityQueue<>(nodeComparator);
-
-        distances.put(start, 0);
-        pq.add(start);
+        Set<MapNode> settledNodes = stateTwo.settledNodes();
+        PriorityQueue<MapNode> pq = stateTwo.priorityQueue();
 
         Optional<MapNode> pathEndNode = Optional.empty();
 
@@ -159,4 +151,18 @@ final class GridDijkstra {
             });
         }
     }
+
+    private static SearchState createSearchState(MapNode start) {
+        Map<MapNode, Integer> distances = new HashMap<>();
+        Comparator<MapNode> nodeComparator = Comparator.comparingInt(node -> distances.getOrDefault(node, Integer.MAX_VALUE));
+        PriorityQueue<MapNode> priorityQueue = new PriorityQueue<>(nodeComparator);
+        distances.put(start, 0);
+        priorityQueue.add(start);
+        return new SearchState(distances, new HashSet<>(), priorityQueue);
+    }
+
+    private record SearchState(
+            Map<MapNode, Integer> distances,
+            Set<MapNode> settledNodes,
+            PriorityQueue<MapNode> priorityQueue) {}
 }
