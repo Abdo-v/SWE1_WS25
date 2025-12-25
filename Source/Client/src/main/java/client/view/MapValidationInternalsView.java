@@ -58,7 +58,7 @@ public class MapValidationInternalsView {
 
         // Prefer frames that look like validation logic.
         for (StackTraceElement frame : frames) {
-            String lower = String.valueOf(frame.getClassName()).toLowerCase();
+            String lower = frame.getClassName().toLowerCase();
             if (lower.contains("validator") || lower.contains("mapvalidator")) {
                 return java.util.Optional.of(frame);
             }
@@ -68,8 +68,8 @@ public class MapValidationInternalsView {
         return java.util.Optional.of(frames[0]);
     }
     private static String formatFrameLikeStackTrace(StackTraceElement frame) {
-        String className = String.valueOf(frame.getClassName());
-        String methodName = String.valueOf(frame.getMethodName());
+        String className = frame.getClassName();
+        String methodName = frame.getMethodName();
         String fileName = Objects.requireNonNullElse(frame.getFileName(), "");
         int line = frame.getLineNumber();
 

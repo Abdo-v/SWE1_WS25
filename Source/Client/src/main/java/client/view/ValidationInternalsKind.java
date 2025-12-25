@@ -29,7 +29,7 @@ public enum ValidationInternalsKind {
     public static ValidationInternalsKind from(java.util.Optional<StackTraceElement> referenceFrame, String message) {
         java.util.Optional<StackTraceElement> safeFrame = java.util.Objects.requireNonNull(referenceFrame, "referenceFrame is required");
         if (safeFrame.isPresent()) {
-            String className = String.valueOf(safeFrame.orElseThrow().getClassName());
+            String className = safeFrame.orElseThrow().getClassName();
             if (className.contains("HalfMapStructureValidator")) {
                 return STRUCTURE;
             }
