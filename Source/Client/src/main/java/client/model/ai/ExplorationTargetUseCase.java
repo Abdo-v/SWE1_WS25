@@ -42,55 +42,33 @@ final class ExplorationTargetUseCase {
                 visitedHalfMapNodes.addAll(TraversalWayBuilders.toUnvisitedNodes(wayHelper.getAllMountainFieldsMap()));
             }
 
-            float bestValue = 0;
+            float[] bestValue = {0};
+            int[] candidatesEvaluated = {0};
             Optional<MapNode> bestNode = Optional.empty();
-            int candidatesEvaluated = 0;
 
             if (objective == Objective.TREASURE) {
-                for (MapNode tile : treasureSeeker.getArrangedOwnHalfMap(currentMapNode).getMapNodes()) {
-                    if (tile.getTerrain() == Terrain.WATER) continue;
-                    if (!visitedHalfMapNodes.contains(tile)) {
-                        candidatesEvaluated++;
-                        float ratio = scorer.score(gameState, currentMapNode, tile, objective);
-                        if (ratio > bestValue) {
-                            bestValue = ratio;
-                            bestNode = Optional.of(tile);
-                        }
-                    }
-                }
+                bestNode = findBestNode(
+                    treasureSeeker.getArrangedOwnHalfMap(currentMapNode).getMapNodes(),
+                    visitedHalfMapNodes, gameState, currentMapNode, objective, scorer, bestValue, candidatesEvaluated
+                );
             } else {
-                for (MapNode tile : wayHelper.getOppHalfMapVisitedGrassFields().keySet()) {
-                    if (tile.getTerrain() == Terrain.WATER) continue;
-                    if (!visitedHalfMapNodes.contains(tile)) {
-                        candidatesEvaluated++;
-                        float ratio = scorer.score(gameState, currentMapNode, tile, objective);
-                        if (ratio > bestValue) {
-                            bestValue = ratio;
-                            bestNode = Optional.of(tile);
-                        }
-                    }
-                }
-                for (MapNode tile : wayHelper.getAllMountainFieldsMap().keySet()) {
-                    boolean isInOpponentHalf = gameState.getMap()
-                            .map(map -> !map.isNodeInOwnHalf(tile))
-                            .orElse(false);
-
-                    if (!visitedHalfMapNodes.contains(tile) && isInOpponentHalf) {
-                        candidatesEvaluated++;
-                        float ratio = scorer.score(gameState, currentMapNode, tile, objective);
-                        if (ratio > bestValue) {
-                            bestValue = ratio;
-                            bestNode = Optional.of(tile);
-                        }
-                    }
-                }
+                bestNode = findBestNode(
+                    wayHelper.getOppHalfMapVisitedGrassFields().keySet(),
+                    visitedHalfMapNodes, gameState, currentMapNode, objective, scorer, bestValue, candidatesEvaluated
+                );
+                bestNode = bestNode.or(() -> findBestNode(
+                    wayHelper.getAllMountainFieldsMap().keySet().stream()
+                        .filter(tile -> gameState.getMap().map(map -> !map.isNodeInOwnHalf(tile)).orElse(false))
+                        .toList(),
+                    visitedHalfMapNodes, gameState, currentMapNode, objective, scorer, bestValue, candidatesEvaluated
+                ));
             }
 
             if (bestNode.isEmpty()) {
                 String strategyName = objective == Objective.TREASURE ? "treasure hunting" : "fort seeking";
                 throw new AIDecisionException(
                         String.format("No valid target found during %s (evaluated %d candidates, best value: %.2f)",
-                                strategyName, candidatesEvaluated, bestValue),
+                                strategyName, candidatesEvaluated[0], bestValue[0]),
                         "WayFinder",
                         "traverseHalfMap",
                         currentMapNode
@@ -109,5 +87,30 @@ final class ExplorationTargetUseCase {
                     currentMapNode
             );
         }
+    }
+
+    private Optional<MapNode> findBestNode(
+        Iterable<MapNode> candidates,
+        ArrayList<MapNode> visitedHalfMapNodes,
+        GameState gameState,
+        MapNode currentMapNode,
+        Objective objective,
+        VisionCostScorer scorer,
+        float[] bestValue,
+        int[] candidatesEvaluated
+    ) {
+        Optional<MapNode> bestNode = Optional.empty();
+        for (MapNode tile : candidates) {
+            if (tile.getTerrain() == Terrain.WATER) continue;
+            if (!visitedHalfMapNodes.contains(tile)) {
+                candidatesEvaluated[0]++;
+                float ratio = scorer.score(gameState, currentMapNode, tile, objective);
+                if (ratio > bestValue[0]) {
+                    bestValue[0] = ratio;
+                    bestNode = Optional.of(tile);
+                }
+            }
+        }
+        return bestNode;
     }
 }
