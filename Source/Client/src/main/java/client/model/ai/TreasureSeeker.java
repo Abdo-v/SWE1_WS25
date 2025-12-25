@@ -37,7 +37,6 @@ public class TreasureSeeker implements client.observer.util.Observer {
 
     /**
      * returns the treasure node if found in the half map visited grass fields
-     * @param halfMapVisitedGrassFields
      * @return the treasure node if found, otherwise null
      */
     public Optional<MapNode> getTreasureNodeIfFound() {

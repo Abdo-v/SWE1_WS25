@@ -145,8 +145,6 @@ public class MapNode {
 
     /**
      * Checks if this MapNode has the same coordinates as another MapNode.
-     * @param x The X coordinate to compare.
-     * @param y The Y coordinate to compare.
      * @return true if the coordinates are the same, false otherwise.
      */
     public String printCoordinates() {

@@ -53,8 +53,6 @@ public class PlayerHalfMap {
 
     /**
      * Gets a map node by its coordinates using == for parameters.
-     * @param x_index The X coordinate of the node.
-     * @param y_index The Y coordinate of the node.
      * @return An {@link Optional} containing the map node at the specified coordinates; empty if not found.
      */
     public Optional<MapNode> getMapNode(int xIndex, int yIndex) {
