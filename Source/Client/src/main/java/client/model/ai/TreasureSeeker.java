@@ -16,14 +16,14 @@ public class TreasureSeeker implements client.observer.util.Observer {
     // private static final Logger logger = LoggerFactory.getLogger(TreasureSeeker.class);
     private Optional<GameState> gameState;
     private boolean treasureFound = false;
-    private WayHelper wayHelper;
+    private final WayHelper wayHelper;
 
     /**
      * Constructs a TreasureSeeker with no null game state.
      */
-    public TreasureSeeker() {
+    public TreasureSeeker(WayHelper wayHelper) {
         this.gameState = Optional.empty();
-        this.wayHelper = new WayHelper();
+        this.wayHelper = Objects.requireNonNull(wayHelper);
     }
     /**
      * Returns a LinkedHashMap of grass nodes in the player's own half-map, initialized as unvisited.

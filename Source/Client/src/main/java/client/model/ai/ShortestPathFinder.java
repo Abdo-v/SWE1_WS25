@@ -1,6 +1,7 @@
 package client.model.ai;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -151,6 +152,26 @@ public class ShortestPathFinder implements client.observer.util.Observer {
 
         int cost = GridDijkstra.shortestPathCost(map, startNode.orElseThrow(), targetNode.orElseThrow(), MovementCostProfile.SHORTEST_PATH);
         return cost == Integer.MAX_VALUE ? -1 : cost;
+    }
+
+    /**
+     * Computes a full Dijkstra cost-map from the current player position.
+     *
+     * <p>Use this when you want to compare many candidate targets in the same turn without
+     * rerunning pathfinding for each candidate.</p>
+     *
+     * @param costProfile Movement cost profile (e.g. {@link MovementCostProfile#SHORTEST_PATH}).
+     * @return Map of reachable nodes to their minimum action cost. Unreachable nodes are absent.
+     */
+    public Map<MapNode, Integer> computeCostMapFromCurrent(MovementCostProfile costProfile) {
+        Objects.requireNonNull(costProfile, "costProfile must not be null");
+
+        GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before cost-map computation"));
+        MapNode current = state.getCurrentPlayerState()
+                .flatMap(player -> player.getCurrentPosition())
+                .orElseThrow(() -> new IllegalStateException("Current position must be set before cost-map computation"));
+        var map = state.getMap().orElseThrow(() -> new IllegalStateException("GameMap must be set before cost-map computation"));
+        return GridDijkstra.shortestPathCosts(map, current, costProfile);
     }
 
     @Override

@@ -114,6 +114,42 @@ final class GridDijkstra {
         return path;
     }
 
+    /**
+     * Computes the shortest-path cost from {@code start} to every reachable node.
+     *
+     * <p>This is useful when many candidate targets need to be compared in the same turn:
+     * run Dijkstra once and then look up costs in O(1) per candidate.</p>
+     *
+     * @param map The game map.
+     * @param start The starting node.
+     * @param costProfile The movement cost profile.
+     * @return A map of nodes to their minimum action-cost from {@code start}. Unreachable nodes are absent.
+     */
+    static Map<MapNode, Integer> shortestPathCosts(GameMap map, MapNode start, MovementCostProfile costProfile) {
+        Map<MapNode, Integer> empty = new HashMap<>();
+        if (Objects.isNull(map) || Objects.isNull(start) || Objects.isNull(costProfile)) {
+            return empty;
+        }
+
+        SearchState state = createSearchState(start);
+        Map<MapNode, Integer> distances = state.distances();
+        Set<MapNode> settledNodes = state.settledNodes();
+        PriorityQueue<MapNode> pq = state.priorityQueue();
+
+        while (!pq.isEmpty()) {
+            MapNode u = pq.poll();
+
+            if (settledNodes.contains(u) || distances.getOrDefault(u, Integer.MAX_VALUE) == Integer.MAX_VALUE) {
+                continue;
+            }
+            settledNodes.add(u);
+
+            relaxNeighbors(map, u, settledNodes, distances, pq, costProfile, null);
+        }
+
+        return distances;
+    }
+
     private static void relaxNeighbors(
             GameMap map,
             MapNode current,

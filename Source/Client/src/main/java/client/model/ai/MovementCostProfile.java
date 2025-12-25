@@ -20,10 +20,17 @@ enum MovementCostProfile {
             Terrain fromTerrain = from.getTerrain();
             Terrain toTerrain = to.getTerrain();
 
-            if (fromTerrain == Terrain.GRASS && toTerrain == Terrain.GRASS) return 1;
-            if (fromTerrain == Terrain.GRASS && toTerrain == Terrain.MOUNTAIN) return 2;
-            if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.GRASS) return 1;
-            if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.MOUNTAIN) return 2;
+            // IMPORTANT:
+            // Costs here must match the game's action semantics:
+            // - Grass -> Grass: 2 actions (leave + enter)
+            // - Grass -> Mountain: 3 actions (leave grass + enter mountain (2))
+            // - Mountain -> Grass: 3 actions (leave mountain (2) + enter grass)
+            // - Mountain -> Mountain: 4 actions (leave (2) + enter (2))
+            // This profile is used to compute the "reachable within 8 actions" set from the enemy true position.
+            if (fromTerrain == Terrain.GRASS && toTerrain == Terrain.GRASS) return 2;
+            if (fromTerrain == Terrain.GRASS && toTerrain == Terrain.MOUNTAIN) return 3;
+            if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.GRASS) return 3;
+            if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.MOUNTAIN) return 4;
 
             System.err.println("MovementCostProfile.WAY_HELPER: Unhandled terrain transition from " + fromTerrain + " to " + toTerrain);
             return Integer.MAX_VALUE;

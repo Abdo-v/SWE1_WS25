@@ -18,11 +18,11 @@ public class FortSeeker implements client.observer.util.Observer {
 
     private Optional<GameState> gameState;
     private boolean enemyFortFound = false;
-    private WayHelper wayHelper;
+    private final WayHelper wayHelper;
 
-    public FortSeeker() {
+    public FortSeeker(WayHelper wayHelper) {
         this.gameState = Optional.empty();
-        this.wayHelper = new WayHelper();
+        this.wayHelper = Objects.requireNonNull(wayHelper);
     }
     /**
      * Returns a LinkedHashMap of grass nodes in the opponent's half-map, initialized as unvisited.

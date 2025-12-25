@@ -15,15 +15,15 @@ public class StrategyGuide implements client.observer.util.Observer {
     // private static final Logger logger = LoggerFactory.getLogger(StrategyGuide.class);
 
     private Optional<GameState> gameState;
-    private WayHelper wayHelper;
+    private final WayHelper wayHelper;
 
     /**
      * Default constructor for StrategyGuide.
      * Initializes the gameState to empty.
      */
-    public StrategyGuide() {
+    public StrategyGuide(WayHelper wayHelper) {
         this.gameState = Optional.empty();
-        this.wayHelper = new WayHelper();
+        this.wayHelper = Objects.requireNonNull(wayHelper);
     }
 
     @Override
