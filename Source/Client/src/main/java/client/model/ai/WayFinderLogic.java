@@ -1,6 +1,7 @@
 package client.model.ai;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -19,6 +20,8 @@ import client.model.mapper.Terrain;
  */
 final class WayFinderLogic {
 
+    private final WayHelper wayHelper;
+    private final StateHolder stateHolder;
     private final ShortestPathFinder shortestPathFinder;
     private final StrategyGuide strategyGuide;
 
@@ -36,10 +39,12 @@ final class WayFinderLogic {
             FortSeeker fortSeeker,
             StrategyGuide strategyGuide
     ) {
+        this.wayHelper = Objects.requireNonNull(wayHelper, "wayHelper must not be null");
+        this.stateHolder = Objects.requireNonNull(stateHolder, "stateHolder must not be null");
         this.shortestPathFinder = shortestPathFinder;
         this.strategyGuide = strategyGuide;
 
-        this.nodeVisitTracker = new NodeVisitTracker(wayHelper);
+        this.nodeVisitTracker = new NodeVisitTracker(this.wayHelper);
         this.visionCostScorer = new VisionCostScorer(wayHelper, shortestPathFinder, strategyGuide);
         this.treasureTargeting = new TreasureTargetingUseCase(treasureSeeker, stateHolder, shortestPathFinder, nodeVisitTracker);
         this.fortTargeting = new FortTargetingUseCase(fortSeeker, stateHolder, shortestPathFinder);
@@ -62,13 +67,44 @@ final class WayFinderLogic {
                 }
             }
 
+            // Path lock is only about exploration targets. If the objective changes, discard the lock.
+            stateHolder.clearLockedExplorationTargetIfObjectiveChanged(objective);
+
             Optional<Direction> treasureDirection = treasureTargeting.tryGetDirection(gameState, currentMapNode, objective);
-            if (treasureDirection.isPresent()) return treasureDirection.orElseThrow();
+            if (treasureDirection.isPresent()) {
+                // Treasure known => exploration lock is irrelevant.
+                stateHolder.clearLockedExplorationTarget();
+                return treasureDirection.orElseThrow();
+            }
 
             Optional<Direction> fortDirection = fortTargeting.tryGetDirection(gameState, currentMapNode, objective);
-            if (fortDirection.isPresent()) return fortDirection.orElseThrow();
+            if (fortDirection.isPresent()) {
+                stateHolder.clearLockedExplorationTarget();
+                return fortDirection.orElseThrow();
+            }
 
-            MapNode bestNode = explorationTarget.selectBestNode(gameState, currentMapNode, objective);
+            // "Loop killer": if we already committed to an exploration target, keep moving towards it
+            // until we reach it or it becomes invalid/unreachable.
+            Optional<MapNode> lockedTargetOpt = stateHolder.getLockedExplorationTarget();
+            Optional<Objective> lockedObjectiveOpt = stateHolder.getLockedExplorationObjective();
+            if (lockedTargetOpt.isPresent() && lockedObjectiveOpt.isPresent() && lockedObjectiveOpt.orElseThrow() == objective) {
+                MapNode lockedTarget = lockedTargetOpt.orElseThrow();
+
+                if (currentMapNode.equalsByCoordinates(lockedTarget) || isExplorationTargetAlreadyVisited(lockedTarget, objective)) {
+                    stateHolder.clearLockedExplorationTarget();
+                } else {
+                    Optional<Direction> lockedDir = shortestPathFinder.findNextValidNodeToTarget(lockedTarget);
+                    if (lockedDir.isPresent()) {
+                        return lockedDir.orElseThrow();
+                    }
+                    stateHolder.clearLockedExplorationTarget();
+                }
+            }
+
+            Map<MapNode, Integer> costMap = shortestPathFinder.computeCostMapFromCurrent(MovementCostProfile.SHORTEST_PATH);
+
+            MapNode bestNode = explorationTarget.selectBestNode(gameState, currentMapNode, objective, costMap);
+            stateHolder.lockExplorationTarget(bestNode, objective);
 
             Optional<Direction> nextDirToBestOpt = shortestPathFinder.findNextValidNodeToTarget(bestNode);
             if (nextDirToBestOpt.isEmpty()) {
@@ -118,6 +154,24 @@ final class WayFinderLogic {
             }
         }
         return Optional.empty();
+    }
+
+    private boolean isExplorationTargetAlreadyVisited(MapNode target, Objective objective) {
+        Objects.requireNonNull(target, "target must not be null");
+        Objects.requireNonNull(objective, "objective must not be null");
+
+        if (target.getTerrain() == Terrain.GRASS) {
+            if (objective == Objective.TREASURE) {
+                return Boolean.TRUE.equals(wayHelper.getHalfMapVisitedGrassFields().get(target));
+            }
+            return Boolean.TRUE.equals(wayHelper.getOppHalfMapVisitedGrassFields().get(target));
+        }
+
+        if (target.getTerrain() == Terrain.MOUNTAIN) {
+            return Boolean.TRUE.equals(wayHelper.getAllMountainFieldsMap().get(target));
+        }
+
+        return false;
     }
 
 

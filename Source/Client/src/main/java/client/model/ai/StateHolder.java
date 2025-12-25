@@ -18,6 +18,11 @@ public class StateHolder implements client.observer.util.Observer {
     private boolean fortAlreadyFound;
     private Optional<MapNode> enemyFirstTruePosition;
 
+    // "Path lock" for exploration: once an exploration target is chosen, keep it until reached
+    // (or until the objective changes / treasure becomes known).
+    private Optional<MapNode> lockedExplorationTarget;
+    private Optional<Objective> lockedExplorationObjective;
+
     /**
      * Default constructor for StateHolder.
      */
@@ -27,6 +32,8 @@ public class StateHolder implements client.observer.util.Observer {
         this.treasureAlreadyCollected = false;
         this.fortAlreadyFound = false;
         this.enemyFirstTruePosition = Optional.empty();
+        this.lockedExplorationTarget = Optional.empty();
+        this.lockedExplorationObjective = Optional.empty();
     }
 
     @Override
@@ -62,6 +69,31 @@ public class StateHolder implements client.observer.util.Observer {
 
     public void setEnemyFirstTruePosition(Optional<MapNode> enemyFirstTruePosition) {
         this.enemyFirstTruePosition = Objects.requireNonNull(enemyFirstTruePosition, "enemyFirstTruePosition must not be null");
+    }
+
+    public Optional<MapNode> getLockedExplorationTarget() {
+        return lockedExplorationTarget;
+    }
+
+    public Optional<Objective> getLockedExplorationObjective() {
+        return lockedExplorationObjective;
+    }
+
+    public void lockExplorationTarget(MapNode target, Objective objective) {
+        this.lockedExplorationTarget = Optional.of(Objects.requireNonNull(target, "target must not be null"));
+        this.lockedExplorationObjective = Optional.of(Objects.requireNonNull(objective, "objective must not be null"));
+    }
+
+    public void clearLockedExplorationTarget() {
+        this.lockedExplorationTarget = Optional.empty();
+        this.lockedExplorationObjective = Optional.empty();
+    }
+
+    public void clearLockedExplorationTargetIfObjectiveChanged(Objective objective) {
+        Objects.requireNonNull(objective, "objective must not be null");
+        if (lockedExplorationObjective.isPresent() && lockedExplorationObjective.orElseThrow() != objective) {
+            clearLockedExplorationTarget();
+        }
     }
 
 }

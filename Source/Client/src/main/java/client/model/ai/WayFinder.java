@@ -37,9 +37,9 @@ public class WayFinder implements client.observer.util.Observer{
         this.stateHolder = new StateHolder();
         this.currentMapNode = Optional.empty();
         this.shortestPathFinder = new ShortestPathFinder();
-        this.treasureSeeker = new TreasureSeeker();
-        this.fortSeeker = new FortSeeker();
-        this.strategyGuide = new StrategyGuide();
+        this.treasureSeeker = new TreasureSeeker(wayHelper);
+        this.fortSeeker = new FortSeeker(wayHelper);
+        this.strategyGuide = new StrategyGuide(wayHelper);
 
     }
 

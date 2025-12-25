@@ -1,6 +1,7 @@
 package client.model.ai;
 
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 
 import client.model.GameState;
@@ -24,46 +25,61 @@ final class VisionCostScorer {
         this.strategyGuide = strategyGuide;
     }
 
-    float score(GameState gameState, MapNode currentMapNode, MapNode node, Objective objective) {
-        if (Objects.isNull(node) || Objects.isNull(gameState) || Objects.isNull(gameState.getMap())) return -1;
-
-        ArrayList<MapNode> visitedGrassNodes = new ArrayList<>();
-        if (objective == Objective.TREASURE) {
-            for (MapNode grassNode : wayHelper.getHalfMapVisitedGrassFields().keySet()) {
-                if (Boolean.TRUE.equals(wayHelper.getHalfMapVisitedGrassFields().get(grassNode))) {
-                    visitedGrassNodes.add(grassNode);
-                }
-            }
-        } else {
-            for (MapNode grassNode : wayHelper.getOppHalfMapVisitedGrassFields().keySet()) {
-                if (Boolean.TRUE.equals(wayHelper.getOppHalfMapVisitedGrassFields().get(grassNode))) {
-                    visitedGrassNodes.add(grassNode);
-                }
-            }
+    float score(GameState gameState, MapNode currentMapNode, MapNode node, Objective objective, Map<MapNode, Integer> costMap) {
+        if (Objects.isNull(node) || Objects.isNull(gameState) || Objects.isNull(costMap) || costMap.isEmpty()) {
+            return -1;
         }
 
-        MapNode previousTile = currentMapNode;
-        float cost = 0;
-        float grassVision = 0;
+        int cost = costMap.getOrDefault(node, Integer.MAX_VALUE);
+        if (cost == Integer.MAX_VALUE || cost <= 0) {
+            return -1;
+        }
 
-        ArrayList<MapNode> path = shortestPathFinder.findShortestPath(currentMapNode, node);
-        for (MapNode tile : path) {
-            if (tile.getTerrain() == Terrain.GRASS && !visitedGrassNodes.contains(tile)) {
-                grassVision += 1;
-            }
-            cost += shortestPathFinder.getCostToReachNode(previousTile, tile);
-            previousTile = tile;
+        float benefit = computeBenefit(node, objective);
+        return benefit > 0 ? (benefit / cost) : -1;
+    }
+
+    private float computeBenefit(MapNode node, Objective objective) {
+        Objects.requireNonNull(node, "node must not be null");
+        Objects.requireNonNull(objective, "objective must not be null");
+
+        // Benefit model (simple + stable):
+        // - Unvisited Grass: 1 (reveals itself)
+        // - Mountain: number of not-yet-visited grass nodes in its extended vision
+        // This matches the game mechanic where mountains reveal their 8 neighbors.
+
+        if (node.getTerrain() == Terrain.GRASS) {
+            boolean visited = isGrassVisited(node, objective);
+            return visited ? 0 : 1;
         }
 
         if (node.getTerrain() == Terrain.MOUNTAIN) {
+            boolean mountainVisited = Boolean.TRUE.equals(wayHelper.getAllMountainFieldsMap().get(node));
+            if (mountainVisited) {
+                return 0;
+            }
+
+            float revealCount = 0;
             ArrayList<MapNode> grassFromVision = strategyGuide.getGrassNodesFromExtendedVision(node);
             for (MapNode grassNode : grassFromVision) {
-                if (!visitedGrassNodes.contains(grassNode)) {
-                    grassVision += 1;
+                if (!isGrassVisited(grassNode, objective)) {
+                    revealCount += 1;
                 }
             }
+            return revealCount;
         }
 
-        return grassVision > 0 ? grassVision / cost : -1;
+        return 0;
+    }
+
+    private boolean isGrassVisited(MapNode grassNode, Objective objective) {
+        if (grassNode.getTerrain() != Terrain.GRASS) {
+            return false;
+        }
+
+        if (objective == Objective.TREASURE) {
+            return Boolean.TRUE.equals(wayHelper.getHalfMapVisitedGrassFields().get(grassNode));
+        }
+        return Boolean.TRUE.equals(wayHelper.getOppHalfMapVisitedGrassFields().get(grassNode));
     }
 }
