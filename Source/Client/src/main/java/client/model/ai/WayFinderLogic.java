@@ -59,7 +59,11 @@ final class WayFinderLogic {
             Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
             Objects.requireNonNull(objective, "objective must not be null");
 
-            nodeVisitTracker.markVisited(currentMapNode, gameState.isPlayerInOwnHalfMap());
+            boolean nodeIsInOwnHalf = gameState.getMap()
+                .map(map -> map.isNodeInOwnHalf(currentMapNode))
+                .orElse(gameState.isPlayerInOwnHalfMap()); // fallback if map missing
+
+            nodeVisitTracker.markVisited(currentMapNode, nodeIsInOwnHalf);
 
             if (currentMapNode.getTerrain() == Terrain.MOUNTAIN) {
                 ArrayList<MapNode> extendedVisionNodes = strategyGuide.getGrassNodesFromExtendedVision(currentMapNode);
