@@ -55,12 +55,7 @@ final class HalfMapSnakeArranger {
 
         boolean currentYScanTopToBottom = currentPosition.getY() < bounds.yMidPointThreshold;
 
-        PlayerHalfMap arranged = new PlayerHalfMap();
-        for (int x = startXIter; (scanXLeftToRight ? x <= endXIter : x >= endXIter); x += iterXIncrement) {
-            addColumn(map, arranged, x, bounds.minY, bounds.maxY, currentYScanTopToBottom);
-            currentYScanTopToBottom = !currentYScanTopToBottom;
-        }
-        return arranged;
+        return arrangeHalfMapColumns(map, startXIter, endXIter, iterXIncrement, bounds.minY, bounds.maxY, currentYScanTopToBottom);
     }
 
     static PlayerHalfMap arrangeOpponentHalf(GameMap map, MapNode currentPosition) {
@@ -91,9 +86,23 @@ final class HalfMapSnakeArranger {
 
         boolean currentYScanTopToBottom = currentPosition.getY() < bounds.playerYThreshold;
 
+        return arrangeHalfMapColumns(map, startXIter, endXIter, iterXIncrement, bounds.minY, bounds.maxY, currentYScanTopToBottom);
+    }
+    /**
+     * Helper to arrange columns for both own and opponent half-maps, alternating Y scan direction.
+     */
+    private static PlayerHalfMap arrangeHalfMapColumns(
+            GameMap map,
+            int startX,
+            int endX,
+            int iterXIncrement,
+            int minY,
+            int maxY,
+            boolean initialYScanTopToBottom) {
         PlayerHalfMap arranged = new PlayerHalfMap();
-        for (int x = startXIter; (scanXLeftToRight ? x <= endXIter : x >= endXIter); x += iterXIncrement) {
-            addColumn(map, arranged, x, bounds.minY, bounds.maxY, currentYScanTopToBottom);
+        boolean currentYScanTopToBottom = initialYScanTopToBottom;
+        for (int x = startX; (iterXIncrement > 0 ? x <= endX : x >= endX); x += iterXIncrement) {
+            addColumn(map, arranged, x, minY, maxY, currentYScanTopToBottom);
             currentYScanTopToBottom = !currentYScanTopToBottom;
         }
         return arranged;
