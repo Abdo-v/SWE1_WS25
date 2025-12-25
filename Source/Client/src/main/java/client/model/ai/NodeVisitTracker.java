@@ -25,7 +25,13 @@ final class NodeVisitTracker {
             if (ownHalf) {
                 wayHelper.getHalfMapVisitedGrassFields().put(node, true);
             } else {
-                wayHelper.getOppHalfMapVisitedGrassFields().put(node, true);
+                // After the "enemy first true position" becomes known, the opponent traversal map may be
+                // filtered to a smaller search space. In that case, do NOT re-introduce irrelevant nodes.
+                var oppVisited = wayHelper.getOppHalfMapVisitedGrassFields();
+                if (!oppVisited.isEmpty() && !oppVisited.containsKey(node)) {
+                    return;
+                }
+                oppVisited.put(node, true);
             }
             return;
         }

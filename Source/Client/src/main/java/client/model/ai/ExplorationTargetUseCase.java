@@ -81,6 +81,31 @@ final class ExplorationTargetUseCase {
             }
 
             if (bestNode.isEmpty()) {
+                // Safety net: do not hard-fail the whole AI when scoring yields no positive candidate.
+                // This can happen if everything looks "visited" or reveals nothing useful.
+                ArrayList<MapNode> fallbackCandidates = new ArrayList<>();
+                if (objective == Objective.TREASURE) {
+                    fallbackCandidates.addAll(treasureSeeker.getArrangedOwnHalfMap(currentMapNode).getMapNodes());
+                } else {
+                    fallbackCandidates.addAll(wayHelper.getOppHalfMapVisitedGrassFields().keySet());
+                    fallbackCandidates.addAll(
+                        wayHelper.getAllMountainFieldsMap().keySet().stream()
+                            .filter(tile -> gameState.getMap().map(map -> !map.isNodeInOwnHalf(tile)).orElse(false))
+                            .toList()
+                    );
+                }
+
+                Optional<MapNode> fallback = pickCheapestReachableUnvisitedFirst(
+                        fallbackCandidates,
+                        currentMapNode,
+                        objective,
+                        costMap
+                );
+
+                if (fallback.isPresent()) {
+                    return fallback.orElseThrow();
+                }
+
                 String strategyName = objective == Objective.TREASURE ? "treasure hunting" : "fort seeking";
                 throw new AIDecisionException(
                         String.format("No valid target found during %s (evaluated %d candidates, best value: %.2f)",
@@ -125,7 +150,9 @@ final class ExplorationTargetUseCase {
         GameMap map = gameState.getMap().orElse(null);
         for (MapNode tile : candidates) {
             if (tile.getTerrain() == Terrain.WATER) continue;
-            if (!visitedHalfMapNodes.contains(tile)) {
+            // NOTE: visitedHalfMapNodes actually contains the *unvisited* nodes.
+            // We only want to evaluate nodes that are still unvisited.
+            if (visitedHalfMapNodes.contains(tile)) {
                 candidatesEvaluated[0]++;
 
                 float ratio = scorer.score(gameState, currentMapNode, tile, objective, costMap);
@@ -199,6 +226,60 @@ final class ExplorationTargetUseCase {
             }
         }
         return bestNode;
+    }
+
+    private Optional<MapNode> pickCheapestReachableUnvisitedFirst(
+            Iterable<MapNode> candidates,
+            MapNode currentMapNode,
+            Objective objective,
+            Map<MapNode, Integer> costMap
+    ) {
+        Optional<MapNode> bestUnvisited = Optional.empty();
+        int bestUnvisitedCost = Integer.MAX_VALUE;
+
+        Optional<MapNode> bestAny = Optional.empty();
+        int bestAnyCost = Integer.MAX_VALUE;
+
+        for (MapNode tile : candidates) {
+            if (tile == null) continue;
+            if (tile.getTerrain() == Terrain.WATER) continue;
+            if (tile.equalsByCoordinates(currentMapNode)) continue;
+
+            int cost = costMap.getOrDefault(tile, Integer.MAX_VALUE);
+            if (cost == Integer.MAX_VALUE || cost <= 0) continue;
+
+            if (cost < bestAnyCost) {
+                bestAnyCost = cost;
+                bestAny = Optional.of(tile);
+            }
+
+            if (!isAlreadyVisited(tile, objective) && cost < bestUnvisitedCost) {
+                bestUnvisitedCost = cost;
+                bestUnvisited = Optional.of(tile);
+            }
+        }
+
+        return bestUnvisited.isPresent() ? bestUnvisited : bestAny;
+    }
+
+    private boolean isAlreadyVisited(MapNode node, Objective objective) {
+        if (node.getTerrain() == Terrain.GRASS) {
+            if (objective == Objective.TREASURE) {
+                return Boolean.TRUE.equals(wayHelper.getHalfMapVisitedGrassFields().get(node));
+            }
+
+            // Fort phase: if it's not in the traversal key-set, it's considered irrelevant/visited.
+            if (!wayHelper.getOppHalfMapVisitedGrassFields().containsKey(node)) {
+                return true;
+            }
+            return Boolean.TRUE.equals(wayHelper.getOppHalfMapVisitedGrassFields().get(node));
+        }
+
+        if (node.getTerrain() == Terrain.MOUNTAIN) {
+            return Boolean.TRUE.equals(wayHelper.getAllMountainFieldsMap().get(node));
+        }
+
+        return true;
     }
 
     private int distanceFromEnemyBorder(GameMap map, MapNode node) {

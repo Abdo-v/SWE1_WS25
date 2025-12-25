@@ -5,6 +5,7 @@ import client.model.GameState;
 import client.model.Direction;
 import client.model.mapper.MapNode;
 import client.model.mapper.HalfMapDimensions;
+import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Optional;
 // import org.slf4j.Logger;
@@ -82,9 +83,27 @@ public class WayFinder implements client.observer.util.Observer{
         });
         if(movesMade == MOVES_UNTIL_ENEMY_TRUE_POSITION) {
             stateHolder.setEnemyFirstTruePosition(state.getEnemyCurrentPosition());
-            stateHolder.getEnemyFirstTruePosition().ifPresent(enemyPos ->
-                    wayHelper.setOppHalfMapVisitedGrassFields(fortSeeker.getFilteredTraverseWay(enemyPos))
-            );
+            stateHolder.getEnemyFirstTruePosition().ifPresent(enemyPos -> {
+                LinkedHashMap<MapNode, Boolean> previous = new LinkedHashMap<>(wayHelper.getOppHalfMapVisitedGrassFields());
+                LinkedHashMap<MapNode, Boolean> filtered = fortSeeker.getFilteredTraverseWay(enemyPos);
+
+                // Preserve already-visited flags for nodes that remain in the filtered search space.
+                for (MapNode node : filtered.keySet()) {
+                    if (Boolean.TRUE.equals(previous.get(node))) {
+                        filtered.put(node, true);
+                    }
+                }
+
+                // If we are currently standing on a relevant enemy-half grass node, mark it visited immediately.
+                currentMapNode
+                        .filter(n -> filtered.containsKey(n))
+                        .ifPresent(n -> filtered.put(n, true));
+
+                wayHelper.setOppHalfMapVisitedGrassFields(filtered);
+
+                // Force the fort-seeking exploration logic to re-evaluate with the refined search-space.
+                stateHolder.clearLockedExplorationTarget();
+            });
         }
         state.getMap()
             .filter(map -> map.getContentSize() == FULL_MAP_TOTAL_NODES)

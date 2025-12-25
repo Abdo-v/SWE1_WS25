@@ -80,6 +80,12 @@ final class VisionCostScorer {
         if (objective == Objective.TREASURE) {
             return Boolean.TRUE.equals(wayHelper.getHalfMapVisitedGrassFields().get(grassNode));
         }
+
+        // Fort phase: only grass nodes inside the (potentially filtered) opponent traversal map are relevant.
+        // If the node is not even part of that key-set, treat it as "already visited" (benefit = 0).
+        if (!wayHelper.getOppHalfMapVisitedGrassFields().containsKey(grassNode)) {
+            return true;
+        }
         return Boolean.TRUE.equals(wayHelper.getOppHalfMapVisitedGrassFields().get(grassNode));
     }
 }

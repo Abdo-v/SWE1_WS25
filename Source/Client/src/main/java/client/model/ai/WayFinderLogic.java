@@ -11,6 +11,7 @@ import client.exception.NoValidMoveAvailableException;
 import client.model.Direction;
 import client.model.GameState;
 import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
 import client.model.mapper.Terrain;
 
 /**
@@ -64,6 +65,15 @@ final class WayFinderLogic {
                 ArrayList<MapNode> extendedVisionNodes = strategyGuide.getGrassNodesFromExtendedVision(currentMapNode);
                 for (MapNode node : extendedVisionNodes) {
                     nodeVisitTracker.markVisited(node, gameState.isPlayerInOwnHalfMap());
+                }
+            }
+
+            // Fort phase: before the enemy true position is guaranteed (first 8 own moves), head to the enemy-half center.
+            // This avoids chasing potentially random enemy positions and moves us into a good scanning position.
+            if (objective == Objective.FORT && stateHolder.getEnemyFirstTruePosition().isEmpty()) {
+                Optional<Direction> centerDir = tryGetDirectionToEnemyHalfCenter(gameState, currentMapNode);
+                if (centerDir.isPresent()) {
+                    return centerDir.orElseThrow();
                 }
             }
 
@@ -154,6 +164,85 @@ final class WayFinderLogic {
             }
         }
         return Optional.empty();
+    }
+
+    private Optional<Direction> tryGetDirectionToEnemyHalfCenter(GameState gameState, MapNode currentMapNode) {
+        Objects.requireNonNull(gameState, "gameState must not be null");
+        Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
+
+        return gameState.getMap().flatMap(map -> {
+            PlayerHalfMap enemyHalf = map.getOpponentHalfMap();
+            if (enemyHalf.getMapNodes().isEmpty()) {
+                return Optional.empty();
+            }
+
+            int minX = Integer.MAX_VALUE;
+            int maxX = Integer.MIN_VALUE;
+            int minY = Integer.MAX_VALUE;
+            int maxY = Integer.MIN_VALUE;
+            for (MapNode node : enemyHalf.getMapNodes()) {
+                minX = Math.min(minX, node.getX());
+                maxX = Math.max(maxX, node.getX());
+                minY = Math.min(minY, node.getY());
+                maxY = Math.max(maxY, node.getY());
+            }
+
+            // Half-map dimensions are 10x5 in this project: 2 center nodes across X, 1 center row in Y.
+            int centerY = (minY + maxY) / 2;
+            int centerX1 = (minX + maxX) / 2;
+            int centerX2 = centerX1 + 1;
+
+            MapNode center1;
+            MapNode center2;
+            try {
+                center1 = map.getNode(centerX1, centerY);
+                center2 = map.getNode(centerX2, centerY);
+            } catch (IllegalArgumentException e) {
+                return Optional.empty();
+            }
+
+            if (center1.getTerrain() == Terrain.WATER && center2.getTerrain() == Terrain.WATER) {
+                return Optional.empty();
+            }
+
+            // Pick the reachable center candidate with the lower action cost.
+            Map<MapNode, Integer> costMap = shortestPathFinder.computeCostMapFromCurrent(MovementCostProfile.SHORTEST_PATH);
+            int c1 = costMap.getOrDefault(center1, Integer.MAX_VALUE);
+            int c2 = costMap.getOrDefault(center2, Integer.MAX_VALUE);
+
+            Optional<MapNode> chosenCenter = Optional.empty();
+            if (center1.getTerrain() == Terrain.WATER) {
+                chosenCenter = c2 == Integer.MAX_VALUE ? Optional.empty() : Optional.of(center2);
+            } else if (center2.getTerrain() == Terrain.WATER) {
+                chosenCenter = c1 == Integer.MAX_VALUE ? Optional.empty() : Optional.of(center1);
+            } else if (c1 < c2) {
+                chosenCenter = c1 == Integer.MAX_VALUE ? Optional.empty() : Optional.of(center1);
+            } else if (c2 < c1) {
+                chosenCenter = c2 == Integer.MAX_VALUE ? Optional.empty() : Optional.of(center2);
+            } else {
+                if (c1 != Integer.MAX_VALUE) {
+                    chosenCenter = Optional.of(center1);
+                }
+            }
+
+            if (chosenCenter.isEmpty()) {
+                return Optional.empty();
+            }
+
+            MapNode target = chosenCenter.orElseThrow();
+            if (currentMapNode.equalsByCoordinates(target)) {
+                return Optional.empty();
+            }
+
+            Optional<Direction> next = shortestPathFinder.findNextValidNodeToTarget(target);
+            if (next.isEmpty()) {
+                return Optional.empty();
+            }
+
+            // Lock to center target to avoid oscillation.
+            stateHolder.lockExplorationTarget(target, Objective.FORT);
+            return next;
+        });
     }
 
     private boolean isExplorationTargetAlreadyVisited(MapNode target, Objective objective) {
