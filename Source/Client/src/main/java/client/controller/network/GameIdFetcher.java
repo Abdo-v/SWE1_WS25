@@ -1,6 +1,7 @@
 package client.controller.network;
 
 import client.exception.GameCommunicationException;
+import org.springframework.lang.NonNull;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -54,33 +55,8 @@ public class GameIdFetcher {
                 }
             
             // Parse the XML to extract uniqueGameID
-            String responseText = response.toString();
-            String startTag = "<uniqueGameID>";
-            String endTag = "</uniqueGameID>";
-            
-            int startIndex = responseText.indexOf(startTag);
-            int endIndex = responseText.indexOf(endTag);
-            
-            if (startIndex == -1 || endIndex == -1) {
-                throw new GameCommunicationException(
-                    "Could not find uniqueGameID in server response",
-                    serverBaseUrl,
-                    "fetchGameId",
-                    -1
-                );
-            }
-            
-            String gameId = responseText.substring(startIndex + startTag.length(), endIndex).trim();
-            
-            if (gameId.isEmpty()) {
-                throw new GameCommunicationException(
-                    "Server returned empty game ID",
-                    serverBaseUrl,
-                    "fetchGameId",
-                    -1
-                );
-            }
-            
+                String gameId = getString(serverBaseUrl, response);
+
                 return gameId;
             } finally {
                 connection.disconnect();
@@ -97,5 +73,36 @@ public class GameIdFetcher {
                 -1
             );
         }
+    }
+
+    @NonNull
+    private static String getString(String serverBaseUrl, StringBuilder response) throws GameCommunicationException {
+        String responseText = response.toString();
+        String startTag = "<uniqueGameID>";
+        String endTag = "</uniqueGameID>";
+
+        int startIndex = responseText.indexOf(startTag);
+        int endIndex = responseText.indexOf(endTag);
+
+        if (startIndex == -1 || endIndex == -1) {
+            throw new GameCommunicationException(
+                "Could not find uniqueGameID in server response",
+                    serverBaseUrl,
+                "fetchGameId",
+                -1
+            );
+        }
+
+        String gameId = responseText.substring(startIndex + startTag.length(), endIndex).trim();
+
+        if (gameId.isEmpty()) {
+            throw new GameCommunicationException(
+                "Server returned empty game ID",
+                    serverBaseUrl,
+                "fetchGameId",
+                -1
+            );
+        }
+        return gameId;
     }
 }
