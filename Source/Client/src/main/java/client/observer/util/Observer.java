@@ -4,7 +4,6 @@ import client.model.GameStateEvent;
 import client.model.GameState;
 
 import java.util.Objects;
-import java.util.Optional;
 
 @FunctionalInterface
 public interface Observer {

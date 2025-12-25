@@ -11,9 +11,7 @@ import client.view.GameOutput;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
-import java.time.Duration;
 import java.util.Objects;
-import java.util.Optional;
 
 
 // please note that most methodes are made

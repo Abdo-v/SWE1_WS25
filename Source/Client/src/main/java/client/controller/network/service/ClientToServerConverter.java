@@ -6,7 +6,6 @@ import client.model.mapper.PlayerHalfMap;
 import messagesbase.UniquePlayerIdentifier;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 
 /**

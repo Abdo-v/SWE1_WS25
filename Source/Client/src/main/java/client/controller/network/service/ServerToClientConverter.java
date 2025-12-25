@@ -2,11 +2,7 @@ package client.controller.network.service;
 
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
-import client.model.mapper.OwnToOppMapOrientation;
 import messagesbase.UniquePlayerIdentifier;
-
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * Converts network (messagesbase) types to client/internal model types.
