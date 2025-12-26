@@ -7,18 +7,7 @@ import java.util.Optional;
  * Checked exception for map data processing failures.
  * 
  * This exception is thrown when map data cannot be properly processed,
- * converted, or validated. Since map issues might be recoverable through
- * re-requesting data or using cached versions, this is a checked exception
- * that forces calling code to handle these scenarios appropriately.
- * 
- * Use cases:
- * - Server map data corruption or inconsistency
- * - Map conversion failures between server and client formats
- * - Invalid map node counts or structure
- * - Map coordinate validation failures
- * - Terrain type conversion errors
- * 
- * @author Abdalrahman Mohammed
+ * converted, or validated.
  */
 public class MapProcessingException extends Exception {
     
@@ -134,15 +123,6 @@ public class MapProcessingException extends Exception {
      */
     private boolean hasNodeCountInfo() {
         return expectedNodes > 0 && actualNodes >= 0;
-    }
-    
-    /**
-     * Determines if this exception includes coordinate information.
-     * 
-     * @return true if coordinate context is available
-     */
-    private boolean hasCoordinateInfo() {
-        return coordinateContext.filter(text -> !text.trim().isEmpty()).isPresent();
     }
     
     /**

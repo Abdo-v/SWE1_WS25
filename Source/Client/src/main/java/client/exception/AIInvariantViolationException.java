@@ -6,7 +6,7 @@ import java.util.Optional;
 /**
  * Unchecked exception for violations of AI invariants/contracts.
  *
- * <p>Use when an internal assumption is broken (e.g. algorithm produced an impossible state),
+ * Use when an internal assumption is broken (e.g. algorithm produced an impossible state),
  * which usually indicates a bug rather than a recoverable runtime condition.
  */
 public class AIInvariantViolationException extends RuntimeException {

@@ -6,17 +6,7 @@ import java.util.Optional;
  * Unchecked exception for AI algorithm decision-making failures.
  * 
  * This exception is thrown when the AI encounters an unrecoverable error
- * in its decision-making process. Since these represent programming logic
- * errors or invalid game states that should not occur in normal operation,
- * this is implemented as an unchecked exception (RuntimeException).
- * 
- * Use cases:
- * - AI pathfinding algorithm failures (no valid path found when one should exist)
- * - Invalid game state transitions that break AI assumptions
- * - Algorithm infinite loops or stack overflow conditions
- * - Corrupted AI decision trees or invalid strategy states
- * - Mathematical errors in AI calculations
- * 
+ * in its decision-making process.
  * @author Abdalrahman Mohammed
  */
 public class AIDecisionException extends RuntimeException {

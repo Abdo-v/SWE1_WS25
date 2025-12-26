@@ -8,9 +8,6 @@ import java.util.Optional;
 /**
  * Checked exception that indicates the AI could not determine a valid next move,
  * but the caller can often recover by applying a safe fallback move.
- *
- * <p>This is intentionally a checked exception to force the controller layer to
- * acknowledge and handle the recovery strategy (fallback move, retry, abort, etc.).
  */
 public class NoValidMoveAvailableException extends Exception {
 

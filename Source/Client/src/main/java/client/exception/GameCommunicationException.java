@@ -6,19 +6,7 @@ import java.util.Optional;
  * Checked exception for game communication failures.
  * 
  * This exception is thrown when communication with the game server fails
- * in a recoverable way. Since network issues are often temporary and can
- * be handled by retry logic, fallback mechanisms, or graceful degradation,
- * this is implemented as a checked exception to force calling code to
- * handle these recoverable error conditions.
- * 
- * Use cases:
- * - Server connection timeouts
- * - HTTP request failures (4xx, 5xx responses)
- * - Network connectivity issues
- * - Server temporarily unavailable
- * - Malformed server responses that can be retried
- * 
- * @author Abdalrahman Mohammed
+ * in a recoverable way.
  */
 public class GameCommunicationException extends Exception {
     

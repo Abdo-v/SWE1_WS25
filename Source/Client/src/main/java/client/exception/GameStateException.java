@@ -4,18 +4,7 @@ package client.exception;
  * Unchecked exception for game state consistency violations.
  * 
  * This exception is thrown when the game state becomes inconsistent
- * or when operations are attempted on invalid game states. These
- * represent programming logic errors rather than expected conditions,
- * making this an unchecked exception.
- * 
- * Use cases:
- * - Inconsistent player state transitions
- * - Operations on missing or uninitialized game states
- * - Observer pattern violations
- * - Invalid game state modifications
- * - Corrupted game state data structures
- * 
- * @author Abdalrahman Mohammed
+ * or when operations are attempted on invalid game states.
  */
 public class GameStateException extends RuntimeException {
     

@@ -4,9 +4,6 @@ import java.util.Objects;
 
 /**
  * Checked exception thrown when a full map is not available within a timeout.
- *
- * This is intentionally a checked exception because callers can decide how to
- * recover (e.g., retry later, abort startup, switch to reduced mode, etc.).
  */
 public class FullMapNotAvailableException extends Exception {
 

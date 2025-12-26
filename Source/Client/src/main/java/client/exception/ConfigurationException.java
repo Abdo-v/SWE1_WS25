@@ -7,17 +7,7 @@ import java.util.Optional;
  * 
  * This exception is thrown when the application encounters invalid
  * configuration parameters, malformed arguments, or missing required
- * configuration values. Since these represent setup/deployment issues
- * rather than runtime conditions, this is an unchecked exception.
- * 
- * Use cases:
- * - Invalid command line arguments
- * - Missing required configuration parameters
- * - Malformed URLs or file paths
- * - Invalid log levels or game modes
- * - Conflicting configuration options
- * 
- * @author Abdalrahman Mohammed
+ * configuration values. 
  */
 public class ConfigurationException extends RuntimeException {
     
