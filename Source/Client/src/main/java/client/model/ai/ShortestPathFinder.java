@@ -64,7 +64,7 @@ public class ShortestPathFinder implements client.observer.util.Observer {
      *         Returns an empty list if no path is found, or if start/target is null or invalid.
      *         If start and target are the same, returns a list containing just the start node.
      */
-    public ArrayList<MapNode> findShortestPath(MapNode start, MapNode target) {
+    private ArrayList<MapNode> findShortestPath(MapNode start, MapNode target) {
         ArrayList<MapNode> path = new ArrayList<>();
         Optional<MapNode> startNode = Optional.ofNullable(start);
         Optional<MapNode> targetNode = Optional.ofNullable(target);

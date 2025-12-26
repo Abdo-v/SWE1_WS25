@@ -189,13 +189,6 @@ public class WayFinder implements client.observer.util.Observer{
         // logger.debug("All sub-observers added successfully");
     }
 
-    // getters and setters for testing, TDD
-
-    /**
-     * Sets the GameState for the WayFinder. only used for observer adding.
-     * @param state
-     * @return
-     */
     public void setGameState(GameState state){
         this.gameState = Optional.of(Objects.requireNonNull(state, "state must not be null"));
         // logger.debug("GameState set for WayFinder");

@@ -16,12 +16,10 @@ import client.model.mapper.Terrain;
 final class VisionCostScorer {
 
     private final WayHelper wayHelper;
-    private final ShortestPathFinder shortestPathFinder;
     private final StrategyGuide strategyGuide;
 
     VisionCostScorer(WayHelper wayHelper, ShortestPathFinder shortestPathFinder, StrategyGuide strategyGuide) {
         this.wayHelper = wayHelper;
-        this.shortestPathFinder = shortestPathFinder;
         this.strategyGuide = strategyGuide;
     }
 
