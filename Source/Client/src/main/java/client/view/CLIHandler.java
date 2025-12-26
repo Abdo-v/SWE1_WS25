@@ -21,7 +21,6 @@ public class CLIHandler implements client.observer.util.Observer {
 
     private Optional<GameState> gameState = Optional.empty();
     private static boolean reduced;
-    private final MapSnapshotView snapshotView = new MapSnapshotView();
 
     public CLIHandler(GameMode gameMode) {
         GameMode safeMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
@@ -31,7 +30,6 @@ public class CLIHandler implements client.observer.util.Observer {
     @Override
     public void update(GameState gameState ){
         this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
-        // to do : implement update on the output to the CLI
     }
 
     public static boolean isGameModeReduced() {
