@@ -17,8 +17,8 @@ import java.util.Objects;
  */
 public final class DebugSettings {
 
-    public static final String DEBUG_PROPERTY = "client.debug";
-    public static final String DEBUG_ENV = "CLIENT_DEBUG";
+    private static final String DEBUG_PROPERTY = "client.debug";
+    private static final String DEBUG_ENV = "CLIENT_DEBUG";
 
     private DebugSettings() {
     }
