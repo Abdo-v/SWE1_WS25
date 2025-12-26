@@ -151,25 +151,24 @@ public class MapProcessingException extends Exception {
      */
     public String getRecoveryMessage() {
         StringBuilder recovery = new StringBuilder();
-        recovery.append("🗺️  Map Processing Error: ").append(getMessage()).append("\n");
+        recovery.append("Map processing failed: ").append(getMessage()).append("\n");
 
-        mapType.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append("📋 Map Type: ").append(value).append("\n"));
+        mapType.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append("Map Type: ").append(value).append("\n"));
+        processingStage.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append("Stage: ").append(value).append("\n"));
+        coordinateContext.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append("Coordinates: ").append(value).append("\n"));
         
         if (hasNodeCountInfo()) {
-            recovery.append("📊 Expected ").append(expectedNodes)
-                   .append(" nodes, but received ").append(actualNodes).append("\n");
+            recovery.append("Nodes: expected ").append(expectedNodes)
+                   .append(", received ").append(actualNodes).append("\n");
         }
         
         if (isRecoverable()) {
-            recovery.append("✅ This error might be recoverable:\n");
-            recovery.append("   • Try refreshing the map data\n");
-            recovery.append("   • Check network connection\n");
-            recovery.append("   • Wait a moment and retry the operation");
+            recovery.append("Action: continuing with retry/polling (recoverable).\n");
+            recovery.append("Hint: enable debug traces via -Dclient.debug=true if you need the root cause.");
         } else {
-            recovery.append("⚠️  This likely cannot be recovered in this run:\n");
-            recovery.append("   • Verify client/server protocol compatibility\n");
-            recovery.append("   • Inspect server ResponseEnvelope exception details (name/message)\n");
-            recovery.append("   • Re-run with -Dclient.debug=true for stack traces");
+            recovery.append("Action: aborting this run (not recoverable).\n");
+            recovery.append("Hint: check protocol/business-rule compatibility and server ResponseEnvelope exceptionName/exceptionMessage.\n");
+            recovery.append("Hint: enable debug traces via -Dclient.debug=true to print stack traces.");
         }
         
         return recovery.toString();
