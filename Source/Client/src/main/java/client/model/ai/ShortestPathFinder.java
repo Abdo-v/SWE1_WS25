@@ -125,34 +125,6 @@ class ShortestPathFinder implements client.observer.util.Observer {
                 .orElseThrow(() -> new IllegalStateException("Current position must be initialized"));
         return GridNavigation.getDirectionToNeighbor(current, neighbor);
     }
-    /**
-     * Calculates the total cost to reach a target node from a starting node.
-     * This method uses the findShortestPath method to get the path and then sums the movement costs.
-     * It returns -1 if the path is not found or if the start or target nodes are null.
-     * @param start The starting MapNode.
-     * @param target The target MapNode.
-     * @return The total movement cost as an integer, or -1 if the path is not found.
-     */
-    public int getCostToReachNode(MapNode start, MapNode target) {
-        Optional<MapNode> startNode = Optional.ofNullable(start);
-        Optional<MapNode> targetNode = Optional.ofNullable(target);
-        Optional<GameState> stateOptional = gameState;
-
-        if (startNode.isEmpty() || targetNode.isEmpty() || stateOptional.isEmpty() || gameState.flatMap(GameState::getMap).isEmpty()) {
-            System.err.println("WayFinder.getCostToReachNode: Node, gameState, or map is missing.");
-            return -1;
-        }
-
-        GameState state = gameState.orElseThrow();
-        MapNode currentPosition = state.getCurrentPlayerState()
-                .flatMap(player -> player.getCurrentPosition())
-                .orElseThrow(() -> new IllegalStateException("Current position must be initialized"));
-
-        var map = state.getMap().orElseThrow(() -> new IllegalStateException("GameMap must be set before cost calculation"));
-
-        int cost = GridDijkstra.shortestPathCost(map, startNode.orElseThrow(), targetNode.orElseThrow(), MovementCostProfile.SHORTEST_PATH);
-        return cost == Integer.MAX_VALUE ? -1 : cost;
-    }
 
     /**
      * Computes a full Dijkstra cost-map from the current player position.
