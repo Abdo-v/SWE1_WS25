@@ -17,6 +17,20 @@ public class AIInvariantViolationException extends RuntimeException {
     private final Optional<String> invariant;
     private final Optional<String> details;
 
+    public AIInvariantViolationException(String message) {
+        super(Objects.requireNonNull(message, "message is required"));
+        this.aiComponent = Optional.empty();
+        this.invariant = Optional.empty();
+        this.details = Optional.empty();
+    }
+
+    public AIInvariantViolationException(String message, Throwable cause) {
+        super(Objects.requireNonNull(message, "message is required"), cause);
+        this.aiComponent = Optional.empty();
+        this.invariant = Optional.empty();
+        this.details = Optional.empty();
+    }
+
     public AIInvariantViolationException(String message, String aiComponent, String invariant, String details) {
         super(Objects.requireNonNull(message, "message is required"));
         this.aiComponent = Optional.ofNullable(aiComponent);
@@ -24,4 +38,15 @@ public class AIInvariantViolationException extends RuntimeException {
         this.details = Optional.ofNullable(details);
     }
 
+    public Optional<String> getAiComponent() {
+        return aiComponent;
+    }
+
+    public Optional<String> getInvariant() {
+        return invariant;
+    }
+
+    public Optional<String> getDetails() {
+        return details;
+    }
 }
