@@ -16,7 +16,32 @@ public class AIDecisionException extends RuntimeException {
     private final Optional<String> aiComponent;
     private final Optional<String> decisionContext;
     private final Optional<Object> gameStateSnapshot;
-
+    
+    /**
+     * Creates a new AIDecisionException with a message.
+     * 
+     * @param message the detail message explaining the AI decision failure
+     */
+    public AIDecisionException(String message) {
+        super(message);
+        this.aiComponent = Optional.empty();
+        this.decisionContext = Optional.empty();
+        this.gameStateSnapshot = Optional.empty();
+    }
+    
+    /**
+     * Creates a new AIDecisionException with a message and cause.
+     * 
+     * @param message the detail message explaining the AI decision failure
+     * @param cause the underlying cause of the AI failure
+     */
+    public AIDecisionException(String message, Throwable cause) {
+        super(message, cause);
+        this.aiComponent = Optional.empty();
+        this.decisionContext = Optional.empty();
+        this.gameStateSnapshot = Optional.empty();
+    }
+    
     /**
      * Creates a new AIDecisionException with detailed AI context information.
      * 
