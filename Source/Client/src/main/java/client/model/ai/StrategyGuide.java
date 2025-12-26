@@ -11,7 +11,7 @@ import client.model.GameState;
 import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
 
-public class StrategyGuide implements client.observer.util.Observer {
+class StrategyGuide implements client.observer.util.Observer {
     // private static final Logger logger = LoggerFactory.getLogger(StrategyGuide.class);
 
     private Optional<GameState> gameState;
@@ -21,7 +21,7 @@ public class StrategyGuide implements client.observer.util.Observer {
      * Default constructor for StrategyGuide.
      * Initializes the gameState to empty.
      */
-    public StrategyGuide(WayHelper wayHelper) {
+    StrategyGuide(WayHelper wayHelper) {
         this.gameState = Optional.empty();
         this.wayHelper = Objects.requireNonNull(wayHelper);
     }
@@ -48,7 +48,7 @@ public class StrategyGuide implements client.observer.util.Observer {
      * @param currentNode The node from which to find surrounding grass nodes.
      * @return An ArrayList of MapNode objects representing grass nodes surrounding the current node.
      */
-    public ArrayList<MapNode> getGrassNodesFromExtendedVision(MapNode currentNode){
+    ArrayList<MapNode> getGrassNodesFromExtendedVision(MapNode currentNode){
         if (Objects.isNull(currentNode)) return new ArrayList<>();
         
         ArrayList<MapNode> grassNodes = new ArrayList<>();
@@ -125,7 +125,7 @@ public class StrategyGuide implements client.observer.util.Observer {
      * and the values are initialized to false (indicating unvisited).
      * @return A LinkedHashMap containing all mountain fields.
      */
-    public LinkedHashMap<MapNode,Boolean> getAllMountainFields(){
+    LinkedHashMap<MapNode,Boolean> getAllMountainFields(){
         return wayHelper.getAllMountainFields();
     }
 }

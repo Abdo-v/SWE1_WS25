@@ -14,7 +14,7 @@ import client.model.mapper.PlayerHalfMap;
  * Helper class for managing traversal paths and half-map arrangements.
  * This class encapsulates logic for organizing and tracking map nodes for traversal strategies.
  */
-public class WayHelper implements client.observer.util.Observer {
+class WayHelper implements client.observer.util.Observer {
 
     private Optional<GameState> gameState;
     private LinkedHashMap<MapNode, Boolean> halfMapVisitedGrassFields;

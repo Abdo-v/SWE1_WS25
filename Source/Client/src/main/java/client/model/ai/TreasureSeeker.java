@@ -11,7 +11,7 @@ import client.model.mapper.PlayerHalfMap;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
-public class TreasureSeeker implements client.observer.util.Observer {
+class TreasureSeeker implements client.observer.util.Observer {
 
     // private static final Logger logger = LoggerFactory.getLogger(TreasureSeeker.class);
     private Optional<GameState> gameState;

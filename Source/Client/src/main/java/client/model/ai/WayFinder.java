@@ -19,13 +19,13 @@ public class WayFinder implements client.observer.util.Observer{
     private static final int MOVES_UNTIL_ENEMY_TRUE_POSITION = 8;
 
     private Optional<GameState> gameState;
-    private WayHelper wayHelper;
-    private StateHolder stateHolder;
+    private final WayHelper wayHelper;
+    private final StateHolder stateHolder;
     private Optional<MapNode> currentMapNode;
-    private ShortestPathFinder shortestPathFinder;
-    private TreasureSeeker treasureSeeker;
-    private FortSeeker fortSeeker;
-    private StrategyGuide strategyGuide;
+    private final ShortestPathFinder shortestPathFinder;
+    private final TreasureSeeker treasureSeeker;
+    private final FortSeeker fortSeeker;
+    private final StrategyGuide strategyGuide;
     private int movesMade = 0;
 
     /**

@@ -7,7 +7,7 @@ public class MapNode {
     private int y;
     private Terrain terrain;
     private boolean fortPresent;
-    private boolean treasurePresent;
+    private final boolean treasurePresent;
 
     /**
      * Constructs a MapNode with the given parameters.

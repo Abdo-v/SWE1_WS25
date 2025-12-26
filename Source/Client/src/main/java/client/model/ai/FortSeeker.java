@@ -12,7 +12,7 @@ import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 import client.model.mapper.PlayerHalfMap;
 
-public class FortSeeker implements client.observer.util.Observer {
+class FortSeeker implements client.observer.util.Observer {
 
     // private static final Logger logger = LoggerFactory.getLogger(FortSeeker.class);
 

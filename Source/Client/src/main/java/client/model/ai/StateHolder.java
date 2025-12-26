@@ -10,7 +10,7 @@ import java.util.Optional;
  * Holds state information for the AI decision-making process.
  * This class encapsulates flags and positions that track the progress of treasure and fort discovery.
  */
-public class StateHolder implements client.observer.util.Observer {
+class StateHolder implements client.observer.util.Observer {
 
     private Optional<GameState> gameState;
     private boolean treasureAlreadyFound;
@@ -25,7 +25,7 @@ public class StateHolder implements client.observer.util.Observer {
     /**
      * Default constructor for StateHolder.
      */
-    public StateHolder() {
+    StateHolder() {
         this.gameState = Optional.empty();
         this.treasureAlreadyFound = false;
         this.fortAlreadyFound = false;
@@ -41,49 +41,49 @@ public class StateHolder implements client.observer.util.Observer {
 
     // Getters and setters
 
-    public boolean isTreasureAlreadyFound() {
+    boolean isTreasureAlreadyFound() {
         return treasureAlreadyFound;
     }
 
-    public void setTreasureAlreadyFound(boolean treasureAlreadyFound) {
+    void setTreasureAlreadyFound(boolean treasureAlreadyFound) {
         this.treasureAlreadyFound = treasureAlreadyFound;
     }
 
-    public boolean isFortAlreadyFound() {
+    boolean isFortAlreadyFound() {
         return fortAlreadyFound;
     }
 
-    public void setFortAlreadyFound(boolean fortAlreadyFound) {
+    void setFortAlreadyFound(boolean fortAlreadyFound) {
         this.fortAlreadyFound = fortAlreadyFound;
     }
 
-    public Optional<MapNode> getEnemyFirstTruePosition() {
+    Optional<MapNode> getEnemyFirstTruePosition() {
         return enemyFirstTruePosition;
     }
 
-    public void setEnemyFirstTruePosition(Optional<MapNode> enemyFirstTruePosition) {
+    void setEnemyFirstTruePosition(Optional<MapNode> enemyFirstTruePosition) {
         this.enemyFirstTruePosition = Objects.requireNonNull(enemyFirstTruePosition, "enemyFirstTruePosition must not be null");
     }
 
-    public Optional<MapNode> getLockedExplorationTarget() {
+    Optional<MapNode> getLockedExplorationTarget() {
         return lockedExplorationTarget;
     }
 
-    public Optional<Objective> getLockedExplorationObjective() {
+    Optional<Objective> getLockedExplorationObjective() {
         return lockedExplorationObjective;
     }
 
-    public void lockExplorationTarget(MapNode target, Objective objective) {
+    void lockExplorationTarget(MapNode target, Objective objective) {
         this.lockedExplorationTarget = Optional.of(Objects.requireNonNull(target, "target must not be null"));
         this.lockedExplorationObjective = Optional.of(Objects.requireNonNull(objective, "objective must not be null"));
     }
 
-    public void clearLockedExplorationTarget() {
+    void clearLockedExplorationTarget() {
         this.lockedExplorationTarget = Optional.empty();
         this.lockedExplorationObjective = Optional.empty();
     }
 
-    public void clearLockedExplorationTargetIfObjectiveChanged(Objective objective) {
+    void clearLockedExplorationTargetIfObjectiveChanged(Objective objective) {
         Objects.requireNonNull(objective, "objective must not be null");
         if (lockedExplorationObjective.isPresent() && lockedExplorationObjective.orElseThrow() != objective) {
             clearLockedExplorationTarget();

@@ -8,7 +8,7 @@ import java.util.List;
 
 public class GameMap {
     private final MapEssentials map;
-    private Optional<OwnToOppMapOrientation> orientation;
+    private final Optional<OwnToOppMapOrientation> orientation;
 
     private static final String ORIENTATION_REQUIRED_MESSAGE = "Map orientation must be set";
 

@@ -55,14 +55,4 @@ final class MapEssentials {
         return nodes.size();
     }
 
-    private void recomputeBoundsFromNodes() {
-        int computedMaxX = 0;
-        int computedMaxY = 0;
-        for (MapNode node : nodes) {
-            computedMaxX = Math.max(computedMaxX, node.getX());
-            computedMaxY = Math.max(computedMaxY, node.getY());
-        }
-        this.maxX = computedMaxX;
-        this.maxY = computedMaxY;
-    }
 }

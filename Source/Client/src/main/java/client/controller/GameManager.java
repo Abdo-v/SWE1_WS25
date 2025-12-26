@@ -20,7 +20,7 @@ import java.time.Duration;
 public class GameManager {
     // private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     
-    private client.model.GameState gameState;
+    private final client.model.GameState gameState;
     private final NetworkCenter networkCenter;
     private Optional<String> playerId;
     private final WayFinder wayFinder = new WayFinder();
@@ -107,7 +107,7 @@ public class GameManager {
         fullMapWaitService.waitForFullMap(this.gameState, timeout, pollInterval);
     }
 
-    public void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
+    void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
         moveExecutionService.makeMove(gameState, requirePlayerId(), gameMode);
     }
 
@@ -150,14 +150,14 @@ public class GameManager {
         visualizationService.visualizeMap(mapType);
     }
 
-    public void enableDynamicVisualization() {
+    void enableDynamicVisualization() {
         visualizationService.enableDynamicVisualization();
     }
 
     /**
      * Disable dynamic visualization
      */
-    public void disableDynamicVisualization() {
+    void disableDynamicVisualization() {
         visualizationService.disableDynamicVisualization();
     }
 

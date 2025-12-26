@@ -12,7 +12,7 @@ import client.model.mapper.MapNode;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
-public class ShortestPathFinder implements client.observer.util.Observer {
+class ShortestPathFinder implements client.observer.util.Observer {
 
     // private static final Logger logger = LoggerFactory.getLogger(ShortestPathFinder.class);
     private Optional<GameState> gameState;

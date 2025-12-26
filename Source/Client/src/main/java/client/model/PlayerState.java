@@ -12,11 +12,11 @@ public class PlayerState {
 
     private static final PlayerStatus DEFAULT_STATUS = PlayerStatus.MUST_WAIT;
 
-    private String playerID;
-    private String firstName;
-    private String lastName;
-    private String uAccount;
-    private PlayerStatus status;
+    private final String playerID;
+    private final String firstName;
+    private final String lastName;
+    private final String uAccount;
+    private final PlayerStatus status;
     private boolean collectedTreasure = false;
     private Optional<MapNode> currentPosition = Optional.empty();
 
