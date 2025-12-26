@@ -75,25 +75,5 @@ public class AIDecisionException extends RuntimeException {
     // Getters for additional context information
     public Optional<String> getAiComponent() { return aiComponent; }
     public Optional<String> getDecisionContext() { return decisionContext; }
-    public Optional<Object> getGameStateSnapshot() { return gameStateSnapshot; }
-    
-    /**
-     * Creates a formatted debug report for developers.
-     * 
-     * @return a detailed debug report of the AI failure
-     */
-    public String getDebugReport() {
-        StringBuilder report = new StringBuilder();
-        report.append("=== AI DECISION EXCEPTION DEBUG REPORT ===\n");
-        report.append("Message: ").append(getMessage()).append("\n");
-        report.append("AI Component: ").append(aiComponent.orElse("Unknown")).append("\n");
-        report.append("Decision Context: ").append(decisionContext.orElse("Unknown")).append("\n");
-        report.append("Has Game State Snapshot: ").append(gameStateSnapshot.isPresent() ? "Yes" : "No").append("\n");
-        Optional.ofNullable(getCause()).ifPresent(cause -> report
-                .append("Underlying Cause: ").append(cause.getClass().getSimpleName())
-                .append(" - ").append(cause.getMessage()).append("\n"));
-        report.append("Stack Trace: Available via printStackTrace()").append("\n");
-        report.append("=== END DEBUG REPORT ===");
-        return report.toString();
-    }
+
 }
