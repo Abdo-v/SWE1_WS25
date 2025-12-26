@@ -14,7 +14,6 @@ import java.util.Optional;
  * <p>For assignment-compliant, emoji-based visualizations, prefer:
  * <ul>
  *   <li>{@link DynamicCLIGameView} for in-game visualization</li>
- *   <li>{@link MapGenerationView} for initial half-map visualization after generation</li>
  *   <li>{@link MapValidationInternalsView} for technical validation internals (System.err)</li>
  * </ul>
  */
@@ -23,7 +22,6 @@ public class CLIHandler implements client.observer.util.Observer {
     private Optional<GameState> gameState = Optional.empty();
     private static boolean reduced;
     private final MapSnapshotView snapshotView = new MapSnapshotView();
-    private final MapGenerationView mapGenerationView = new MapGenerationView();
 
     public CLIHandler(GameMode gameMode) {
         GameMode safeMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
@@ -38,29 +36,6 @@ public class CLIHandler implements client.observer.util.Observer {
 
     public static boolean isGameModeReduced() {
         return CLIHandler.reduced;
-    }
-
-    private void visualizeMap(MapVisualizationType mapType) {
-        MapVisualizationType safeType = Objects.requireNonNullElse(mapType, MapVisualizationType.UNKNOWN);
-
-        if (this.gameState.isEmpty()) {
-            switch (safeType) {
-                case OWN:
-                    System.out.println("Own map visual: map not available");
-                    break;
-                case OPPONENT:
-                    System.out.println("Opponent map visual: map not available or incomplete");
-                    break;
-                case FULL:
-                    System.out.println("Full map visual: map not available or incomplete");
-                    break;
-                default:
-                    System.out.println("Invalid map type. Use 'own', 'opponent', or 'full'.");
-            }
-            return;
-        }
-
-        snapshotView.visualize(this.gameState.orElseThrow(), safeType);
     }
 
 

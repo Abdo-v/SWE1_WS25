@@ -36,18 +36,15 @@ final class HalfMapSnakeArranger {
         OwnToOppMapOrientation orientation = map.getOrientation();
         Bounds bounds = ownHalfBounds(orientation);
 
-        boolean scanXLeftToRight;
         int startXIter;
         int endXIter;
         int iterXIncrement;
 
         if (currentPosition.getX() < bounds.xMidPointThreshold) {
-            scanXLeftToRight = true;
             startXIter = bounds.minX;
             endXIter = bounds.maxX;
             iterXIncrement = 1;
         } else {
-            scanXLeftToRight = false;
             startXIter = bounds.maxX;
             endXIter = bounds.minX;
             iterXIncrement = -1;

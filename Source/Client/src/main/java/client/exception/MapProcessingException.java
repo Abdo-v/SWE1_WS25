@@ -41,29 +41,6 @@ public class MapProcessingException extends Exception {
     }
     
     /**
-     * Creates a new MapProcessingException with node count context.
-     * 
-     * @param message the detail message explaining the map processing failure
-     * @param mapType the type of map being processed
-     * @param processingStage the stage of processing where the failure occurred
-     * @param expectedNodes the expected number of map nodes
-     * @param actualNodes the actual number of map nodes found
-     */
-    private MapProcessingException(String message, String mapType, String processingStage, int expectedNodes, int actualNodes) {
-        super(buildDetailedMessage(message,
-                Optional.ofNullable(mapType),
-                Optional.ofNullable(processingStage),
-                expectedNodes,
-                actualNodes,
-                Optional.empty()));
-        this.mapType = Optional.ofNullable(mapType);
-        this.processingStage = Optional.ofNullable(processingStage);
-        this.expectedNodes = expectedNodes;
-        this.actualNodes = actualNodes;
-        this.coordinateContext = Optional.empty();
-    }
-
-    /**
      * Creates a new MapProcessingException with complete context and cause.
      * 
      * @param message the detail message explaining the map processing failure
