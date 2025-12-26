@@ -15,6 +15,8 @@ public class GameCommunicationException extends Exception {
     private final Optional<String> serverUrl;
     private final Optional<String> operation;
     private final int httpStatusCode;
+    private final Optional<String> remoteExceptionName;
+    private final Optional<String> remoteExceptionMessage;
     
     /**
      * Creates a new GameCommunicationException with a message.
@@ -26,6 +28,8 @@ public class GameCommunicationException extends Exception {
         this.serverUrl = Optional.empty();
         this.operation = Optional.empty();
         this.httpStatusCode = -1;
+        this.remoteExceptionName = Optional.empty();
+        this.remoteExceptionMessage = Optional.empty();
     }
     
     /**
@@ -39,6 +43,8 @@ public class GameCommunicationException extends Exception {
         this.serverUrl = Optional.empty();
         this.operation = Optional.empty();
         this.httpStatusCode = -1;
+        this.remoteExceptionName = Optional.empty();
+        this.remoteExceptionMessage = Optional.empty();
     }
     
     /**
@@ -54,6 +60,8 @@ public class GameCommunicationException extends Exception {
         this.serverUrl = Optional.ofNullable(serverUrl);
         this.operation = Optional.ofNullable(operation);
         this.httpStatusCode = httpStatusCode;
+        this.remoteExceptionName = Optional.empty();
+        this.remoteExceptionMessage = Optional.empty();
     }
     
     /**
@@ -70,6 +78,28 @@ public class GameCommunicationException extends Exception {
         this.serverUrl = Optional.ofNullable(serverUrl);
         this.operation = Optional.ofNullable(operation);
         this.httpStatusCode = httpStatusCode;
+        this.remoteExceptionName = Optional.empty();
+        this.remoteExceptionMessage = Optional.empty();
+    }
+
+    /**
+     * Creates a new GameCommunicationException representing a server-side rejection
+     * reported via ResponseEnvelope (exception name + message).
+     */
+    public GameCommunicationException(
+            String message,
+            String serverUrl,
+            String operation,
+            int httpStatusCode,
+            String remoteExceptionName,
+            String remoteExceptionMessage
+    ) {
+        super(buildDetailedMessage(message, serverUrl, operation, httpStatusCode));
+        this.serverUrl = Optional.ofNullable(serverUrl);
+        this.operation = Optional.ofNullable(operation);
+        this.httpStatusCode = httpStatusCode;
+        this.remoteExceptionName = Optional.ofNullable(remoteExceptionName);
+        this.remoteExceptionMessage = Optional.ofNullable(remoteExceptionMessage);
     }
 
     public GameCommunicationException(String message, String serverUrl, Operation operation, int httpStatusCode) {
@@ -97,6 +127,8 @@ public class GameCommunicationException extends Exception {
     public Optional<String> getServerUrl() { return serverUrl; }
     public Optional<String> getOperation() { return operation; }
     public int getHttpStatusCode() { return httpStatusCode; }
+    public Optional<String> getRemoteExceptionName() { return remoteExceptionName; }
+    public Optional<String> getRemoteExceptionMessage() { return remoteExceptionMessage; }
     
     /**
      * Determines if this communication error is potentially recoverable

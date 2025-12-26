@@ -4,10 +4,10 @@ import java.util.Optional;
 
 /**
  * Unchecked exception for AI algorithm decision-making failures.
- * 
- * This exception is thrown when the AI encounters an unrecoverable error
- * in its decision-making process.
- * @author Abdalrahman Mohammed
+ *
+ * <p>This exception indicates that the AI could not complete a decision step
+ * (e.g., selecting a move or computing a path) given the current internal state
+ * and available game information.
  */
 public class AIDecisionException extends RuntimeException {
     

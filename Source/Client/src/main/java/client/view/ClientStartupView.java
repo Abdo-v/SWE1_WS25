@@ -3,6 +3,7 @@ package client.view;
 import client.exception.ConfigurationException;
 import client.exception.FullMapNotAvailableException;
 import client.exception.GameCommunicationException;
+import client.model.common.DebugSettings;
 import client.model.GameMode;
 
 import java.util.Objects;
@@ -54,8 +55,10 @@ public class ClientStartupView {
     }
 
     public void showFullMapNotAvailable(FullMapNotAvailableException e) {
+        Objects.requireNonNull(e, "full map exception is required");
         System.err.println("⏳ Full map not available in time: " + safeText(e.getMessage()));
         System.err.println("💡 Tip: Ensure another player joined and sent their half map.");
+        DebugSettings.printStackTraceIfDebug(e);
     }
 
     public void showStartingMainGameLoop() {
@@ -73,21 +76,30 @@ public class ClientStartupView {
         if (validValues.length > 0) {
             System.err.println("Valid options: " + String.join(", ", validValues));
         }
+
+        DebugSettings.printStackTraceIfDebug(e);
     }
 
     public void showCommunicationError(GameCommunicationException e) {
-        System.err.println("🌐 Network Communication Error: " + e.getMessage());
-        if (e.isRecoverable()) {
-            System.err.println("💡 This error might be temporary. Try:");
-            System.err.println("   • Check your internet connection");
-            System.err.println("   • Verify the server URL: " + e.getServerUrl());
-            System.err.println("   • Wait a moment and restart the application");
-        } else {
-            System.err.println("❌ This appears to be a permanent issue:");
-            System.err.println("   • Verify server availability");
-            System.err.println("   • Check if the game ID is valid");
-            System.err.println("   • Contact support if the problem persists");
+        Objects.requireNonNull(e, "communication exception is required");
+
+        System.err.println("🌐 Communication failed: " + safeText(e.getMessage()));
+        e.getOperation().filter(op -> !op.isBlank()).ifPresent(op -> System.err.println("Operation: " + op));
+        e.getServerUrl().filter(url -> !url.isBlank()).ifPresent(url -> System.err.println("Server: " + url));
+        if (e.getHttpStatusCode() > 0) {
+            System.err.println("HTTP Status: " + e.getHttpStatusCode());
         }
+
+        e.getRemoteExceptionName().filter(name -> !name.isBlank()).ifPresent(name -> System.err.println("Server Error: " + name));
+        e.getRemoteExceptionMessage().filter(msg -> !msg.isBlank()).ifPresent(msg -> System.err.println("Details: " + msg));
+
+        if (e.isRecoverable()) {
+            System.err.println("💡 Potentially recoverable: retry after a short wait.");
+        } else {
+            System.err.println("💡 Likely a protocol/business-rule issue. Check game ID, player registration, and request validity.");
+        }
+
+        DebugSettings.printStackTraceIfDebug(e);
     }
 
     public void showUnexpectedError(Exception e) {

@@ -20,6 +20,8 @@ import java.util.Optional;
 
 class HalfMapService {
 
+    private static final int MAX_HALF_MAP_GENERATION_ATTEMPTS = 25;
+
     private final NetworkCenter networkCenter;
     private final GameOutput output;
     private final MapValidator mapValidator;
@@ -47,8 +49,8 @@ class HalfMapService {
         ));
 
         try {
-            PlayerHalfMap halfMapToSend = generateHalfMap(safePlayerId);
-            validateHalfMap(halfMapToSend);
+            PlayerHalfMap halfMapToSend = generateValidHalfMap(safePlayerId, safeGameStateId);
+            mapGenerationView.printHalfMap(halfMapToSend, "Own Half Map");
             sendHalfMap(halfMapToSend);
         } catch (GameCommunicationException e) {
             throw e;
@@ -66,23 +68,29 @@ class HalfMapService {
 
     private PlayerHalfMap generateHalfMap(String playerId) {
         MapGenerator generator = new MapGenerator();
-        PlayerHalfMap halfMapToSend = generator.generateMap(HalfMapDimensions.WIDTH, HalfMapDimensions.HEIGHT, playerId);
-        // Keep CLIHandler available for legacy wiring, but use the dedicated map generation view
-        // for consistent emoji-based output.
-        mapGenerationView.printHalfMap(halfMapToSend, "Own Half Map");
-        return halfMapToSend;
+        return generator.generateMap(HalfMapDimensions.WIDTH, HalfMapDimensions.HEIGHT, playerId);
     }
 
-    private void validateHalfMap(PlayerHalfMap halfMap) {
-        Notification validation = mapValidator.validate(halfMap);
-        if (validation.hasErrors()) {
-            // Technical internals go to System.err
+    private PlayerHalfMap generateValidHalfMap(String playerId, String gameStateId) {
+        for (int attempt = 1; attempt <= MAX_HALF_MAP_GENERATION_ATTEMPTS; attempt++) {
+            PlayerHalfMap candidate = generateHalfMap(playerId);
+            Notification validation = mapValidator.validate(candidate);
+            if (!validation.hasErrors()) {
+                output.showMapValidationOk();
+                return candidate;
+            }
+
+            // Map validation errors are not handled via exceptions. Report internals and retry.
             mapValidationInternalsView.report(validation);
-            output.showMapValidationFailed(validation.getErrorMessages());
-            throw new IllegalStateException("Generated map is invalid: " + validation.getErrorMessages());
+            output.showMapValidationFailed("Attempt " + attempt + "/" + MAX_HALF_MAP_GENERATION_ATTEMPTS + ": " + validation.getErrorMessages());
         }
 
-        output.showMapValidationOk();
+        throw new GameStateException(
+                "Unable to generate a valid half map after " + MAX_HALF_MAP_GENERATION_ATTEMPTS + " attempts",
+                gameStateId,
+                Operation.GENERATE_HALF_MAP,
+                FailureReason.MAP_ERROR
+        );
     }
 
     private void sendHalfMap(PlayerHalfMap halfMap) throws GameCommunicationException {

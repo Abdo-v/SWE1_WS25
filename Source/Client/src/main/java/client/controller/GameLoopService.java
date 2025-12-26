@@ -9,6 +9,7 @@ import client.exception.MapProcessingException;
 import client.model.GameMode;
 import client.model.PlayerState;
 import client.model.PlayerStatus;
+import client.model.common.DebugSettings;
 import client.view.GameOutput;
 
 import java.time.Duration;
@@ -68,8 +69,10 @@ class GameLoopService {
                             acted = true;
                         } catch (AIDecisionException e) {
                             output.showAiError(e.getMessage());
+                            DebugSettings.printStackTraceIfDebug(e);
                         } catch (GameCommunicationException e) {
                             output.showNetworkError(e.getMessage());
+                            DebugSettings.printStackTraceIfDebug(e);
                             if (!e.isRecoverable()) {
                                 throw e;
                             }
@@ -105,6 +108,7 @@ class GameLoopService {
 
             } catch (MapProcessingException e) {
                 output.showMapError(e.getRecoveryMessage());
+                DebugSettings.printStackTraceIfDebug(e);
                 if (!e.isRecoverable()) {
                     throw new GameStateException(
                         "Fatal map processing error: " + e.getMessage(),
@@ -118,6 +122,7 @@ class GameLoopService {
             } catch (GameCommunicationException | GameStateException e) {
                 throw e;
             } catch (Exception e) {
+                DebugSettings.printStackTraceIfDebug(e);
                 throw new GameStateException(
                     "Unexpected error in game loop: " + e.getMessage(),
                     e,

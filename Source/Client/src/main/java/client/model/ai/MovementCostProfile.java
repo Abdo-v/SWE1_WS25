@@ -2,6 +2,7 @@ package client.model.ai;
 
 import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
+import client.model.common.DebugSettings;
 import java.util.Objects;
 
 /**
@@ -32,7 +33,9 @@ enum MovementCostProfile {
             if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.GRASS) return 3;
             if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.MOUNTAIN) return 4;
 
-            System.err.println("MovementCostProfile.WAY_HELPER: Unhandled terrain transition from " + fromTerrain + " to " + toTerrain);
+            if (DebugSettings.isDebugEnabled()) {
+                System.err.println("MovementCostProfile.WAY_HELPER: Unhandled terrain transition from " + fromTerrain + " to " + toTerrain);
+            }
             return Integer.MAX_VALUE;
         }
     },
@@ -52,7 +55,9 @@ enum MovementCostProfile {
             if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.GRASS) return 3;
             if (fromTerrain == Terrain.MOUNTAIN && toTerrain == Terrain.MOUNTAIN) return 4;
 
-            System.err.println("MovementCostProfile.SHORTEST_PATH: Unhandled terrain transition from " + fromTerrain + " to " + toTerrain);
+            if (DebugSettings.isDebugEnabled()) {
+                System.err.println("MovementCostProfile.SHORTEST_PATH: Unhandled terrain transition from " + fromTerrain + " to " + toTerrain);
+            }
             return Integer.MAX_VALUE;
         }
     };

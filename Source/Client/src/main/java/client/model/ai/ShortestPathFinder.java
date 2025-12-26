@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import client.model.Direction;
 import client.model.GameState;
+import client.model.common.DebugSettings;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 // import org.slf4j.Logger;
@@ -39,13 +40,17 @@ class ShortestPathFinder implements client.observer.util.Observer {
 
         if (path.isEmpty()) {
             // logger.warn("No valid path found to target {}", target.printCoordinates());
-            System.out.println("WayFinder: No valid path found to target node: path is empty.");
+            if (DebugSettings.isDebugEnabled()) {
+                System.err.println("WayFinder: No valid path found to target node (empty path).");
+            }
             return Optional.empty();
         }
 
         // Path includes start at index 0; the next step is index 1.
         if (path.size() < 2) {
-            System.out.println("WayFinder: Current node is the last in the path, no next node to move towards.");
+            if (DebugSettings.isDebugEnabled()) {
+                System.err.println("WayFinder: Current node already equals target (no next step).");
+            }
             return Optional.empty();
         }
 
@@ -72,7 +77,9 @@ class ShortestPathFinder implements client.observer.util.Observer {
         Optional<GameMap> mapOptional = gameState.flatMap(GameState::getMap);
 
         if (startNode.isEmpty() || targetNode.isEmpty() || stateOptional.isEmpty() || mapOptional.isEmpty()) {
-            System.err.println("WayFinder.findShortestPath (Dijkstra): Start, target, gameState, or map is missing.");
+            if (DebugSettings.isDebugEnabled()) {
+                System.err.println("WayFinder.findShortestPath (Dijkstra): Start, target, gameState, or map is missing.");
+            }
             return path;
         }
 
@@ -89,8 +96,10 @@ class ShortestPathFinder implements client.observer.util.Observer {
         var map = state.getMap().orElseThrow(() -> new IllegalStateException("GameMap must be set before pathfinding"));
         ArrayList<MapNode> computed = GridDijkstra.shortestPath(map, safeStart, safeTarget, MovementCostProfile.SHORTEST_PATH);
         if (computed.isEmpty()) {
-            System.out.println("WayFinder.findShortestPath (Dijkstra): No path found from (" + safeStart.getX() + "," + safeStart.getY() +
-                               ") to (" + safeTarget.getX() + "," + safeTarget.getY() + ").");
+            if (DebugSettings.isDebugEnabled()) {
+                System.err.println("WayFinder.findShortestPath (Dijkstra): No path found from (" + safeStart.getX() + "," + safeStart.getY() +
+                                   ") to (" + safeTarget.getX() + "," + safeTarget.getY() + ").");
+            }
         }
         return computed;
     }

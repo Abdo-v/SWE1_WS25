@@ -166,10 +166,10 @@ public class MapProcessingException extends Exception {
             recovery.append("   • Check network connection\n");
             recovery.append("   • Wait a moment and retry the operation");
         } else {
-            recovery.append("⚠️  This appears to be a permanent issue:\n");
-            recovery.append("   • Check server compatibility\n");
-            recovery.append("   • Verify map data format\n");
-            recovery.append("   • Contact support if the problem persists");
+            recovery.append("⚠️  This likely cannot be recovered in this run:\n");
+            recovery.append("   • Verify client/server protocol compatibility\n");
+            recovery.append("   • Inspect server ResponseEnvelope exception details (name/message)\n");
+            recovery.append("   • Re-run with -Dclient.debug=true for stack traces");
         }
         
         return recovery.toString();

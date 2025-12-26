@@ -22,6 +22,7 @@ import messagesbase.messagesfromserver.GameState;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
 public class NetworkCenter {
@@ -83,10 +84,12 @@ public class NetworkCenter {
             if (resultReg.getState() == ERequestState.Error) {
              // logger.error("Player registration failed for {} {}: {}", firstName, lastName, resultReg.getExceptionMessage());
                 throw new GameCommunicationException(
-                    "Server rejected player registration: " + resultReg.getExceptionMessage(),
+                    formatServerRejection("PLAYER_REGISTRATION", resultReg),
                     serverBaseUrl,
                     "PLAYER_REGISTRATION",
-                    400
+                    400,
+                    resultReg.getExceptionName(),
+                    resultReg.getExceptionMessage()
                 );
             }
             
@@ -153,10 +156,12 @@ public class NetworkCenter {
             if (response.getState() == ERequestState.Error) {
              // logger.error("Failed to send half map for player {}: {}", playerId.getUniquePlayerID(), response.getExceptionMessage());
                 throw new GameCommunicationException(
-                    "Server rejected half map: " + response.getExceptionMessage(),
+                    formatServerRejection("SEND_HALF_MAP", response),
                     serverBaseUrl,
                     "SEND_HALF_MAP",
-                    400
+                    400,
+                    response.getExceptionName(),
+                    response.getExceptionMessage()
                 );
             }
             
@@ -202,18 +207,8 @@ public class NetworkCenter {
             );
         }
 
-        Optional.ofNullable(direction).ifPresentOrElse(
-                d -> {
-                    try {
-                        sendMoveInternal(d);
-                    } catch (GameCommunicationException e) {
-                        throw new RuntimeException(e);
-                    }
-                },
-                () -> {
-                    System.err.println("Attempted to send a missing move. Skipping.");
-                }
-        );
+        Direction safeDirection = Objects.requireNonNull(direction, "direction is required");
+        sendMoveInternal(safeDirection);
     }
 
     private void sendMoveInternal(Direction direction) throws GameCommunicationException {
@@ -235,10 +230,12 @@ public class NetworkCenter {
             if (response.getState() == ERequestState.Error) {
              // logger.error("Failed to send move {} for player {}: {}", direction, playerId.getUniquePlayerID(), response.getExceptionMessage());
                 throw new GameCommunicationException(
-                    "Server rejected move: " + response.getExceptionMessage(),
+                    formatServerRejection("SEND_MOVE", response),
                     serverBaseUrl,
                     "SEND_MOVE",
-                    400
+                    400,
+                    response.getExceptionName(),
+                    response.getExceptionMessage()
                 );
             }
             
@@ -262,8 +259,8 @@ public class NetworkCenter {
                 e.getStatusCode().value()
             );
         } catch (Exception e) {
-            if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
+            if (e instanceof GameCommunicationException) {
+                throw e;
             }
          // logger.error("Network error during move submission: {}", e.getMessage(), e);
             throw new GameCommunicationException(
@@ -309,10 +306,12 @@ public class NetworkCenter {
             if (response.getState() == ERequestState.Error) {
              // logger.error("Failed to poll game state for player {}: {}", playerId.getUniquePlayerID(), response.getExceptionMessage());
                 throw new GameCommunicationException(
-                    "Server rejected game state request: " + response.getExceptionMessage(),
+                    formatServerRejection("POLL_GAME_STATE", response),
                     serverBaseUrl,
                     "POLL_GAME_STATE",
-                    400
+                    400,
+                    response.getExceptionName(),
+                    response.getExceptionMessage()
                 );
             }
             
@@ -391,6 +390,17 @@ public class NetworkCenter {
     private messagesbase.messagesfromclient.EMove convertClientDirection(Direction d){
      // logger.trace("Converting client direction {} to server move", d);
         return clientToServerConverter.convertClientDirection(d);
+    }
+
+    private static String formatServerRejection(String operation, ResponseEnvelope<?> envelope) {
+        Objects.requireNonNull(envelope, "envelope is required");
+        String safeOp = Objects.requireNonNullElse(operation, "UNKNOWN");
+        String exceptionName = Objects.requireNonNullElse(envelope.getExceptionName(), "ServerError").trim();
+        String exceptionMessage = Objects.requireNonNullElse(envelope.getExceptionMessage(), "").trim();
+        if (!exceptionMessage.isBlank()) {
+            return "Server rejected " + safeOp + ": " + exceptionName + " - " + exceptionMessage;
+        }
+        return "Server rejected " + safeOp + ": " + exceptionName;
     }
 
 }
