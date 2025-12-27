@@ -44,8 +44,13 @@ class GridDijkstraTest {
     }
 
     @Test
-    void shortestPathCosts_whenArgsAreNull_returnsEmptyMap() {
-        assertTrue(GridDijkstra.shortestPathCosts(null, null, null).isEmpty());
+    void shortestPathCosts_whenStartIsIsolated_returnsOnlyStartCost() {
+        GameMap map = grid(1, 1, List.of());
+        MapNode start = new MapNode(0, 0, Terrain.GRASS, false, false);
+
+        Map<MapNode, Integer> costs = GridDijkstra.shortestPathCosts(map, start, MovementCostProfile.SHORTEST_PATH);
+        assertEquals(1, costs.size());
+        assertEquals(0, costs.get(start));
     }
 
     private static GameMap grid(int w, int h, List<int[]> waterCells) {

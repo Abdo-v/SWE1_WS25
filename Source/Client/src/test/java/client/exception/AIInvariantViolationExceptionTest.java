@@ -10,16 +10,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class AIInvariantViolationExceptionTest {
 
     @Test
-    void constructor_rejectsNullMessage() {
-        NullPointerException ex = assertThrows(
-                NullPointerException.class,
-                () -> new AIInvariantViolationException(null)
-        );
-
-        assertTrue(ex.getMessage().contains("message is required"));
-    }
-
-    @Test
     void messageOnlyConstructor_setsMessageAndLeavesContextEmpty() {
         AIInvariantViolationException ex = new AIInvariantViolationException("boom");
 

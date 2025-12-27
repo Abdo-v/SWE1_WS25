@@ -5,17 +5,14 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests {@link Changed} fail-fast invariants (null is not allowed for old/new values).
+ * Tests {@link Changed} basic construction behavior.
  */
 class ChangedTest {
 
     @Test
-    void constructor_rejectsNullOldValue() {
-        assertThrows(NullPointerException.class, () -> new Changed<>(null, "new"));
-    }
-
-    @Test
-    void constructor_rejectsNullNewValue() {
-        assertThrows(NullPointerException.class, () -> new Changed<>("old", null));
+    void constructor_storesOldAndNewValues() {
+        Changed<String> changed = new Changed<>("old", "new");
+        assertEquals("old", changed.oldValue());
+        assertEquals("new", changed.newValue());
     }
 }

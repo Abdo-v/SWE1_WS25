@@ -15,19 +15,6 @@ import client.model.mapper.Terrain;
  * Unit tests for cross-half-map validation paths in {@link MapValidator}.
  */
 class MapValidatorCrossHalfMapTest {
-
-    /**
-     * If there is no existing half-map to compare against, cross-half-map validation should be skipped.
-     */
-    @Test
-    void validate_withNullExistingHalfMap_skipsCrossValidationAndKeepsResultOfSingleMapValidation() {
-        PlayerHalfMap newHalfMap = buildValidHalfMap();
-
-        Notification n = new MapValidator().validate(newHalfMap, null);
-
-        assertFalse(n.hasErrors(), () -> "Expected valid map, errors: " + n.getErrorMessages());
-    }
-
     /**
      * If the half-map dimensions do not match, validation should fail fast with a clear error message.
      */

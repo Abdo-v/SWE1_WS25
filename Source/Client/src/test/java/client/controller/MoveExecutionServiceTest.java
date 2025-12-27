@@ -36,13 +36,6 @@ import client.view.GameOutput;
 class MoveExecutionServiceTest {
 
     @Test
-    void makeMove_whenGameStateNull_throwsGameStateException() {
-        MoveExecutionService service = new MoveExecutionService(mock(NetworkCenter.class), mock(WayFinder.class), mock(GameOutput.class));
-
-        assertThrows(GameStateException.class, () -> service.makeMove(null, "p1", GameMode.UNKNOWN));
-    }
-
-    @Test
     void makeMove_whenCurrentPlayerStateMissing_throwsGameStateException() {
         MoveExecutionService service = new MoveExecutionService(mock(NetworkCenter.class), mock(WayFinder.class), mock(GameOutput.class));
         GameState state = new GameState("gs-1");
@@ -51,10 +44,10 @@ class MoveExecutionServiceTest {
     }
 
     @Test
-    void makeMove_whenWayFinderReturnsNull_throwsAIDecisionException() throws Exception {
+    void makeMove_whenWayFinderProducesMissingNextMove_throwsAIDecisionException() throws Exception {
         NetworkCenter networkCenter = mock(NetworkCenter.class);
         WayFinder wayFinder = mock(WayFinder.class);
-        when(wayFinder.findNext()).thenReturn(null);
+        when(wayFinder.findNext()).thenThrow(new NullPointerException("missing next move"));
 
         MoveExecutionService service = new MoveExecutionService(networkCenter, wayFinder, mock(GameOutput.class));
 

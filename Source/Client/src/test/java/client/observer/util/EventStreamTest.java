@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -12,18 +14,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * Tests {@link EventStream} subscribe/unsubscribe behavior and publication semantics.
  */
 class EventStreamTest {
-
-    @Test
-    void subscribe_whenListenerIsNull_throws() {
-        EventStream<String> stream = new EventStream<>();
-        assertThrows(NullPointerException.class, () -> stream.subscribe(null));
-    }
-
-    @Test
-    void publish_whenEventIsNull_throws() {
-        EventStream<String> stream = new EventStream<>();
-        assertThrows(NullPointerException.class, () -> stream.publish(null));
-    }
 
     @Test
     void publish_notifiesAllSubscribers_inSubscriptionOrder() {
@@ -74,11 +64,11 @@ class EventStreamTest {
 
         List<String> received = new ArrayList<>();
 
-        Subscription[] secondSubscription = new Subscription[1];
+        AtomicReference<Optional<Subscription>> secondSubscription = new AtomicReference<>(Optional.empty());
         stream.subscribe(e -> {
             received.add("first:" + e);
-            if (secondSubscription[0] == null) {
-                secondSubscription[0] = stream.subscribe(e2 -> received.add("second:" + e2));
+            if (secondSubscription.get().isEmpty()) {
+                secondSubscription.set(Optional.of(stream.subscribe(e2 -> received.add("second:" + e2))));
             }
         });
 

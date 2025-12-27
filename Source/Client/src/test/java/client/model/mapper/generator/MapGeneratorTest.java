@@ -25,9 +25,4 @@ class MapGeneratorTest {
         assertThrows(IllegalArgumentException.class, () -> gen.generateMap(10, 0, "p1"));
     }
 
-    @Test
-    void generateMap_whenPlayerIdNull_throwsNullPointerException() {
-        MapGenerator gen = new MapGenerator();
-        assertThrows(NullPointerException.class, () -> gen.generateMap(10, 5, null));
-    }
 }

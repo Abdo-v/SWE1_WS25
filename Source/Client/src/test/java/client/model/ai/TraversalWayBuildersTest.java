@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 /**
  * Unit tests for {@link TraversalWayBuilders}.
  *
- * <p>Validates traversal structure creation and the "unvisited" convention (value != true).
+ * <p>Validates traversal structure creation and the "unvisited" convention (value is false).
  */
 class TraversalWayBuildersTest {
 
@@ -61,17 +61,17 @@ class TraversalWayBuildersTest {
     }
 
     /**
-     * Ensures the "unvisited" convention includes values that are false or null, but excludes true.
+     * Ensures the "unvisited" convention includes values that are false, but excludes true.
      */
     @Test
-    void toUnvisitedNodes_includesFalseAndNull_excludesTrue() {
+    void toUnvisitedNodes_includesFalse_excludesTrue() {
         MapNode a = new MapNode(0, 0, Terrain.GRASS, false, false);
         MapNode b = new MapNode(1, 0, Terrain.GRASS, false, false);
         MapNode c = new MapNode(2, 0, Terrain.GRASS, false, false);
 
         LinkedHashMap<MapNode, Boolean> visited = new LinkedHashMap<>();
         visited.put(a, false);
-        visited.put(b, null);
+        visited.put(b, false);
         visited.put(c, true);
 
         var unvisited = TraversalWayBuilders.toUnvisitedNodes(visited);

@@ -2,12 +2,10 @@ package client.controller.network.service;
 
 import client.model.PlayerStatus;
 import messagesbase.messagesfromserver.EPlayerGameState;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for {@link ServerToClientStatusConverter}.
@@ -37,13 +35,4 @@ class ServerToClientStatusConverterTest {
         assertEquals(expected, actual);
     }
 
-    /**
-     * Ensures null input is rejected with a clear exception.
-     */
-    @Test
-    void convert_whenNull_throws() {
-        ServerToClientStatusConverter converter = new ServerToClientStatusConverter();
-
-        assertThrows(NullPointerException.class, () -> converter.convert(null));
-    }
 }

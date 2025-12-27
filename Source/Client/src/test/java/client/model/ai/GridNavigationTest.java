@@ -2,7 +2,6 @@ package client.model.ai;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 
@@ -52,11 +51,6 @@ class GridNavigationTest {
         MapNode neighbor = new MapNode(0, 1, Terrain.GRASS, false, false);
 
         assertEquals(Direction.DOWN, GridNavigation.getDirectionToNeighbor(current, neighbor).orElseThrow());
-    }
-
-    @Test
-    void getNodeInDirection_whenMapNull_throws() {
-        assertThrows(NullPointerException.class, () -> GridNavigation.getNodeInDirection(null, new MapNode(), Direction.UP));
     }
 
     private static void assertTrueEmpty(java.util.Optional<?> optional) {

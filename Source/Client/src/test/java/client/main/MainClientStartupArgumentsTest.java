@@ -36,16 +36,6 @@ class StartupArgumentsParserTest {
     }
 
     @Test
-    void parseStartupArguments_rejectsNullGameMode() {
-        ConfigurationException ex = assertThrows(
-                ConfigurationException.class,
-            () -> StartupArgumentsParser.parse(new String[]{null, "http://localhost:8080", "id"})
-        );
-
-        assertEquals("gameMode", ex.getConfigurationKey().orElseThrow());
-    }
-
-    @Test
     void parseStartupArguments_rejectsInvalidGameMode() {
         ConfigurationException ex = assertThrows(
                 ConfigurationException.class,

@@ -11,6 +11,7 @@ import client.view.testsupport.StdIoCapture;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -61,10 +62,10 @@ class MapSnapshotViewTest {
         try (StdIoCapture io = new StdIoCapture()) {
             ArrayList<MapNode> nodes = new ArrayList<>();
 
-            MapNode myCell = null;
-            MapNode oppCell = null;
-            MapNode treasureCell = null;
-            MapNode fortCell = null;
+            Optional<MapNode> myCell = Optional.empty();
+            Optional<MapNode> oppCell = Optional.empty();
+            Optional<MapNode> treasureCell = Optional.empty();
+            Optional<MapNode> fortCell = Optional.empty();
 
             // FULL map in this client is 100 nodes. With LEFT_RIGHT orientation that is 20x5,
             // where the own half is x=0..9 (50 nodes) and opponent half is x=10..19 (50 nodes).
@@ -74,38 +75,38 @@ class MapSnapshotViewTest {
                     nodes.add(node);
 
                     if (x == 0 && y == 0) {
-                        myCell = node;
+                        myCell = Optional.of(node);
                     }
                     if (x == 1 && y == 0) {
-                        oppCell = node;
+                        oppCell = Optional.of(node);
                     }
                     if (x == 2 && y == 0) {
-                        treasureCell = node;
+                        treasureCell = Optional.of(node);
                     }
                     if (x == 3 && y == 0) {
-                        fortCell = node;
+                        fortCell = Optional.of(node);
                     }
                 }
             }
 
-            assertNotNull(myCell);
-            assertNotNull(oppCell);
-            assertNotNull(treasureCell);
-            assertNotNull(fortCell);
+            assertTrue(myCell.isPresent());
+            assertTrue(oppCell.isPresent());
+            assertTrue(treasureCell.isPresent());
+            assertTrue(fortCell.isPresent());
 
-            fortCell.setFortPresent(true);
+            fortCell.orElseThrow().setFortPresent(true);
 
             GameMap map = new GameMap(nodes, OwnToOppMapOrientation.LEFT_RIGHT, 19, 4);
 
-            PlayerState me = new PlayerState("p1", "A", "B", "u", true, myCell, PlayerStatus.MUST_WAIT);
-            PlayerState opp = new PlayerState("p2", "C", "D", "u2", false, oppCell, PlayerStatus.MUST_WAIT);
+            PlayerState me = new PlayerState("p1", "A", "B", "u", true, myCell.orElseThrow(), PlayerStatus.MUST_WAIT);
+            PlayerState opp = new PlayerState("p2", "C", "D", "u2", false, oppCell.orElseThrow(), PlayerStatus.MUST_WAIT);
 
             ArrayList<PlayerState> players = new ArrayList<>();
             players.add(me);
             players.add(opp);
 
             GameState state = new GameState("gs-3", players, map);
-            state.setTreasurePosition(treasureCell);
+            state.setTreasurePosition(treasureCell.orElseThrow());
 
             new MapSnapshotView().visualize(state, MapVisualizationType.FULL);
 

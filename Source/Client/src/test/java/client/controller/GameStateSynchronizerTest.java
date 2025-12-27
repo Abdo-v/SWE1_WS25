@@ -15,19 +15,13 @@ import static org.mockito.Mockito.*;
 class GameStateSynchronizerTest {
 
     @Test
-    void synchronize_whenSharedGameStateMissing_wrapsAsMapProcessingException() {
+    void synchronize_whenPollingFails_throwsMapProcessingException() throws Exception {
         NetworkCenter networkCenter = mock(NetworkCenter.class);
-        GameStateSynchronizer synchronizer = new GameStateSynchronizer(networkCenter);
-
-        MapProcessingException ex = assertThrows(MapProcessingException.class, () -> synchronizer.synchronize(null));
-        assertNotNull(ex.getCause());
-        assertTrue(ex.getCause() instanceof NullPointerException);
-    }
-
-    @Test
-    void synchronize_whenServerReturnsNullState_throwsMapProcessingException() throws Exception {
-        NetworkCenter networkCenter = mock(NetworkCenter.class);
-        when(networkCenter.pollGameState()).thenReturn(null);
+        when(networkCenter.pollGameState()).thenThrow(new MapProcessingException(
+                "Received missing game state from server",
+                "GameState",
+                "server_response_validation"
+        ));
 
         GameStateSynchronizer synchronizer = new GameStateSynchronizer(networkCenter);
         GameState shared = new GameState("id");
@@ -36,16 +30,18 @@ class GameStateSynchronizerTest {
     }
 
     @Test
-    void synchronize_whenConversionReturnsNull_throwsMapProcessingException() throws Exception {
+    void synchronize_whenConversionFails_throwsMapProcessingException() throws Exception {
         NetworkCenter networkCenter = mock(NetworkCenter.class);
         messagesbase.messagesfromserver.GameState serverState = mock(messagesbase.messagesfromserver.GameState.class);
         when(networkCenter.pollGameState()).thenReturn(serverState);
-        when(networkCenter.convertServerGamestate(serverState)).thenReturn(null);
+
+        when(networkCenter.convertServerGamestate(serverState)).thenThrow(new RuntimeException("conversion failed"));
 
         GameStateSynchronizer synchronizer = new GameStateSynchronizer(networkCenter);
         GameState shared = new GameState("id");
 
-        assertThrows(MapProcessingException.class, () -> synchronizer.synchronize(shared));
+        MapProcessingException ex = assertThrows(MapProcessingException.class, () -> synchronizer.synchronize(shared));
+        assertTrue(ex.getMessage().toLowerCase().contains("unexpected"));
     }
 
     @Test

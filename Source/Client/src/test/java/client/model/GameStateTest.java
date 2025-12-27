@@ -21,7 +21,7 @@ import client.observer.util.Changed;
  *
  * <p>Focus:
  * <ul>
- *   <li>Fail-fast preconditions (null handling via {@link java.util.Objects#requireNonNull(Object)})</li>
+ *   <li>Fail-fast preconditions (required inputs are validated)</li>
  *   <li>Event streams (Changed&lt;T&gt;) published when state changes</li>
  *   <li>Derived queries such as {@link GameState#isPlayerInOwnHalfMap()}</li>
  * </ul>

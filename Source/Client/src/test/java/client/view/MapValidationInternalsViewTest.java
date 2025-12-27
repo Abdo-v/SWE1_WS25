@@ -22,8 +22,9 @@ class MapValidationInternalsViewTest {
 
 	@Test
 	void report_includes_reference_for_invalid_map() {
-		// Arrange: force a validation failure ("negative" path)
-		Notification notification = new MapValidator().validate(null);
+		// Arrange: force a validation failure ("negative" path) without using missing references
+		PlayerHalfMap invalidHalfMap = new PlayerHalfMap("p1");
+		Notification notification = new MapValidator().validate(invalidHalfMap);
 		assertTrue(notification.hasErrors(), "Precondition: validation should have produced errors");
 
 		ByteArrayOutputStream stderrBuffer = new ByteArrayOutputStream();

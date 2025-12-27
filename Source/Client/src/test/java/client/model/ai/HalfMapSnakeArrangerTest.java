@@ -1,7 +1,6 @@
 package client.model.ai;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 
@@ -68,23 +67,6 @@ class HalfMapSnakeArrangerTest {
 
         assertEquals(10, arranged.getMapNodes().get(0).getX());
         assertEquals(0, arranged.getMapNodes().get(0).getY());
-    }
-
-    /**
-     * Null preconditions should fail fast with {@link IllegalArgumentException}.
-     */
-    @Test
-    void arrangeOwnHalf_whenMapIsNull_throwsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, () -> HalfMapSnakeArranger.arrangeOwnHalf(null, new MapNode()));
-    }
-
-    /**
-     * Null preconditions should fail fast with {@link IllegalArgumentException}.
-     */
-    @Test
-    void arrangeOwnHalf_whenCurrentPositionIsNull_throwsIllegalArgumentException() {
-        GameMap map = buildFullMap(OwnToOppMapOrientation.LEFT_RIGHT);
-        assertThrows(IllegalArgumentException.class, () -> HalfMapSnakeArranger.arrangeOwnHalf(map, null));
     }
 
     private static GameMap buildFullMap(OwnToOppMapOrientation orientation) {

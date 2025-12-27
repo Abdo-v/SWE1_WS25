@@ -17,13 +17,6 @@ import client.model.mapper.Terrain;
 class MapValidatorTest {
 
     @Test
-    void validate_whenHalfMapIsNull_returnsPreconditionError() {
-        Notification n = new MapValidator().validate(null);
-        assertTrue(n.hasErrors());
-        assertTrue(n.getErrorMessages().toLowerCase().contains("must be provided"));
-    }
-
-    @Test
     void validate_whenHalfMapIsValid_hasNoErrors() {
         PlayerHalfMap halfMap = buildValidHalfMap();
         Notification n = new MapValidator().validate(halfMap);

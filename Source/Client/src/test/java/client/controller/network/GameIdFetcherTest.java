@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -25,20 +26,18 @@ import client.exception.GameCommunicationException;
  */
 class GameIdFetcherTest {
 
-    private HttpServer server;
+    private Optional<HttpServer> server = Optional.empty();
 
     @AfterEach
     void tearDown() {
-        if (server != null) {
-            server.stop(0);
-        }
+        server.ifPresent(s -> s.stop(0));
     }
 
     @Test
     void fetchGameId_whenResponseContainsUniqueGameId_returnsExtractedId() throws Exception {
-        server = startServer(200, "<root><uniqueGameID>abc-123</uniqueGameID></root>");
+        server = Optional.of(startServer(200, "<root><uniqueGameID>abc-123</uniqueGameID></root>"));
 
-        String baseUrlWithoutTrailingSlash = "http://localhost:" + server.getAddress().getPort();
+        String baseUrlWithoutTrailingSlash = "http://localhost:" + server.orElseThrow().getAddress().getPort();
         String id = GameIdFetcher.fetchGameId(baseUrlWithoutTrailingSlash);
 
         assertEquals("abc-123", id);
@@ -46,9 +45,9 @@ class GameIdFetcherTest {
 
     @Test
     void fetchGameId_whenUniqueGameIdMissing_throwsGameCommunicationException() throws Exception {
-        server = startServer(200, "<root><nope>value</nope></root>");
+        server = Optional.of(startServer(200, "<root><nope>value</nope></root>"));
 
-        String baseUrl = "http://localhost:" + server.getAddress().getPort() + "/";
+        String baseUrl = "http://localhost:" + server.orElseThrow().getAddress().getPort() + "/";
         GameCommunicationException ex = assertThrows(
                 GameCommunicationException.class,
                 () -> GameIdFetcher.fetchGameId(baseUrl)
@@ -58,9 +57,9 @@ class GameIdFetcherTest {
 
     @Test
     void fetchGameId_whenUniqueGameIdEmpty_throwsGameCommunicationException() throws Exception {
-        server = startServer(200, "<root><uniqueGameID>   </uniqueGameID></root>");
+        server = Optional.of(startServer(200, "<root><uniqueGameID>   </uniqueGameID></root>"));
 
-        String baseUrl = "http://localhost:" + server.getAddress().getPort();
+        String baseUrl = "http://localhost:" + server.orElseThrow().getAddress().getPort();
         GameCommunicationException ex = assertThrows(
                 GameCommunicationException.class,
                 () -> GameIdFetcher.fetchGameId(baseUrl)
@@ -70,9 +69,9 @@ class GameIdFetcherTest {
 
     @Test
     void fetchGameId_whenServerReturnsNon200_throwsGameCommunicationExceptionWithStatusCode() throws Exception {
-        server = startServer(503, "service unavailable");
+        server = Optional.of(startServer(503, "service unavailable"));
 
-        String baseUrl = "http://localhost:" + server.getAddress().getPort();
+        String baseUrl = "http://localhost:" + server.orElseThrow().getAddress().getPort();
         GameCommunicationException ex = assertThrows(
                 GameCommunicationException.class,
                 () -> GameIdFetcher.fetchGameId(baseUrl)

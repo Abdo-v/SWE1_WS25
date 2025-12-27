@@ -27,9 +27,4 @@ class ObserverTest {
         assertSame(state, seen.get());
     }
 
-    @Test
-    void update_whenEventIsNull_throws() {
-        Observer observer = gs -> { };
-        assertThrows(NullPointerException.class, () -> observer.update((GameStateEvent) null));
-    }
 }

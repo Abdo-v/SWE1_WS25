@@ -2,7 +2,7 @@ package client.model.ai;
 
 import client.model.mapper.GameMap;
 import client.model.mapper.HalfMapDimensions;
-import java.util.Objects;
+import java.util.Optional;
 import client.model.mapper.MapNode;
 import client.model.mapper.OwnToOppMapOrientation;
 import client.model.mapper.PlayerHalfMap;
@@ -25,18 +25,22 @@ final class HalfMapSnakeArranger {
         // utility
     }
 
-    static PlayerHalfMap arrangeOwnHalf(GameMap map, MapNode currentPosition) {
-        Objects.requireNonNull(map, "GameMap is required");
-        Objects.requireNonNull(currentPosition, "Current position is required");
+    private static <T> T requireArgument(T value, String message) {
+        return Optional.ofNullable(value).orElseThrow(() -> new IllegalArgumentException(message));
+    }
 
-        OwnToOppMapOrientation orientation = map.getOrientation();
+    static PlayerHalfMap arrangeOwnHalf(GameMap map, MapNode currentPosition) {
+        GameMap requiredMap = requireArgument(map, "GameMap is required");
+        MapNode requiredCurrentPosition = requireArgument(currentPosition, "Current position is required");
+
+        OwnToOppMapOrientation orientation = requiredMap.getOrientation();
         Bounds bounds = ownHalfBounds(orientation);
 
         int startXIter;
         int endXIter;
         int iterXIncrement;
 
-        if (currentPosition.getX() < bounds.xMidPointThreshold) {
+        if (requiredCurrentPosition.getX() < bounds.xMidPointThreshold) {
             startXIter = bounds.minX;
             endXIter = bounds.maxX;
             iterXIncrement = 1;
@@ -46,19 +50,19 @@ final class HalfMapSnakeArranger {
             iterXIncrement = -1;
         }
 
-        boolean currentYScanTopToBottom = currentPosition.getY() < bounds.yMidPointThreshold;
+        boolean currentYScanTopToBottom = requiredCurrentPosition.getY() < bounds.yMidPointThreshold;
 
-        return arrangeHalfMapColumns(map, startXIter, endXIter, iterXIncrement, bounds.minY, bounds.maxY, currentYScanTopToBottom);
+        return arrangeHalfMapColumns(requiredMap, startXIter, endXIter, iterXIncrement, bounds.minY, bounds.maxY, currentYScanTopToBottom);
     }
 
     static PlayerHalfMap arrangeOpponentHalf(GameMap map, MapNode currentPosition) {
-        Objects.requireNonNull(map, "GameMap is required");
-        Objects.requireNonNull(currentPosition, "Current position is required");
+        GameMap requiredMap = requireArgument(map, "GameMap is required");
+        MapNode requiredCurrentPosition = requireArgument(currentPosition, "Current position is required");
 
-        OwnToOppMapOrientation orientation = map.getOrientation();
+        OwnToOppMapOrientation orientation = requiredMap.getOrientation();
         OpponentBounds bounds = opponentHalfBounds(orientation);
 
-        boolean scanXLeftToRight = currentPosition.getX() < bounds.playerXThreshold;
+        boolean scanXLeftToRight = requiredCurrentPosition.getX() < bounds.playerXThreshold;
 
         int startXIter;
         int endXIter;
@@ -73,9 +77,9 @@ final class HalfMapSnakeArranger {
             iterXIncrement = -1;
         }
 
-        boolean currentYScanTopToBottom = currentPosition.getY() < bounds.playerYThreshold;
+        boolean currentYScanTopToBottom = requiredCurrentPosition.getY() < bounds.playerYThreshold;
 
-        return arrangeHalfMapColumns(map, startXIter, endXIter, iterXIncrement, bounds.minY, bounds.maxY, currentYScanTopToBottom);
+        return arrangeHalfMapColumns(requiredMap, startXIter, endXIter, iterXIncrement, bounds.minY, bounds.maxY, currentYScanTopToBottom);
     }
     /**
      * Helper to arrange columns for both own and opponent half-maps, alternating Y scan direction.

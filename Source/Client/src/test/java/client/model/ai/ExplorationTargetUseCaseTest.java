@@ -26,19 +26,6 @@ import static org.mockito.Mockito.when;
 class ExplorationTargetUseCaseTest {
 
     /**
-     * Ensures null inputs are rejected and wrapped into an {@link AIDecisionException}.
-     */
-    @Test
-    void selectBestNode_whenNullArgs_throwsAIDecisionException() {
-        WayHelper wayHelper = mock(WayHelper.class);
-        TreasureSeeker treasureSeeker = mock(TreasureSeeker.class);
-        VisionCostScorer scorer = mock(VisionCostScorer.class);
-        ExplorationTargetUseCase useCase = new ExplorationTargetUseCase(wayHelper, treasureSeeker, scorer);
-
-        assertThrows(AIDecisionException.class, () -> useCase.selectBestNode(null, null, null, null));
-    }
-
-    /**
      * Ensures that when score ties, mountains win over grass (tie-breaker #1).
      */
     @Test

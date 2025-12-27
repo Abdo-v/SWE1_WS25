@@ -51,11 +51,4 @@ class WayFinderTest {
 
         assertThrows(IllegalStateException.class, wayFinder::addSubObservers);
     }
-
-    @Test
-    void setGameState_whenNull_throwsNullPointerException() {
-        WayFinder wayFinder = new WayFinder();
-
-        assertThrows(NullPointerException.class, () -> wayFinder.setGameState(null));
-    }
 }

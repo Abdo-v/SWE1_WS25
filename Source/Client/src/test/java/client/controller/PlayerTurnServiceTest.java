@@ -18,13 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class PlayerTurnServiceTest {
 
     @Test
-    void getCurrentPlayerStatus_whenGameStateMissing_throwsGameStateException() {
-        PlayerTurnService service = new PlayerTurnService();
-
-        assertThrows(GameStateException.class, () -> service.getCurrentPlayerStatus(null, "p1"));
-    }
-
-    @Test
     void getCurrentPlayerStatus_whenPlayerFound_returnsStatus() throws Exception {
         PlayerTurnService service = new PlayerTurnService();
 

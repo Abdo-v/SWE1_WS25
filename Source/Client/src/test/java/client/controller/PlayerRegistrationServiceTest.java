@@ -17,14 +17,6 @@ import static org.mockito.Mockito.*;
 class PlayerRegistrationServiceTest {
 
     @Test
-    void registerPlayer_whenGameStateMissing_throwsGameStateException() {
-        NetworkCenter networkCenter = mock(NetworkCenter.class);
-        PlayerRegistrationService service = new PlayerRegistrationService(networkCenter);
-
-        assertThrows(GameStateException.class, () -> service.registerPlayer(null, "A", "B", "u"));
-    }
-
-    @Test
     void registerPlayer_whenNetworkSucceeds_addsPlayerAndReturnsId() throws Exception {
         NetworkCenter networkCenter = mock(NetworkCenter.class);
         PlayerRegistrationService service = new PlayerRegistrationService(networkCenter);

@@ -12,6 +12,8 @@ import org.mockito.Mockito;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.nio.charset.StandardCharsets;
+
 import client.exception.GameCommunicationException;
 import client.exception.MapProcessingException;
 import client.model.Direction;
@@ -74,7 +76,7 @@ class NetworkCenterHttpErrorHandlingTest {
                 "Internal Server Error",
                 HttpHeaders.EMPTY,
                 new byte[0],
-                null
+                        StandardCharsets.UTF_8
         );
 
         when(httpClient.post(eq("/game-1/players"), any(), any()))

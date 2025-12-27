@@ -21,7 +21,6 @@ class GameModeTest {
             "'',UNKNOWN"
     })
     void fromCLIValue_parsesKnownModesAndFallsBack(String input, GameMode expected) {
-        String normalized = input.isEmpty() ? null : input;
-        assertEquals(expected, GameMode.fromCLIValue(normalized));
+        assertEquals(expected, GameMode.fromCLIValue(input));
     }
 }

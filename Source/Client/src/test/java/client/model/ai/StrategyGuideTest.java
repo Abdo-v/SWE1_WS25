@@ -25,10 +25,10 @@ import client.model.mapper.Terrain;
 class StrategyGuideTest {
 
     @Test
-    void getGrassNodesFromExtendedVision_whenPositionNull_returnsEmptyList() {
+    void getGrassNodesFromExtendedVision_whenGameStateMissing_returnsEmptyList() {
         StrategyGuide guide = new StrategyGuide(mock(WayHelper.class));
-
-        assertTrue(guide.getGrassNodesFromExtendedVision(null).isEmpty());
+        MapNode position = new MapNode(0, 0, Terrain.GRASS, false, false);
+        assertTrue(guide.getGrassNodesFromExtendedVision(position).isEmpty());
     }
 
     @Test

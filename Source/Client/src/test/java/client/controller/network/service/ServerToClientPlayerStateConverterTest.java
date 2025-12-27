@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ServerToClientPlayerStateConverterTest {
 
     /**
-     * Converts a non-null server player state and verifies all relevant fields are mapped.
+        * Converts a server player state and verifies all relevant fields are mapped.
      */
     @Test
     void convert_mapsAllFields() {

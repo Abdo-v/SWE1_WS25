@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +26,13 @@ class GameStateQueryServiceTest {
 
         when(networkCenter.pollGameState()).thenReturn(serverState);
         when(serverState.getMap()).thenReturn(serverMap);
-        when(serverMap.getMapNodes()).thenReturn(new ArrayList<>(Collections.nCopies(100, null)));
+
+        @SuppressWarnings({"rawtypes", "unchecked"})
+        ArrayList nodes = new ArrayList();
+        for (int i = 0; i < 100; i++) {
+            nodes.add(new Object());
+        }
+        when(serverMap.getMapNodes()).thenReturn(nodes);
 
         GameStateQueryService service = new GameStateQueryService(networkCenter);
 
