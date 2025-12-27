@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MapSnapshotView.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.view</a> &gt; <span class="el_source">MapSnapshotView.java</span></div><h1>MapSnapshotView.java</h1><pre class="source lang-java linenums">package client.view;
+
+import client.model.GameState;
+import client.model.PlayerState;
+import client.model.mapper.GameMap;
+import client.model.mapper.MapNode;
+
+import java.util.Objects;
+import java.util.Optional;
+
+/**
+ * Emoji-based, one-time map visualization.
+ *
+ * &lt;p&gt;Use this for snapshot-style output (e.g., initial FULL map print) to keep the visual
+ * language consistent with {@link DynamicCLIGameView}.
+ */
+<span class="nc" id="L17">public class MapSnapshotView {</span>
+
+    public void visualize(GameState gameState, MapVisualizationType mapType) {
+<span class="nc" id="L20">        Objects.requireNonNull(gameState, &quot;gameState is required&quot;);</span>
+<span class="nc" id="L21">        Objects.requireNonNull(mapType, &quot;mapType is required&quot;);</span>
+
+<span class="nc" id="L23">        Optional&lt;GameMap&gt; mapOpt = gameState.getMap();</span>
+<span class="nc bnc" id="L24" title="All 4 branches missed.">        if (mapOpt.isEmpty() || mapOpt.get().getContentSize() == 0) {</span>
+<span class="nc" id="L25">            System.out.println(mapType.name() + &quot; map visual: map not available&quot;);</span>
+<span class="nc" id="L26">            return;</span>
+        }
+
+<span class="nc" id="L29">        GameMap map = mapOpt.get();</span>
+
+<span class="nc bnc" id="L31" title="All 4 branches missed.">        switch (mapType) {</span>
+            case OWN:
+<span class="nc" id="L33">                printMap(gameState, map, 0, 0, map.getMaxX(), map.getMaxY(), &quot;Own Map Snapshot&quot;);</span>
+<span class="nc" id="L34">                break;</span>
+            case OPPONENT:
+<span class="nc bnc" id="L36" title="All 2 branches missed.">                if (map.getContentSize() != 100) {</span>
+<span class="nc" id="L37">                    System.out.println(&quot;Opponent map visual: map not available or incomplete&quot;);</span>
+<span class="nc" id="L38">                    return;</span>
+                }
+<span class="nc" id="L40">                printMap(gameState, map, 0, 0, map.getMaxX(), map.getMaxY(), &quot;Opponent Map Snapshot&quot;);</span>
+<span class="nc" id="L41">                break;</span>
+            case FULL:
+<span class="nc bnc" id="L43" title="All 2 branches missed.">                if (map.getContentSize() != 100) {</span>
+<span class="nc" id="L44">                    System.out.println(&quot;Full map visual: map incomplete&quot;);</span>
+<span class="nc" id="L45">                    return;</span>
+                }
+<span class="nc" id="L47">                printMap(gameState, map, 0, 0, map.getMaxX(), map.getMaxY(), &quot;Full Map Snapshot&quot;);</span>
+<span class="nc" id="L48">                break;</span>
+            default:
+<span class="nc" id="L50">                System.out.println(&quot;Invalid map type. Use 'own', 'opponent', or 'full'.&quot;);</span>
+        }
+<span class="nc" id="L52">    }</span>
+
+    private void printMap(GameState state, GameMap map, int minX, int minY, int maxX, int maxY, String title) {
+<span class="nc" id="L55">        System.out.println(&quot;\n&quot; + title + &quot; (&quot; + (maxX + 1) + &quot;x&quot; + (maxY + 1) + &quot;) - Orientation: &quot; + map.getOrientation().getName());</span>
+<span class="nc" id="L56">        System.out.println(CLILegends.fullMapLegend());</span>
+<span class="nc" id="L57">        System.out.println(CLITexts.SEPARATOR_SHORT);</span>
+
+<span class="nc" id="L59">        var myState = state.getCurrentPlayerState();</span>
+<span class="nc" id="L60">        var opponentState = state.getEnemyPlayerState();</span>
+<span class="nc" id="L61">        var myPosition = myState.flatMap(PlayerState::getCurrentPosition);</span>
+<span class="nc" id="L62">        var opponentPosition = opponentState.flatMap(PlayerState::getCurrentPosition);</span>
+
+<span class="nc" id="L64">        final boolean myHasTreasure = myState.map(PlayerState::hasCollectedTreasure).orElse(false);</span>
+<span class="nc" id="L65">        final boolean opponentHasTreasure = opponentState.map(PlayerState::hasCollectedTreasure).orElse(false);</span>
+
+<span class="nc bnc" id="L67" title="All 2 branches missed.">        for (int y = minY; y &lt;= maxY; y++) {</span>
+<span class="nc" id="L68">            StringBuilder row = new StringBuilder(&quot;|&quot;);</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            for (int x = minX; x &lt;= maxX; x++) {</span>
+<span class="nc" id="L70">                Optional&lt;MapNode&gt; node = SafeMapNodeLookup.tryGetNode(map, x, y);</span>
+<span class="nc" id="L71">                row.append(MapCellRenderer.renderCell(state, node, myPosition, opponentPosition, myHasTreasure, opponentHasTreasure));</span>
+
+<span class="nc bnc" id="L73" title="All 2 branches missed.">                if (x &lt; maxX) {</span>
+<span class="nc" id="L74">                    row.append(' ');</span>
+                }
+            }
+<span class="nc" id="L77">            row.append('|');</span>
+<span class="nc" id="L78">            System.out.println(row);</span>
+        }
+
+<span class="nc" id="L81">        System.out.println(CLITexts.SEPARATOR_SHORT);</span>
+<span class="nc" id="L82">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

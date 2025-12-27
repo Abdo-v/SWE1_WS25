@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ServerToClientMapConverter.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.controller.network.service</a> &gt; <span class="el_source">ServerToClientMapConverter.java</span></div><h1>ServerToClientMapConverter.java</h1><pre class="source lang-java linenums">package client.controller.network.service;
+
+import client.model.mapper.GameMap;
+import client.model.mapper.MapNode;
+import client.model.mapper.OwnToOppMapOrientation;
+import messagesbase.messagesfromserver.EFortState;
+import messagesbase.messagesfromserver.FullMap;
+import messagesbase.messagesfromserver.FullMapNode;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Optional;
+
+/**
+ * Converts a server full map to the client/internal game map.
+ */
+class ServerToClientMapConverter {
+
+    private final ServerToClientMapNodeConverter mapNodeConverter;
+
+<span class="nc" id="L21">    public ServerToClientMapConverter(ServerToClientMapNodeConverter mapNodeConverter) {</span>
+<span class="nc" id="L22">        this.mapNodeConverter = mapNodeConverter;</span>
+<span class="nc" id="L23">    }</span>
+
+    public GameMap convert(FullMap serverMap) {
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        if (serverMap.isEmpty()) {</span>
+<span class="nc" id="L27">            return new GameMap();</span>
+        }
+
+<span class="nc" id="L30">        Collection&lt;FullMapNode&gt; serverMapNodes = serverMap.getMapNodes();</span>
+<span class="nc" id="L31">        Optional&lt;OwnToOppMapOrientation&gt; orientation = Optional.empty();</span>
+<span class="nc" id="L32">        boolean vertical = false;</span>
+<span class="nc" id="L33">        boolean horizontal = false;</span>
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        for (FullMapNode node : serverMapNodes) {</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">            if (node.getY() &gt; 4) {</span>
+<span class="nc" id="L36">                vertical = true;</span>
+<span class="nc" id="L37">                break;</span>
+            }
+<span class="nc bnc" id="L39" title="All 2 branches missed.">            if (node.getX() &gt; 9) {</span>
+<span class="nc" id="L40">                horizontal = true;</span>
+<span class="nc" id="L41">                break;</span>
+            }
+        }
+
+<span class="nc" id="L45">        ArrayList&lt;MapNode&gt; internalNodes = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        for (FullMapNode node : serverMapNodes) {</span>
+<span class="nc" id="L47">            internalNodes.add(mapNodeConverter.convert(node));</span>
+        }
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (vertical) {</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            for (FullMapNode node : serverMapNodes) {</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                if (node.getFortState() == EFortState.MyFortPresent) {</span>
+<span class="nc bnc" id="L53" title="All 2 branches missed.">                    if (node.getY() &lt;= 4) {</span>
+<span class="nc" id="L54">                        orientation = Optional.of(OwnToOppMapOrientation.UP_DOWN);</span>
+<span class="nc" id="L55">                    } else {</span>
+<span class="nc" id="L56">                        orientation = Optional.of(OwnToOppMapOrientation.DOWN_UP);</span>
+                    }
+<span class="nc" id="L58">                    break;</span>
+                }
+            }
+<span class="nc bnc" id="L61" title="All 2 branches missed.">        } else if (horizontal) {</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            for (FullMapNode node : serverMapNodes) {</span>
+<span class="nc bnc" id="L63" title="All 2 branches missed.">                if (node.getFortState() == EFortState.MyFortPresent) {</span>
+<span class="nc bnc" id="L64" title="All 2 branches missed.">                    if (node.getX() &lt;= 9) {</span>
+<span class="nc" id="L65">                        orientation = Optional.of(OwnToOppMapOrientation.LEFT_RIGHT);</span>
+<span class="nc" id="L66">                    } else {</span>
+<span class="nc" id="L67">                        orientation = Optional.of(OwnToOppMapOrientation.RIGHT_LEFT);</span>
+                    }
+<span class="nc" id="L69">                    break;</span>
+                }
+            }
+        }
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">        if (orientation.isEmpty()) {</span>
+<span class="nc" id="L75">            return new GameMap();</span>
+        }
+
+<span class="nc" id="L78">        OwnToOppMapOrientation resolvedOrientation = orientation.get();</span>
+
+        int maxX;
+        int maxY;
+<span class="nc bnc" id="L82" title="All 4 branches missed.">        if (resolvedOrientation == OwnToOppMapOrientation.UP_DOWN || resolvedOrientation == OwnToOppMapOrientation.DOWN_UP) {</span>
+<span class="nc" id="L83">            maxX = 9;</span>
+<span class="nc" id="L84">            maxY = 9;</span>
+<span class="nc" id="L85">        } else {</span>
+<span class="nc" id="L86">            maxX = 19;</span>
+<span class="nc" id="L87">            maxY = 4;</span>
+        }
+
+<span class="nc" id="L90">        return new GameMap(internalNodes, resolvedOrientation, maxX, maxY);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

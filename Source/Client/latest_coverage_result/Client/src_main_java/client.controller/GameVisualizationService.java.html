@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>GameVisualizationService.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.controller</a> &gt; <span class="el_source">GameVisualizationService.java</span></div><h1>GameVisualizationService.java</h1><pre class="source lang-java linenums">package client.controller;
+
+import client.model.GameState;
+import client.view.DynamicCLIGameView;
+import client.view.MapVisualizationType;
+import client.view.CLIHandler;
+import client.view.MapSnapshotView;
+
+final class GameVisualizationService {
+
+    private final DynamicCLIGameView dynamicView;
+    private final GameState gameState;
+    private final MapSnapshotView snapshotView;
+
+<span class="nc" id="L15">    GameVisualizationService(CLIHandler cliHandler, DynamicCLIGameView dynamicView, GameState gameState) {</span>
+<span class="nc" id="L16">        this.dynamicView = dynamicView;</span>
+<span class="nc" id="L17">        this.gameState = gameState;</span>
+<span class="nc" id="L18">        this.snapshotView = new MapSnapshotView();</span>
+<span class="nc" id="L19">    }</span>
+
+    void visualizeMap(String mapType) {
+<span class="nc" id="L22">        visualizeMap(MapVisualizationType.fromCLIValue(mapType));</span>
+<span class="nc" id="L23">    }</span>
+
+    private void visualizeMap(MapVisualizationType mapType) {
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        if (CLIHandler.isGameModeReduced()) {</span>
+<span class="nc" id="L27">            return;</span>
+        }
+<span class="nc" id="L29">        snapshotView.visualize(gameState, mapType);</span>
+<span class="nc" id="L30">    }</span>
+
+    void enableDynamicVisualization() {
+<span class="nc" id="L33">        dynamicView.enableDynamicMode();</span>
+<span class="nc" id="L34">    }</span>
+
+    void disableDynamicVisualization() {
+<span class="nc" id="L37">        dynamicView.disableDynamicMode();</span>
+<span class="nc" id="L38">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

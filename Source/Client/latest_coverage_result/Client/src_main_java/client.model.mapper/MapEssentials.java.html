@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MapEssentials.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.mapper</a> &gt; <span class="el_source">MapEssentials.java</span></div><h1>MapEssentials.java</h1><pre class="source lang-java linenums">package client.model.mapper;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Shared, minimal map component that stores common map state.
+ *
+ * &lt;p&gt;Intentionally contains no game rules (e.g. half-map size limits).
+ */
+final class MapEssentials {
+
+    private int maxX;
+    private int maxY;
+    private final ArrayList&lt;MapNode&gt; nodes;
+
+<span class="fc" id="L19">    public MapEssentials(List&lt;MapNode&gt; initialNodes, int maxX, int maxY) {</span>
+<span class="fc" id="L20">        Objects.requireNonNull(initialNodes, &quot;initialNodes&quot;);</span>
+<span class="fc bfc" id="L21" title="All 2 branches covered.">        for (MapNode node : initialNodes) {</span>
+<span class="fc" id="L22">            Objects.requireNonNull(node, &quot;node&quot;);</span>
+        }
+<span class="fc" id="L24">        this.nodes = new ArrayList&lt;&gt;(initialNodes);</span>
+<span class="fc" id="L25">        this.maxX = maxX;</span>
+<span class="fc" id="L26">        this.maxY = maxY;</span>
+<span class="fc" id="L27">    }</span>
+
+    public boolean addNode(MapNode node) {
+<span class="fc" id="L30">        Objects.requireNonNull(node, &quot;node&quot;);</span>
+
+<span class="fc" id="L32">        this.maxX = Math.max(this.maxX, node.getX());</span>
+<span class="fc" id="L33">        this.maxY = Math.max(this.maxY, node.getY());</span>
+<span class="fc" id="L34">        return nodes.add(node);</span>
+    }
+
+    /**
+     * Returns an unmodifiable view of the current nodes.
+     *
+     * &lt;p&gt;This prevents callers from mutating internal state without updating bounds/invariants.
+     */
+    public List&lt;MapNode&gt; getNodes() {
+<span class="fc" id="L43">        return Collections.unmodifiableList(nodes);</span>
+    }
+
+    public int getMaxX() {
+<span class="nc" id="L47">        return maxX;</span>
+    }
+
+    public int getMaxY() {
+<span class="nc" id="L51">        return maxY;</span>
+    }
+
+    public int size() {
+<span class="fc" id="L55">        return nodes.size();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>GridDijkstraTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/test/java</a> &gt; <a href="index.source.html" class="el_package">client.model.ai</a> &gt; <span class="el_source">GridDijkstraTest.java</span></div><h1>GridDijkstraTest.java</h1><pre class="source lang-java linenums">package client.model.ai;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.Test;
+
+import client.model.mapper.GameMap;
+import client.model.mapper.MapNode;
+import client.model.mapper.OwnToOppMapOrientation;
+import client.model.mapper.Terrain;
+
+<span class="fc" id="L17">class GridDijkstraTest {</span>
+
+    @Test
+    void shortestPathCost_onSimpleGrid_returnsExpectedCost() {
+<span class="fc" id="L21">        GameMap map = grid(3, 3, List.of());</span>
+<span class="fc" id="L22">        MapNode start = new MapNode(0, 0, Terrain.GRASS, false, false);</span>
+<span class="fc" id="L23">        MapNode target = new MapNode(2, 0, Terrain.GRASS, false, false);</span>
+
+<span class="fc" id="L25">        int cost = GridDijkstra.shortestPathCost(map, start, target, MovementCostProfile.SHORTEST_PATH);</span>
+<span class="fc" id="L26">        assertEquals(4, cost); // 2 steps * 2 cost per grass-&gt;grass</span>
+<span class="fc" id="L27">    }</span>
+
+    @Test
+    void shortestPath_whenBlockedByWater_returnsEmpty() {
+        // Block middle row y=1 completely =&gt; cannot reach y=2 from y=0
+<span class="fc" id="L32">        GameMap map = grid(3, 3, List.of(</span>
+<span class="fc" id="L33">                new int[]{0,1}, new int[]{1,1}, new int[]{2,1}</span>
+        ));
+
+<span class="fc" id="L36">        MapNode start = new MapNode(0, 0, Terrain.GRASS, false, false);</span>
+<span class="fc" id="L37">        MapNode target = new MapNode(0, 2, Terrain.GRASS, false, false);</span>
+
+<span class="fc" id="L39">        assertTrue(GridDijkstra.shortestPath(map, start, target, MovementCostProfile.SHORTEST_PATH).isEmpty());</span>
+<span class="fc" id="L40">        assertEquals(Integer.MAX_VALUE, GridDijkstra.shortestPathCost(map, start, target, MovementCostProfile.SHORTEST_PATH));</span>
+<span class="fc" id="L41">    }</span>
+
+    @Test
+    void shortestPathCosts_whenArgsAreNull_returnsEmptyMap() {
+<span class="fc" id="L45">        assertTrue(GridDijkstra.shortestPathCosts(null, null, null).isEmpty());</span>
+<span class="fc" id="L46">    }</span>
+
+    private static GameMap grid(int w, int h, List&lt;int[]&gt; waterCells) {
+<span class="fc" id="L49">        ArrayList&lt;MapNode&gt; nodes = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        for (int y = 0; y &lt; h; y++) {</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">            for (int x = 0; x &lt; w; x++) {</span>
+<span class="fc" id="L52">                Terrain t = Terrain.GRASS;</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">                for (int[] wc : waterCells) {</span>
+<span class="fc bfc" id="L54" title="All 4 branches covered.">                    if (wc[0] == x &amp;&amp; wc[1] == y) t = Terrain.WATER;</span>
+                }
+<span class="fc" id="L56">                nodes.add(new MapNode(x, y, t, false, false));</span>
+            }
+        }
+<span class="fc" id="L59">        return new GameMap(nodes, OwnToOppMapOrientation.UP_DOWN, w - 1, h - 1);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

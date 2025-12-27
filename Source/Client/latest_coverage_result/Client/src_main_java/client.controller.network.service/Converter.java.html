@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>Converter.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.controller.network.service</a> &gt; <span class="el_source">Converter.java</span></div><h1>Converter.java</h1><pre class="source lang-java linenums">package client.controller.network.service;
+
+import client.model.Direction;
+import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
+import messagesbase.UniquePlayerIdentifier;
+
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Backwards-compatible facade for conversion logic.
+ *
+ * &lt;p&gt;New code should prefer {@link ClientToServerConverter} and {@link ServerToClientConverter}
+ * directly. This class remains to keep existing callers functional.
+ */
+<span class="nc" id="L17">class Converter {</span>
+
+<span class="nc" id="L19">    private final ClientToServerConverter clientToServer = new ClientToServerConverter();</span>
+<span class="nc" id="L20">    private final ServerToClientConverter serverToClient = new ServerToClientConverter();</span>
+
+    /**
+     * Converts the server game state to the internal representation.
+     * @param serverGameState The server game state.
+     * @return The internal game state.
+     */
+    public client.model.GameState convertServerGamestate(messagesbase.messagesfromserver.GameState serverGameState, UniquePlayerIdentifier playerId) {
+<span class="nc" id="L28">        return serverToClient.convertServerGamestate(serverGameState, playerId);</span>
+    }
+
+    /**
+     * Converts the server player state to the internal representation.
+     * @param serverPlayerState The server player state.
+     * @param playerMapNode The player's map node.
+     * @return The internal player state.
+     */
+    public client.model.PlayerState convertServerPlayerState(messagesbase.messagesfromserver.PlayerState serverPlayerState, MapNode playerMapNode) {
+<span class="nc" id="L38">        return serverToClient.convertServerPlayerState(serverPlayerState, playerMapNode);</span>
+    }
+
+    public client.model.PlayerStatus convertServerStatus(messagesbase.messagesfromserver.EPlayerGameState serverStatus){
+<span class="nc" id="L42">        return serverToClient.convertServerStatus(serverStatus);</span>
+    }
+
+    /**
+     * Converts the server map to the internal game map.
+     * @param serverMap The server map.
+     * @return The internal game map.
+     */
+    public client.model.mapper.GameMap convertServerMap(messagesbase.messagesfromserver.FullMap serverMap) {
+<span class="nc" id="L51">        return serverToClient.convertServerMap(serverMap);</span>
+    }
+
+    /**
+     * Converts the server map node to the internal map node.
+     * @param serverMapNode The server map node.
+     * @return The internal map node.
+     */
+    public MapNode convertServerMapNode(messagesbase.messagesfromserver.FullMapNode serverMapNode) {
+<span class="nc" id="L60">        return serverToClient.convertServerMapNode(serverMapNode);</span>
+    }
+
+    /**
+     * Checks if the server map has an enemy fort.
+     * @param serverMap The server map.
+     * @return True if enemy fort is present, false otherwise.
+     */
+    public boolean serverMapHasEnemyFort(messagesbase.messagesfromserver.FullMap serverMap) {
+<span class="nc" id="L69">        return serverToClient.serverMapHasEnemyFort(serverMap);</span>
+    }
+
+    /**
+     * Gets the treasure position from the server map.
+     * @param serverMap The server map.
+        * @return The treasure position as a MapNode, if available.
+     */
+    /**
+     * Converts the internal half map to the Server message format.
+     * @param halfMap Our internal half map representation.
+     * @return A half map in the format expected by the server.
+     */
+    public messagesbase.messagesfromclient.PlayerHalfMap convertClientHalfMap(PlayerHalfMap halfMap, UniquePlayerIdentifier playerId) {
+<span class="nc" id="L83">        return clientToServer.convertClientHalfMap(halfMap, playerId);</span>
+    }
+
+    /**
+     * Converts a list of internal map nodes to Server map nodes.
+     * @param nodes List of internal map nodes.
+     * @return Collection of Server map nodes.
+     */
+    public Collection&lt;messagesbase.messagesfromclient.PlayerHalfMapNode&gt; convertClientNodes(List&lt;MapNode&gt; nodes) {
+<span class="nc" id="L92">        return clientToServer.convertClientNodes(nodes);</span>
+    }
+
+    /**
+     * Converts client terrain to Server terrain.
+     * @param clientTerrain The client terrain.
+     * @return The corresponding Server terrain.
+     */
+    public messagesbase.messagesfromclient.ETerrain convertClientTerrain(client.model.mapper.Terrain clientTerrain) {
+<span class="nc" id="L101">        return clientToServer.convertClientTerrain(clientTerrain);</span>
+    }
+
+    /**
+     * Converts server terrain to client terrain.
+     * @param serverTerrain The server terrain.
+     * @return The corresponding client terrain.
+     */
+    public client.model.mapper.Terrain convertServerTerrain(messagesbase.messagesfromclient.ETerrain serverTerrain) {
+<span class="nc" id="L110">        return serverToClient.convertServerTerrain(serverTerrain);</span>
+    }
+
+    /**
+     * Converts the client direction to the Server move.
+     * @param d The client direction.
+     * @return The Server move.
+     */
+    public messagesbase.messagesfromclient.EMove convertClientDirection(Direction d){
+<span class="nc" id="L119">        return clientToServer.convertClientDirection(d);</span>
+    }
+
+    // helpers
+    
+    /**
+     * Checks if a fort is present on the given Server node.
+     * @param node The Server node.
+     * @return True if a fort is present, false otherwise.
+     */
+    public boolean isFortOnServerNode(messagesbase.messagesfromserver.FullMapNode node) {
+<span class="nc" id="L130">        return serverToClient.isFortOnServerNode(node);</span>
+    }
+
+    public boolean isTreasureOnServerNode(messagesbase.messagesfromserver.FullMapNode node) {
+<span class="nc" id="L134">        return serverToClient.isTreasureOnServerNode(node);</span>
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

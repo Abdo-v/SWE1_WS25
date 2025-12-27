@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MapValidationInternalsView.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.view</a> &gt; <span class="el_source">MapValidationInternalsView.java</span></div><h1>MapValidationInternalsView.java</h1><pre class="source lang-java linenums">package client.view;
+
+import client.model.common.Notification;
+
+import java.util.Objects;
+
+/**
+ * CLI visualization for technical internals during map generation.
+ *
+ * &lt;p&gt;Requirement: print validation problems to {@link System#err} with:
+ * &lt;ul&gt;
+ *   &lt;li&gt;coarse error kind&lt;/li&gt;
+ *   &lt;li&gt;helpful explanation&lt;/li&gt;
+ *   &lt;li&gt;reference to relevant validation logic (class + method) based on stack trace&lt;/li&gt;
+ * &lt;/ul&gt;
+ */
+<span class="fc" id="L17">public class MapValidationInternalsView {</span>
+
+    public void report(Notification notification) {
+<span class="fc" id="L20">        Objects.requireNonNull(notification, &quot;notification is required&quot;);</span>
+
+<span class="pc bpc" id="L22" title="1 of 2 branches missed.">        if (!notification.hasErrors()) {</span>
+<span class="nc" id="L23">            return;</span>
+        }
+
+<span class="fc" id="L26">        System.err.println(&quot;\n🧪 Map Validation Internals&quot;);</span>
+<span class="fc" id="L27">        System.err.println(&quot;Type: Half-map validation errors&quot;);</span>
+<span class="fc" id="L28">        System.err.println(&quot;Details:&quot;);</span>
+
+<span class="fc" id="L30">        int index = 1;</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        for (Notification.Error error : notification.getErrors()) {</span>
+<span class="fc" id="L32">            String message = safeText(error.info);</span>
+<span class="fc" id="L33">            var referenceFrame = error.cause</span>
+<span class="fc" id="L34">                    .flatMap(MapValidationInternalsView::findTopRelevantFrame);</span>
+<span class="fc" id="L35">            ValidationInternalsKind kind = ValidationInternalsKind.from(referenceFrame, message);</span>
+<span class="fc" id="L36">            String reference = referenceFrame</span>
+<span class="fc" id="L37">                    .map(MapValidationInternalsView::formatFrameLikeStackTrace)</span>
+<span class="fc" id="L38">                    .orElse(&quot;(no stack trace reference available)&quot;);</span>
+
+<span class="fc" id="L40">            System.err.println(&quot;  &quot; + index + &quot;) Kind: &quot; + kind.displayText());</span>
+<span class="fc" id="L41">            System.err.println(&quot;     Message: &quot; + message);</span>
+<span class="fc" id="L42">            System.err.println(&quot;     Reference: &quot; + reference);</span>
+<span class="fc" id="L43">            index++;</span>
+        }
+<span class="fc" id="L45">        System.err.println();</span>
+<span class="fc" id="L46">    }</span>
+
+    private static String safeText(String text) {
+<span class="fc" id="L49">        return Objects.requireNonNullElse(text, &quot;(no message)&quot;);</span>
+    }
+
+    private static java.util.Optional&lt;StackTraceElement&gt; findTopRelevantFrame(Exception ex) {
+<span class="fc" id="L53">        Objects.requireNonNull(ex, &quot;exception is required&quot;);</span>
+<span class="fc" id="L54">        StackTraceElement[] frames = Objects.requireNonNullElse(ex.getStackTrace(), new StackTraceElement[0]);</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (frames.length == 0) {</span>
+<span class="nc" id="L56">            return java.util.Optional.empty();</span>
+        }
+
+        // Prefer frames that look like validation logic.
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        for (StackTraceElement frame : frames) {</span>
+<span class="fc" id="L61">            String lower = frame.getClassName().toLowerCase();</span>
+<span class="pc bpc" id="L62" title="1 of 4 branches missed.">            if (lower.contains(&quot;validator&quot;) || lower.contains(&quot;mapvalidator&quot;)) {</span>
+<span class="fc" id="L63">                return java.util.Optional.of(frame);</span>
+            }
+        }
+
+        // Fallback: first frame.
+<span class="nc" id="L68">        return java.util.Optional.of(frames[0]);</span>
+    }
+    private static String formatFrameLikeStackTrace(StackTraceElement frame) {
+<span class="fc" id="L71">        String className = frame.getClassName();</span>
+<span class="fc" id="L72">        String methodName = frame.getMethodName();</span>
+<span class="fc" id="L73">        String fileName = Objects.requireNonNullElse(frame.getFileName(), &quot;&quot;);</span>
+<span class="fc" id="L74">        int line = frame.getLineNumber();</span>
+
+<span class="pc bpc" id="L76" title="2 of 4 branches missed.">        if (!fileName.isBlank() &amp;&amp; line &gt; 0) {</span>
+<span class="fc" id="L77">            return &quot;at &quot; + className + &quot;.&quot; + methodName + &quot;(&quot; + fileName + &quot;:&quot; + line + &quot;)&quot;;</span>
+        }
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (!fileName.isBlank()) {</span>
+<span class="nc" id="L80">            return &quot;at &quot; + className + &quot;.&quot; + methodName + &quot;(&quot; + fileName + &quot;)&quot;;</span>
+        }
+<span class="nc" id="L82">        return &quot;at &quot; + className + &quot;.&quot; + methodName + &quot;()&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

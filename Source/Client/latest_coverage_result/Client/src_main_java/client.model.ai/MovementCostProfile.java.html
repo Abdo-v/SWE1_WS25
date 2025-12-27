@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MovementCostProfile.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.ai</a> &gt; <span class="el_source">MovementCostProfile.java</span></div><h1>MovementCostProfile.java</h1><pre class="source lang-java linenums">package client.model.ai;
+
+import client.model.mapper.MapNode;
+import client.model.mapper.Terrain;
+import client.model.common.DebugSettings;
+import java.util.Objects;
+
+/**
+ * Defines movement cost rules for different AI use-cases.
+ *
+ * Package-private on purpose: this is an internal refactoring detail.
+ */
+<span class="fc" id="L13">enum MovementCostProfile {</span>
+<span class="fc" id="L14">    WAY_HELPER {</span>
+        @Override
+        int cost(MapNode from, MapNode to) {
+<span class="nc bnc" id="L17" title="All 4 branches missed.">            if (Objects.isNull(to) || to.getTerrain() == Terrain.WATER) {</span>
+<span class="nc" id="L18">                return Integer.MAX_VALUE;</span>
+            }
+
+<span class="nc" id="L21">            Terrain fromTerrain = from.getTerrain();</span>
+<span class="nc" id="L22">            Terrain toTerrain = to.getTerrain();</span>
+
+            // IMPORTANT:
+            // Costs here must match the game's action semantics:
+            // - Grass -&gt; Grass: 2 actions (leave + enter)
+            // - Grass -&gt; Mountain: 3 actions (leave grass + enter mountain (2))
+            // - Mountain -&gt; Grass: 3 actions (leave mountain (2) + enter grass)
+            // - Mountain -&gt; Mountain: 4 actions (leave (2) + enter (2))
+            // This profile is used to compute the &quot;reachable within 8 actions&quot; set from the enemy true position.
+<span class="nc bnc" id="L31" title="All 4 branches missed.">            if (fromTerrain == Terrain.GRASS &amp;&amp; toTerrain == Terrain.GRASS) return 2;</span>
+<span class="nc bnc" id="L32" title="All 4 branches missed.">            if (fromTerrain == Terrain.GRASS &amp;&amp; toTerrain == Terrain.MOUNTAIN) return 3;</span>
+<span class="nc bnc" id="L33" title="All 4 branches missed.">            if (fromTerrain == Terrain.MOUNTAIN &amp;&amp; toTerrain == Terrain.GRASS) return 3;</span>
+<span class="nc bnc" id="L34" title="All 4 branches missed.">            if (fromTerrain == Terrain.MOUNTAIN &amp;&amp; toTerrain == Terrain.MOUNTAIN) return 4;</span>
+
+<span class="nc bnc" id="L36" title="All 2 branches missed.">            if (DebugSettings.isDebugEnabled()) {</span>
+<span class="nc" id="L37">                System.err.println(&quot;MovementCostProfile.WAY_HELPER: Unhandled terrain transition from &quot; + fromTerrain + &quot; to &quot; + toTerrain);</span>
+            }
+<span class="nc" id="L39">            return Integer.MAX_VALUE;</span>
+        }
+    },
+<span class="fc" id="L42">    SHORTEST_PATH {</span>
+        @Override
+        int cost(MapNode from, MapNode to) {
+<span class="pc bpc" id="L45" title="1 of 4 branches missed.">            if (Objects.isNull(to) || to.getTerrain() == Terrain.WATER) {</span>
+<span class="fc" id="L46">                return Integer.MAX_VALUE;</span>
+            }
+
+<span class="fc" id="L49">            Terrain fromTerrain = from.getTerrain();</span>
+<span class="fc" id="L50">            Terrain toTerrain = to.getTerrain();</span>
+
+            // Keep the original ShortestPathFinder weights exactly as-is.
+<span class="pc bpc" id="L53" title="2 of 4 branches missed.">            if (fromTerrain == Terrain.GRASS &amp;&amp; toTerrain == Terrain.GRASS) return 2;</span>
+<span class="nc bnc" id="L54" title="All 4 branches missed.">            if (fromTerrain == Terrain.GRASS &amp;&amp; toTerrain == Terrain.MOUNTAIN) return 3;</span>
+<span class="nc bnc" id="L55" title="All 4 branches missed.">            if (fromTerrain == Terrain.MOUNTAIN &amp;&amp; toTerrain == Terrain.GRASS) return 3;</span>
+<span class="nc bnc" id="L56" title="All 4 branches missed.">            if (fromTerrain == Terrain.MOUNTAIN &amp;&amp; toTerrain == Terrain.MOUNTAIN) return 4;</span>
+
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            if (DebugSettings.isDebugEnabled()) {</span>
+<span class="nc" id="L59">                System.err.println(&quot;MovementCostProfile.SHORTEST_PATH: Unhandled terrain transition from &quot; + fromTerrain + &quot; to &quot; + toTerrain);</span>
+            }
+<span class="nc" id="L61">            return Integer.MAX_VALUE;</span>
+        }
+    };
+
+    abstract int cost(MapNode from, MapNode to);
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

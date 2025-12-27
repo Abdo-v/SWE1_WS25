@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>PlayerSummaryFormatter.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.view</a> &gt; <span class="el_source">PlayerSummaryFormatter.java</span></div><h1>PlayerSummaryFormatter.java</h1><pre class="source lang-java linenums">package client.view;
+
+import client.model.PlayerState;
+
+import java.util.Objects;
+
+/**
+ * Formats user-facing player summary text for CLI output.
+ *
+ * &lt;p&gt;Intentionally excludes technical/internal details from {@link PlayerState#toString()}.
+ */
+<span class="nc" id="L12">final class PlayerSummaryFormatter {</span>
+
+    String format(PlayerState playerState, int movesMade) {
+<span class="nc" id="L15">        Objects.requireNonNull(playerState, &quot;playerState is required&quot;);</span>
+
+<span class="nc" id="L17">        String id = displayOrUnknown(playerState.getPlayerID());</span>
+<span class="nc" id="L18">        String firstName = displayOrUnknown(playerState.getFirstName());</span>
+<span class="nc" id="L19">        String lastName = displayOrUnknown(playerState.getLastName());</span>
+<span class="nc" id="L20">        String uAccount = displayOrUnknown(playerState.getUAccount());</span>
+
+<span class="nc" id="L22">        StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L23">        sb.append(&quot;Player: &quot;).append(firstName).append(' ').append(lastName).append('\n');</span>
+<span class="nc" id="L24">        sb.append(&quot;uAccount: &quot;).append(uAccount).append('\n');</span>
+<span class="nc" id="L25">        sb.append(&quot;ID: &quot;).append(id).append('\n');</span>
+<span class="nc" id="L26">        sb.append(&quot;Moves made: &quot;).append(Math.max(0, movesMade)).append('\n');</span>
+<span class="nc" id="L27">        return sb.toString();</span>
+    }
+
+    private static String displayOrUnknown(String value) {
+<span class="nc" id="L31">        String trimmed = Objects.requireNonNullElse(value, &quot;&quot;).trim();</span>
+<span class="nc bnc" id="L32" title="All 2 branches missed.">        return trimmed.isEmpty() ? &quot;(unknown)&quot; : trimmed;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

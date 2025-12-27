@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>GameMap.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.mapper</a> &gt; <span class="el_source">GameMap.java</span></div><h1>GameMap.java</h1><pre class="source lang-java linenums">package client.model.mapper;
+
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.List;
+
+public class GameMap {
+    private final MapEssentials map;
+    private final Optional&lt;OwnToOppMapOrientation&gt; orientation;
+
+    private static final String ORIENTATION_REQUIRED_MESSAGE = &quot;Map orientation must be set&quot;;
+
+    /**
+     * Constructs a GameMap with the given parameters and dimensions.
+     * @param orientation The orientation of the map.
+     * @param maxX The maximum X coordinate.
+     * @param maxY The maximum Y coordinate.
+     */
+<span class="fc" id="L21">    public GameMap(ArrayList&lt;MapNode&gt; nodes, OwnToOppMapOrientation orientation, int maxX, int maxY) {</span>
+<span class="fc" id="L22">        this.orientation = Optional.of(Objects.requireNonNull(orientation, &quot;orientation&quot;));</span>
+<span class="fc" id="L23">        this.map = new MapEssentials(Objects.requireNonNull(nodes, &quot;nodes&quot;), maxX, maxY);</span>
+<span class="fc" id="L24">    }</span>
+
+    /**
+     * Default constructor for GameMap.
+     */
+<span class="fc" id="L29">    public GameMap() {</span>
+<span class="fc" id="L30">        this.map = new MapEssentials(new ArrayList&lt;&gt;(), 0, 0);</span>
+<span class="fc" id="L31">        this.orientation = Optional.empty();</span>
+<span class="fc" id="L32">    }</span>
+
+    /**
+     * Gets the player's own half map.
+     * @return The player's own half map.
+     */
+    public PlayerHalfMap getOwnHalfMap() {
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (map.size() == HalfMapDimensions.TOTAL_NODES) {</span>
+<span class="nc" id="L40">            return buildHalfMap(node -&gt; true);</span>
+        }
+
+<span class="nc" id="L43">        return buildHalfMap(ownHalfPredicate());</span>
+    }
+
+    /**
+     * Gets the opponent's half map.
+     * @return The opponent's half map.
+     */
+    public PlayerHalfMap getOpponentHalfMap() {
+<span class="nc" id="L51">        return buildHalfMap(ownHalfPredicate().negate());</span>
+    }
+
+
+    /**
+     * Gets the map orientation.
+     * @return The map orientation.
+     */
+    public OwnToOppMapOrientation getOrientation() {
+<span class="nc" id="L60">        return orientation.orElseThrow(() -&gt; new IllegalStateException(ORIENTATION_REQUIRED_MESSAGE));</span>
+    }
+
+    /**
+     * Gets the maximum X coordinate.
+     * @return The maximum X coordinate.
+     */
+    public int getMaxX() {
+<span class="nc" id="L68">        return map.getMaxX();</span>
+    }
+
+    /**
+     * Gets the maximum Y coordinate.
+     * @return The maximum Y coordinate.
+     */
+    public int getMaxY() {
+<span class="nc" id="L76">        return map.getMaxY();</span>
+    }
+
+    /**
+     * Gets the total number of nodes in the map.
+     * @return The total number of nodes in the map.
+     */
+    public int getContentSize() {
+<span class="nc" id="L84">        return map.size();</span>
+    }
+
+    /**
+     * Gets the MapNode at the specified coordinates.
+     * @param x X-coordinate.
+     * @param y Y-coordinate.
+     * @return The MapNode at the specified coordinates.
+     * @throws IllegalArgumentException if coordinates are invalid.
+     */
+    public MapNode getNode(int x, int y) {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (MapNode node : map.getNodes()) {</span>
+<span class="fc bfc" id="L96" title="All 4 branches covered.">            if (node.getX() == x &amp;&amp; node.getY() == y) {</span>
+<span class="fc" id="L97">                return node;</span>
+            }
+        }
+<span class="fc" id="L100">        throw new IllegalArgumentException(&quot;Invalid coordinates: (&quot; + x + &quot;, &quot; + y + &quot;), not found in gameMap&quot;);</span>
+    }
+
+    /**
+     * gets the map nodes of the game map.
+     * @return An unmodifiable view of MapNode objects representing the game map nodes.
+     */
+    public List&lt;MapNode&gt; getGameMapNodes() {
+<span class="nc" id="L108">        return map.getNodes();</span>
+    }
+    /**
+     * Checks if the given node is in the player's own half of the map.
+     * The method uses the map's orientation to determine the player's half.
+     * @param node The MapNode to check.
+     * @return True if the node is in the player's own half, false otherwise.
+     */
+    public boolean isNodeInOwnHalf(MapNode node) {
+<span class="nc" id="L117">        Objects.requireNonNull(node, &quot;node&quot;);</span>
+<span class="nc" id="L118">        return ownHalfPredicate().test(node);</span>
+    }
+
+    private PlayerHalfMap buildHalfMap(Predicate&lt;MapNode&gt; includeNode) {
+<span class="nc" id="L122">        Objects.requireNonNull(includeNode, &quot;includeNode&quot;);</span>
+
+<span class="nc" id="L124">        PlayerHalfMap halfMap = new PlayerHalfMap();</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">        for (MapNode node : map.getNodes()) {</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            if (includeNode.test(node)) {</span>
+<span class="nc" id="L127">                halfMap.addMapNode(node);</span>
+            }
+        }
+<span class="nc" id="L130">        return halfMap;</span>
+    }
+
+    private Predicate&lt;MapNode&gt; ownHalfPredicate() {
+<span class="nc bnc" id="L134" title="All 2 branches missed.">        if (orientation.isEmpty()) {</span>
+<span class="nc" id="L135">            throw new IllegalStateException(ORIENTATION_REQUIRED_MESSAGE);</span>
+        }
+
+<span class="nc bnc" id="L138" title="All 4 branches missed.">        return switch (orientation.get()) {</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            case UP_DOWN -&gt; node -&gt; node.getY() &lt;= HalfMapDimensions.HEIGHT - 1;</span>
+<span class="nc bnc" id="L140" title="All 2 branches missed.">            case DOWN_UP -&gt; node -&gt; node.getY() &gt;= HalfMapDimensions.HEIGHT;</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            case LEFT_RIGHT -&gt; node -&gt; node.getX() &lt;= HalfMapDimensions.WIDTH - 1;</span>
+<span class="nc bnc" id="L142" title="All 2 branches missed.">            case RIGHT_LEFT -&gt; node -&gt; node.getX() &gt;= HalfMapDimensions.WIDTH;</span>
+        };
+    }
+    /**
+     * Returns a string representation of the GameMap.
+     * @return A string representation of the GameMap.
+     */
+    public String toString() {
+<span class="nc" id="L150">        StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L151">        sb.append(&quot;GameMap{orientation=&quot;).append(orientation)</span>
+<span class="nc" id="L152">                    .append(&quot;, maxX=&quot;).append(getMaxX())</span>
+<span class="nc" id="L153">                    .append(&quot;, maxY=&quot;).append(getMaxY())</span>
+<span class="nc" id="L154">          .append(&quot;, nodes=[&quot;);</span>
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        for (MapNode node : map.getNodes()) {</span>
+<span class="nc" id="L156">            sb.append(node.toString()).append(&quot;, &quot;);</span>
+        }
+<span class="nc" id="L158">        sb.append(&quot;]}&quot;);</span>
+<span class="nc" id="L159">        return sb.toString();</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

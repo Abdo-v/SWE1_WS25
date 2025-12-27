@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>GameManager.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.controller</a> &gt; <span class="el_source">GameManager.java</span></div><h1>GameManager.java</h1><pre class="source lang-java linenums">package client.controller;
+
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
+import client.exception.GameCommunicationException;
+import client.exception.GameStateException;
+import client.exception.AIDecisionException;
+import client.exception.FullMapNotAvailableException;
+import client.exception.MapProcessingException;
+import client.model.GameMode;
+import client.model.ai.WayFinder;
+import client.view.DynamicCLIGameView;
+import client.view.GameOutput;
+import client.controller.network.service.NetworkCenter;
+
+import java.util.Optional;
+import java.util.Objects;
+import java.time.Duration;
+
+public class GameManager {
+    // private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
+    
+    private final client.model.GameState gameState;
+    private final NetworkCenter networkCenter;
+    private Optional&lt;String&gt; playerId;
+<span class="nc" id="L26">    private final WayFinder wayFinder = new WayFinder();</span>
+<span class="nc" id="L27">    private final DynamicCLIGameView dynamicView = new DynamicCLIGameView();</span>
+    private final GameOutput output;
+    private final HalfMapService halfMapService;
+    private final GameStateSynchronizer gameStateSynchronizer;
+    private final GameStateQueryService gameStateQueryService;
+    private final GameLoopService gameLoopService;
+    private final FullMapWaitService fullMapWaitService;
+    private final PlayerRegistrationService playerRegistrationService;
+    private final MoveExecutionService moveExecutionService;
+    private final GameVisualizationService visualizationService;
+    private final PlayerTurnService playerTurnService;
+
+    private static final String UNKNOWN_GAME_STATE_ID = &quot;unknown&quot;;
+
+    public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode, GameOutput output){
+<span class="nc" id="L42">        this(state, serverBaseUrl, GameMode.fromCLIValue(gameMode), output);</span>
+<span class="nc" id="L43">    }</span>
+
+<span class="nc" id="L45">    private GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){</span>
+<span class="nc" id="L46">        this.gameState = Objects.requireNonNull(state, &quot;state is required&quot;);</span>
+<span class="nc" id="L47">        this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, &quot;serverBaseUrl is required&quot;), this.gameState.getGameStateID());</span>
+<span class="nc" id="L48">        this.output = Objects.requireNonNull(output, &quot;output is required&quot;);</span>
+<span class="nc" id="L49">        this.playerId = Optional.empty();</span>
+
+<span class="nc" id="L51">        var cliHandler = GameManagerWiring.createCLIHandler(gameMode);</span>
+<span class="nc" id="L52">        GameManagerWiring.wireObservers(state, cliHandler, wayFinder, dynamicView);</span>
+
+<span class="nc" id="L54">        this.halfMapService = new HalfMapService(this.networkCenter, cliHandler, this.output);</span>
+<span class="nc" id="L55">        this.gameStateSynchronizer = new GameStateSynchronizer(this.networkCenter);</span>
+<span class="nc" id="L56">        this.gameStateQueryService = new GameStateQueryService(this.networkCenter);</span>
+<span class="nc" id="L57">        this.fullMapWaitService = new FullMapWaitService(this.gameStateSynchronizer, this.gameStateQueryService);</span>
+<span class="nc" id="L58">        this.gameLoopService = new GameLoopService(this, this.output);</span>
+
+<span class="nc" id="L60">        this.playerRegistrationService = new PlayerRegistrationService(this.networkCenter);</span>
+<span class="nc" id="L61">        this.moveExecutionService = new MoveExecutionService(this.networkCenter, this.wayFinder, this.output);</span>
+<span class="nc" id="L62">        this.visualizationService = new GameVisualizationService(cliHandler, this.dynamicView, this.gameState);</span>
+<span class="nc" id="L63">        this.playerTurnService = new PlayerTurnService();</span>
+<span class="nc" id="L64">    }</span>
+
+    /**
+     * Registers a player with the server.
+     * @param firstName Player's first name.
+     * @param lastName Player's last name.
+     * @param uAccount Player's university account.
+     * @return The player's ID if registration is successful.
+     * @throws GameCommunicationException If registration fails due to network or server issues.
+     * @throws GameStateException If the game state is invalid for player registration.
+     */
+    public String registerPlayer(String firstName, String lastName, String uAccount) throws GameCommunicationException, GameStateException {
+<span class="nc" id="L76">        String registeredPlayerId = playerRegistrationService.registerPlayer(gameState, firstName, lastName, uAccount);</span>
+<span class="nc" id="L77">        this.playerId = Optional.of(registeredPlayerId);</span>
+<span class="nc" id="L78">        return registeredPlayerId;</span>
+    }
+    
+    /**
+     * Generates and sends the player's half map to the server.
+     * @throws GameCommunicationException If sending half map fails due to network issues.
+     * @throws GameStateException If the game state is invalid for map generation.
+     */
+    public void generateAndSendHalfMap() throws GameCommunicationException, GameStateException {
+<span class="nc" id="L87">        halfMapService.generateAndSendHalfMap(requirePlayerId(), requireGameStateId());</span>
+<span class="nc" id="L88">    }</span>
+
+    /**
+     * Updates the game state with the latest data from the server.
+     * @throws GameCommunicationException If polling fails due to network issues.
+     * @throws MapProcessingException If the received data cannot be processed.
+     */
+    public void updateGameState() throws GameCommunicationException, MapProcessingException {
+<span class="nc" id="L96">        gameStateSynchronizer.synchronize(this.gameState);</span>
+<span class="nc" id="L97">    }</span>
+
+    /**
+     * Waits until the full map is available, polling periodically.
+     *
+     * This method does NOT throw as part of normal control flow. It only throws
+     * a checked exception when the timeout is exceeded.
+     */
+    public void waitForFullMap(Duration timeout, Duration pollInterval)
+            throws GameCommunicationException, MapProcessingException, FullMapNotAvailableException {
+<span class="nc" id="L107">        fullMapWaitService.waitForFullMap(this.gameState, timeout, pollInterval);</span>
+<span class="nc" id="L108">    }</span>
+
+    void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
+<span class="nc" id="L111">        moveExecutionService.makeMove(gameState, requirePlayerId(), gameMode);</span>
+<span class="nc" id="L112">    }</span>
+
+    /**
+     * Gets the current player status with proper exception handling.
+     * @return The current player status.
+     * @throws GameStateException If the player is not found in the game state.
+     */
+    public client.model.PlayerStatus getCurrentPlayerStatus() throws GameStateException {
+<span class="nc" id="L120">        return playerTurnService.getCurrentPlayerStatus(gameState, requirePlayerId());</span>
+    }
+
+    /**
+     * Starts the main game loop with comprehensive exception handling.
+     * @throws GameCommunicationException If network communication fails.
+     * @throws GameStateException If game state becomes invalid.
+     */
+    public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
+<span class="nc" id="L129">        gameLoopService.startGameLoop(gameMode);</span>
+<span class="nc" id="L130">    }</span>
+
+    /**
+     * Gets the current game state.
+     * @return The current game state.
+     */
+    public client.model.GameState getGameState() {
+<span class="nc" id="L137">        return gameState;</span>
+    }
+
+    /**
+     * Sets the player ID.
+     * @param playerId The player ID to set.
+     */
+    public void setPlayerId(String playerId) {
+<span class="nc" id="L145">        this.playerId = Optional.ofNullable(playerId)</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                .filter(id -&gt; !id.isBlank());</span>
+<span class="nc" id="L147">    }</span>
+
+    public void visualizeMap(String mapType) {
+<span class="nc" id="L150">        visualizationService.visualizeMap(mapType);</span>
+<span class="nc" id="L151">    }</span>
+
+    void enableDynamicVisualization() {
+<span class="nc" id="L154">        visualizationService.enableDynamicVisualization();</span>
+<span class="nc" id="L155">    }</span>
+
+    /**
+     * Disable dynamic visualization
+     */
+    void disableDynamicVisualization() {
+<span class="nc" id="L161">        visualizationService.disableDynamicVisualization();</span>
+<span class="nc" id="L162">    }</span>
+
+    private String requirePlayerId() {
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        return playerId.filter(id -&gt; !id.isBlank()).orElseThrow(() -&gt; new GameStateException(</span>
+<span class="nc" id="L166">                &quot;Player identifier is missing&quot;,</span>
+<span class="nc" id="L167">                requireGameStateId(),</span>
+<span class="nc" id="L168">                &quot;PLAYER_ID&quot;,</span>
+<span class="nc" id="L169">                &quot;missing&quot;</span>
+<span class="nc" id="L170">        ));</span>
+    }
+
+    private String requireGameStateId() {
+<span class="nc" id="L174">        return Optional.ofNullable(gameState)</span>
+<span class="nc" id="L175">                .map(client.model.GameState::getGameStateID)</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                .filter(id -&gt; !id.isBlank())</span>
+<span class="nc" id="L177">                .orElse(UNKNOWN_GAME_STATE_ID);</span>
+    }
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

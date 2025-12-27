@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ShortestPathFinder.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.ai</a> &gt; <span class="el_source">ShortestPathFinder.java</span></div><h1>ShortestPathFinder.java</h1><pre class="source lang-java linenums">package client.model.ai;
+
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import client.model.Direction;
+import client.model.GameState;
+import client.model.common.DebugSettings;
+import client.model.mapper.GameMap;
+import client.model.mapper.MapNode;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
+
+class ShortestPathFinder implements client.observer.util.Observer {
+
+    // private static final Logger logger = LoggerFactory.getLogger(ShortestPathFinder.class);
+    private Optional&lt;GameState&gt; gameState;
+
+<span class="nc" id="L21">    public ShortestPathFinder() {</span>
+<span class="nc" id="L22">        this.gameState = Optional.empty();</span>
+<span class="nc" id="L23">    }</span>
+
+    /**
+     * Finds the next valid node to move towards the target.
+    * @return The Direction to move towards the target node.
+     */
+    public Optional&lt;Direction&gt; findNextValidNodeToTarget(MapNode targetMapNode){
+<span class="nc" id="L30">        Objects.requireNonNull(targetMapNode, &quot;targetMapNode must not be null&quot;);</span>
+
+<span class="nc" id="L32">        GameState state = gameState.orElseThrow(() -&gt; new IllegalStateException(&quot;GameState must be set before pathfinding&quot;));</span>
+<span class="nc" id="L33">        MapNode target = targetMapNode;</span>
+<span class="nc" id="L34">        MapNode current = state.getCurrentPlayerState()</span>
+<span class="nc" id="L35">            .flatMap(player -&gt; player.getCurrentPosition())</span>
+<span class="nc" id="L36">            .orElseThrow(() -&gt; new IllegalStateException(&quot;Current position must be set before finding next valid direction.&quot;));</span>
+        
+        // logger.trace(&quot;Pathfinding from {} to {}&quot;, current.printCoordinates(), target.printCoordinates());
+<span class="nc" id="L39">        ArrayList&lt;MapNode&gt; path = findShortestPath(current, target);</span>
+
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        if (path.isEmpty()) {</span>
+            // logger.warn(&quot;No valid path found to target {}&quot;, target.printCoordinates());
+<span class="nc bnc" id="L43" title="All 2 branches missed.">            if (DebugSettings.isDebugEnabled()) {</span>
+<span class="nc" id="L44">                System.err.println(&quot;WayFinder: No valid path found to target node (empty path).&quot;);</span>
+            }
+<span class="nc" id="L46">            return Optional.empty();</span>
+        }
+
+        // Path includes start at index 0; the next step is index 1.
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        if (path.size() &lt; 2) {</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            if (DebugSettings.isDebugEnabled()) {</span>
+<span class="nc" id="L52">                System.err.println(&quot;WayFinder: Current node already equals target (no next step).&quot;);</span>
+            }
+<span class="nc" id="L54">            return Optional.empty();</span>
+        }
+
+<span class="nc" id="L57">        MapNode nextNode = path.get(1);</span>
+<span class="nc" id="L58">        return getDirectionToNeighbor(nextNode);</span>
+    }
+
+    /**
+     * Finds the shortest path from a start node to a target node using Dijkstra's algorithm.
+     * The path is a list of MapNode objects, including the start and target nodes.
+     * Movement costs are determined by getMovementCost().
+     *
+     * @param start  The starting MapNode.
+     * @param target The target MapNode.
+     * @return An ArrayList of MapNode objects representing the shortest path from start to target.
+     *         Returns an empty list if no path is found, or if start/target is null or invalid.
+     *         If start and target are the same, returns a list containing just the start node.
+     */
+    private ArrayList&lt;MapNode&gt; findShortestPath(MapNode start, MapNode target) {
+<span class="nc" id="L73">        ArrayList&lt;MapNode&gt; path = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L74">        Optional&lt;MapNode&gt; startNode = Optional.ofNullable(start);</span>
+<span class="nc" id="L75">        Optional&lt;MapNode&gt; targetNode = Optional.ofNullable(target);</span>
+<span class="nc" id="L76">        Optional&lt;GameState&gt; stateOptional = gameState;</span>
+<span class="nc" id="L77">        Optional&lt;GameMap&gt; mapOptional = gameState.flatMap(GameState::getMap);</span>
+
+<span class="nc bnc" id="L79" title="All 8 branches missed.">        if (startNode.isEmpty() || targetNode.isEmpty() || stateOptional.isEmpty() || mapOptional.isEmpty()) {</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">            if (DebugSettings.isDebugEnabled()) {</span>
+<span class="nc" id="L81">                System.err.println(&quot;WayFinder.findShortestPath (Dijkstra): Start, target, gameState, or map is missing.&quot;);</span>
+            }
+<span class="nc" id="L83">            return path;</span>
+        }
+
+<span class="nc" id="L86">        MapNode safeStart = startNode.orElseThrow();</span>
+<span class="nc" id="L87">        MapNode safeTarget = targetNode.orElseThrow();</span>
+
+<span class="nc bnc" id="L89" title="All 2 branches missed.">        if (safeStart.equalsByCoordinates(safeTarget)) {</span>
+            // logger.debug(&quot;Start and target are the same, returning single-node path&quot;);
+<span class="nc" id="L91">            path.add(safeStart);</span>
+<span class="nc" id="L92">            return path;</span>
+        }
+
+<span class="nc" id="L95">        GameState state = gameState.orElseThrow();</span>
+<span class="nc" id="L96">        var map = state.getMap().orElseThrow(() -&gt; new IllegalStateException(&quot;GameMap must be set before pathfinding&quot;));</span>
+<span class="nc" id="L97">        ArrayList&lt;MapNode&gt; computed = GridDijkstra.shortestPath(map, safeStart, safeTarget, MovementCostProfile.SHORTEST_PATH);</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">        if (computed.isEmpty()) {</span>
+<span class="nc bnc" id="L99" title="All 2 branches missed.">            if (DebugSettings.isDebugEnabled()) {</span>
+<span class="nc" id="L100">                System.err.println(&quot;WayFinder.findShortestPath (Dijkstra): No path found from (&quot; + safeStart.getX() + &quot;,&quot; + safeStart.getY() +</span>
+<span class="nc" id="L101">                                   &quot;) to (&quot; + safeTarget.getX() + &quot;,&quot; + safeTarget.getY() + &quot;).&quot;);</span>
+            }
+        }
+<span class="nc" id="L104">        return computed;</span>
+    }
+
+    /**
+     * Get node in a specific direction from current node
+     * @param startNode The starting MapNode.
+     * @param direction The Direction to move in.
+     * @return The MapNode in the specified direction, or null if out of bounds.
+     */
+    public MapNode getNodeInDirection(MapNode startNode, Direction direction) {
+<span class="nc" id="L114">        Objects.requireNonNull(startNode, &quot;startNode must not be null&quot;);</span>
+<span class="nc" id="L115">        Objects.requireNonNull(direction, &quot;direction must not be null&quot;);</span>
+
+<span class="nc" id="L117">        GameState state = gameState.orElseThrow(() -&gt; new IllegalStateException(&quot;GameState must be set before navigation&quot;));</span>
+<span class="nc" id="L118">        var map = state.getMap().orElseThrow(() -&gt; new IllegalStateException(&quot;GameMap must be set before navigation&quot;));</span>
+<span class="nc" id="L119">        return GridNavigation.getNodeInDirection(map, startNode, direction).orElseThrow(</span>
+<span class="nc" id="L120">                () -&gt; new IllegalArgumentException(&quot;Requested direction leads out of bounds&quot;)</span>
+        );
+    }
+
+    /**
+     * Gets the direction to a neighbor node from the current position.
+     * @param neighbor The neighbor MapNode to find the direction to.
+     * @return The Direction to the neighbor node, or null if the neighbor is not adjacent.
+     */
+    public Optional&lt;Direction&gt; getDirectionToNeighbor(MapNode neighbor){
+<span class="nc" id="L130">        Objects.requireNonNull(neighbor, &quot;neighbor must not be null&quot;);</span>
+<span class="nc" id="L131">        GameState state = gameState.orElseThrow(() -&gt; new IllegalStateException(&quot;GameState must be set before navigation&quot;));</span>
+<span class="nc" id="L132">        MapNode current = state.getCurrentPlayerState()</span>
+<span class="nc" id="L133">                .flatMap(player -&gt; player.getCurrentPosition())</span>
+<span class="nc" id="L134">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Current position must be initialized&quot;));</span>
+<span class="nc" id="L135">        return GridNavigation.getDirectionToNeighbor(current, neighbor);</span>
+    }
+
+    /**
+     * Computes a full Dijkstra cost-map from the current player position.
+     *
+     * &lt;p&gt;Use this when you want to compare many candidate targets in the same turn without
+     * rerunning pathfinding for each candidate.&lt;/p&gt;
+     *
+     * @param costProfile Movement cost profile (e.g. {@link MovementCostProfile#SHORTEST_PATH}).
+     * @return Map of reachable nodes to their minimum action cost. Unreachable nodes are absent.
+     */
+    public Map&lt;MapNode, Integer&gt; computeCostMapFromCurrent(MovementCostProfile costProfile) {
+<span class="nc" id="L148">        Objects.requireNonNull(costProfile, &quot;costProfile must not be null&quot;);</span>
+
+<span class="nc" id="L150">        GameState state = gameState.orElseThrow(() -&gt; new IllegalStateException(&quot;GameState must be set before cost-map computation&quot;));</span>
+<span class="nc" id="L151">        MapNode current = state.getCurrentPlayerState()</span>
+<span class="nc" id="L152">                .flatMap(player -&gt; player.getCurrentPosition())</span>
+<span class="nc" id="L153">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Current position must be set before cost-map computation&quot;));</span>
+<span class="nc" id="L154">        var map = state.getMap().orElseThrow(() -&gt; new IllegalStateException(&quot;GameMap must be set before cost-map computation&quot;));</span>
+<span class="nc" id="L155">        return GridDijkstra.shortestPathCosts(map, current, costProfile);</span>
+    }
+
+    @Override
+    public void update(GameState gameState) {
+        // logger.trace(&quot;ShortestPathFinder received GameState update&quot;);
+<span class="nc" id="L161">          this.gameState = Optional.of(Objects.requireNonNull(gameState, &quot;gameState must not be null&quot;));</span>
+        //System.out.print(StaticColors.BLUE + &quot;S&quot; + StaticColors.RESET);
+<span class="nc" id="L163">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

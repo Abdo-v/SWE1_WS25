@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>HalfMapWaterPlacer.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.mapper.generator</a> &gt; <span class="el_source">HalfMapWaterPlacer.java</span></div><h1>HalfMapWaterPlacer.java</h1><pre class="source lang-java linenums">package client.model.mapper.generator;
+
+import client.model.mapper.MapNode;
+import client.model.mapper.MapRules;
+import client.model.mapper.PlayerHalfMap;
+import client.model.mapper.Terrain;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+
+final class HalfMapWaterPlacer {
+    private static final int MIN_WATER_PLACEMENT_ATTEMPTS = 100;
+
+    private HalfMapWaterPlacer() {
+    }
+
+    static boolean placeWaterWithConstraints(
+            Terrain[][] grid,
+            boolean[][] fort,
+            int count,
+            int width,
+            int height,
+            Random random,
+            Optional&lt;PlayerHalfMap&gt; existingHalfMap,
+            MapGenerationConfig config
+    ) {
+<span class="nc" id="L30">        int minEdgeWaterTopBottom = (int) Math.ceil(MapRules.MIN_EDGE_BLOCKED_RATIO * width);</span>
+<span class="nc" id="L31">        int minEdgeWaterLeftRight = (int) Math.ceil(MapRules.MIN_EDGE_BLOCKED_RATIO * height);</span>
+
+<span class="nc bnc" id="L33" title="All 2 branches missed.">        if (!placeMinimumWaterOnEdge(grid, fort, width, height, random, existingHalfMap, Edge.TOP, minEdgeWaterTopBottom)) {</span>
+<span class="nc" id="L34">            return false;</span>
+        }
+<span class="nc bnc" id="L36" title="All 2 branches missed.">        if (!placeMinimumWaterOnEdge(grid, fort, width, height, random, existingHalfMap, Edge.BOTTOM, minEdgeWaterTopBottom)) {</span>
+<span class="nc" id="L37">            return false;</span>
+        }
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        if (!placeMinimumWaterOnEdge(grid, fort, width, height, random, existingHalfMap, Edge.LEFT, minEdgeWaterLeftRight)) {</span>
+<span class="nc" id="L40">            return false;</span>
+        }
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        if (!placeMinimumWaterOnEdge(grid, fort, width, height, random, existingHalfMap, Edge.RIGHT, minEdgeWaterLeftRight)) {</span>
+<span class="nc" id="L43">            return false;</span>
+        }
+
+<span class="nc" id="L46">        int placed = 0;</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        for (int x = 0; x &lt; width; x++) {</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            for (int y = 0; y &lt; height; y++) {</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">                if (grid[x][y] == Terrain.WATER) {</span>
+<span class="nc" id="L50">                    placed++;</span>
+                }
+            }
+        }
+
+<span class="nc" id="L55">        int attempts = 0;</span>
+<span class="nc" id="L56">        int maxAttempts = Math.max(MIN_WATER_PLACEMENT_ATTEMPTS, count * config.waterPlacementAttemptMultiplier());</span>
+<span class="nc bnc" id="L57" title="All 4 branches missed.">        while (placed &lt; count &amp;&amp; attempts &lt; maxAttempts) {</span>
+<span class="nc" id="L58">            attempts++;</span>
+<span class="nc" id="L59">            int x = random.nextInt(width);</span>
+<span class="nc" id="L60">            int y = random.nextInt(height);</span>
+
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            if (!canPlaceWater(grid, fort, x, y)) {</span>
+<span class="nc" id="L63">                continue;</span>
+            }
+
+<span class="nc" id="L66">            Terrain original = grid[x][y];</span>
+<span class="nc" id="L67">            grid[x][y] = Terrain.WATER;</span>
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">            boolean valid = TerrainBorderConstraints.checkBorderConstraints(grid, width, height)</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                    &amp;&amp; TerrainGridConnectivity.checkConnectivity(grid, width, height);</span>
+
+<span class="nc bnc" id="L72" title="All 2 branches missed.">            if (valid) {</span>
+<span class="nc" id="L73">                placed++;</span>
+<span class="nc" id="L74">            } else {</span>
+<span class="nc" id="L75">                grid[x][y] = original;</span>
+            }
+        }
+
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        return placed == count</span>
+<span class="nc bnc" id="L80" title="All 2 branches missed.">                &amp;&amp; TerrainBorderConstraints.checkBorderConstraints(grid, width, height)</span>
+<span class="nc bnc" id="L81" title="All 2 branches missed.">                &amp;&amp; TerrainGridConnectivity.checkConnectivity(grid, width, height);</span>
+    }
+
+<span class="nc" id="L84">    private enum Edge {TOP, BOTTOM, LEFT, RIGHT}</span>
+
+    private static boolean placeMinimumWaterOnEdge(
+            Terrain[][] grid,
+            boolean[][] fort,
+            int width,
+            int height,
+            Random random,
+            Optional&lt;PlayerHalfMap&gt; existingHalfMap,
+            Edge edge,
+            int minWaterNeeded
+    ) {
+<span class="nc bnc" id="L96" title="All 4 branches missed.">        int edgeLen = (edge == Edge.TOP || edge == Edge.BOTTOM) ? width : height;</span>
+<span class="nc" id="L97">        int requiredWalkable = (int) Math.ceil(MapRules.MIN_EDGE_WALKABLE_RATIO * edgeLen);</span>
+<span class="nc" id="L98">        int maxWaterAllowed = edgeLen - requiredWalkable;</span>
+
+<span class="nc" id="L100">        int currentWater = countWaterOnEdge(grid, width, height, edge);</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (currentWater &gt;= minWaterNeeded) {</span>
+<span class="nc" id="L102">            return true;</span>
+        }
+
+<span class="nc" id="L105">        List&lt;int[]&gt; candidates = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        for (int i = 0; i &lt; edgeLen; i++) {</span>
+            int x;
+            int y;
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            if (edge == Edge.TOP) {</span>
+<span class="nc" id="L110">                x = i;</span>
+<span class="nc" id="L111">                y = 0;</span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">            } else if (edge == Edge.BOTTOM) {</span>
+<span class="nc" id="L113">                x = i;</span>
+<span class="nc" id="L114">                y = height - 1;</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            } else if (edge == Edge.LEFT) {</span>
+<span class="nc" id="L116">                x = 0;</span>
+<span class="nc" id="L117">                y = i;</span>
+<span class="nc" id="L118">            } else {</span>
+<span class="nc" id="L119">                x = width - 1;</span>
+<span class="nc" id="L120">                y = i;</span>
+            }
+<span class="nc" id="L122">            candidates.add(new int[]{x, y});</span>
+        }
+
+<span class="nc" id="L125">        Collections.shuffle(candidates, random);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (existingHalfMap.isPresent()) {</span>
+<span class="nc" id="L127">            candidates.sort((a, b) -&gt; {</span>
+<span class="nc" id="L128">                boolean aBlocksCrossing = getOppositeEdgeNode(existingHalfMap.get(), edge, a[0], a[1], width, height)</span>
+<span class="nc" id="L129">                        .filter(MapNode::isWalkable)</span>
+<span class="nc" id="L130">                        .isPresent();</span>
+<span class="nc" id="L131">                boolean bBlocksCrossing = getOppositeEdgeNode(existingHalfMap.get(), edge, b[0], b[1], width, height)</span>
+<span class="nc" id="L132">                        .filter(MapNode::isWalkable)</span>
+<span class="nc" id="L133">                        .isPresent();</span>
+<span class="nc" id="L134">                return Boolean.compare(aBlocksCrossing, bBlocksCrossing);</span>
+            });
+        }
+
+<span class="nc bnc" id="L138" title="All 2 branches missed.">        for (int[] pos : candidates) {</span>
+<span class="nc bnc" id="L139" title="All 2 branches missed.">            if (currentWater &gt;= minWaterNeeded) {</span>
+<span class="nc" id="L140">                break;</span>
+            }
+<span class="nc" id="L142">            int x = pos[0];</span>
+<span class="nc" id="L143">            int y = pos[1];</span>
+
+<span class="nc bnc" id="L145" title="All 2 branches missed.">            if (!canPlaceWater(grid, fort, x, y)) {</span>
+<span class="nc" id="L146">                continue;</span>
+            }
+
+<span class="nc" id="L149">            Terrain original = grid[x][y];</span>
+<span class="nc" id="L150">            grid[x][y] = Terrain.WATER;</span>
+
+<span class="nc" id="L152">            int newEdgeWater = countWaterOnEdge(grid, width, height, edge);</span>
+<span class="nc bnc" id="L153" title="All 4 branches missed.">            boolean valid = newEdgeWater &lt;= maxWaterAllowed &amp;&amp; TerrainGridConnectivity.checkConnectivity(grid, width, height);</span>
+<span class="nc bnc" id="L154" title="All 2 branches missed.">            if (valid) {</span>
+<span class="nc" id="L155">                currentWater = newEdgeWater;</span>
+<span class="nc" id="L156">            } else {</span>
+<span class="nc" id="L157">                grid[x][y] = original;</span>
+            }
+        }
+
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        return currentWater &gt;= minWaterNeeded;</span>
+    }
+
+    private static int countWaterOnEdge(Terrain[][] grid, int width, int height, Edge edge) {
+<span class="nc" id="L165">        int count = 0;</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        if (edge == Edge.TOP) {</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">            for (int x = 0; x &lt; width; x++) {</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                if (grid[x][0] == Terrain.WATER) count++;</span>
+            }
+<span class="nc bnc" id="L170" title="All 2 branches missed.">        } else if (edge == Edge.BOTTOM) {</span>
+<span class="nc bnc" id="L171" title="All 2 branches missed.">            for (int x = 0; x &lt; width; x++) {</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">                if (grid[x][height - 1] == Terrain.WATER) count++;</span>
+            }
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        } else if (edge == Edge.LEFT) {</span>
+<span class="nc bnc" id="L175" title="All 2 branches missed.">            for (int y = 0; y &lt; height; y++) {</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">                if (grid[0][y] == Terrain.WATER) count++;</span>
+            }
+<span class="nc" id="L178">        } else {</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            for (int y = 0; y &lt; height; y++) {</span>
+<span class="nc bnc" id="L180" title="All 2 branches missed.">                if (grid[width - 1][y] == Terrain.WATER) count++;</span>
+            }
+        }
+<span class="nc" id="L183">        return count;</span>
+    }
+
+    private static boolean canPlaceWater(Terrain[][] grid, boolean[][] fort, int x, int y) {
+<span class="nc bnc" id="L187" title="All 6 branches missed.">        return !fort[x][y] &amp;&amp; grid[x][y] != Terrain.WATER &amp;&amp; grid[x][y] != Terrain.MOUNTAIN;</span>
+    }
+
+    private static Optional&lt;MapNode&gt; getOppositeEdgeNode(PlayerHalfMap existingHalfMap, Edge newEdge, int x, int y, int width, int height) {
+<span class="nc bnc" id="L191" title="All 2 branches missed.">        if (newEdge == Edge.LEFT) {</span>
+<span class="nc" id="L192">            return existingHalfMap.getMapNode(width - 1, y);</span>
+        }
+<span class="nc bnc" id="L194" title="All 2 branches missed.">        if (newEdge == Edge.RIGHT) {</span>
+<span class="nc" id="L195">            return existingHalfMap.getMapNode(0, y);</span>
+        }
+<span class="nc bnc" id="L197" title="All 2 branches missed.">        if (newEdge == Edge.TOP) {</span>
+<span class="nc" id="L198">            return existingHalfMap.getMapNode(x, height - 1);</span>
+        }
+<span class="nc" id="L200">        return existingHalfMap.getMapNode(x, 0);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

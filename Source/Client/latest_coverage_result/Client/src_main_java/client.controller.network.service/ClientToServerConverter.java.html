@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ClientToServerConverter.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.controller.network.service</a> &gt; <span class="el_source">ClientToServerConverter.java</span></div><h1>ClientToServerConverter.java</h1><pre class="source lang-java linenums">package client.controller.network.service;
+
+import client.model.Direction;
+import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
+import messagesbase.UniquePlayerIdentifier;
+
+import java.util.Collection;
+import java.util.List;
+
+/**
+ * Converts client/internal model types to network (messagesbase) types.
+ */
+<span class="nc" id="L14">class ClientToServerConverter {</span>
+
+<span class="nc" id="L16">    private final ClientToServerTerrainConverter terrainConverter = new ClientToServerTerrainConverter();</span>
+<span class="nc" id="L17">    private final ClientToServerHalfMapNodeConverter halfMapNodeConverter = new ClientToServerHalfMapNodeConverter(terrainConverter);</span>
+<span class="nc" id="L18">    private final ClientToServerHalfMapConverter halfMapConverter = new ClientToServerHalfMapConverter(halfMapNodeConverter);</span>
+<span class="nc" id="L19">    private final ClientToServerMoveConverter moveConverter = new ClientToServerMoveConverter();</span>
+
+    public messagesbase.messagesfromclient.PlayerHalfMap convertClientHalfMap(PlayerHalfMap halfMap, UniquePlayerIdentifier playerId) {
+<span class="nc" id="L22">        return halfMapConverter.convert(halfMap, playerId);</span>
+    }
+
+    public Collection&lt;messagesbase.messagesfromclient.PlayerHalfMapNode&gt; convertClientNodes(List&lt;MapNode&gt; nodes) {
+<span class="nc" id="L26">        return halfMapNodeConverter.convert(nodes);</span>
+    }
+
+    public messagesbase.messagesfromclient.ETerrain convertClientTerrain(client.model.mapper.Terrain clientTerrain) {
+<span class="nc" id="L30">        return terrainConverter.convert(clientTerrain);</span>
+    }
+
+    public messagesbase.messagesfromclient.EMove convertClientDirection(Direction d) {
+<span class="nc" id="L34">        return moveConverter.convert(d);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

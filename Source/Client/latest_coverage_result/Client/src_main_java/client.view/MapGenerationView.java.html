@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MapGenerationView.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.view</a> &gt; <span class="el_source">MapGenerationView.java</span></div><h1>MapGenerationView.java</h1><pre class="source lang-java linenums">package client.view;
+
+import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+/**
+ * CLI visualization for the map generation phase.
+ *
+ * &lt;p&gt;Purpose: Provide a consistent, emoji-based visualization of the generated half map
+ * directly after it is created (before sending to the server). This keeps the UI consistent
+ * with the in-game emoji map visualization.
+ */
+<span class="nc" id="L18">public class MapGenerationView {</span>
+
+    /**
+     * Prints an emoji-based half map representation to {@link System#out}.
+     *
+     * @param halfMap half map to print
+     * @param title title shown above the map
+     */
+    public void printHalfMap(PlayerHalfMap halfMap, String title) {
+<span class="nc" id="L27">        Objects.requireNonNull(title, &quot;title is required&quot;);</span>
+<span class="nc" id="L28">        Objects.requireNonNull(halfMap, &quot;halfMap is required&quot;);</span>
+
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        if (halfMap.getMapNodes().isEmpty()) {</span>
+<span class="nc" id="L31">            System.out.println(&quot;\n&quot; + title + &quot;: (no half-map data)&quot;);</span>
+<span class="nc" id="L32">            return;</span>
+        }
+
+<span class="nc" id="L35">        System.out.println(&quot;\n&quot; + title + &quot; (Half Map):&quot;);</span>
+<span class="nc" id="L36">        System.out.println(CLILegends.halfMapLegend());</span>
+<span class="nc" id="L37">        System.out.println(CLITexts.SEPARATOR_HALF_MAP);</span>
+
+<span class="nc" id="L39">        Map&lt;String, MapNode&gt; nodeMap = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L40" title="All 2 branches missed.">        for (MapNode node : halfMap.getMapNodes()) {</span>
+<span class="nc" id="L41">            nodeMap.put(node.getX() + &quot;,&quot; + node.getY(), node);</span>
+        }
+
+<span class="nc" id="L44">        int maxX = halfMap.getMapNodes().stream().mapToInt(MapNode::getX).max().orElse(0);</span>
+<span class="nc" id="L45">        int maxY = halfMap.getMapNodes().stream().mapToInt(MapNode::getY).max().orElse(0);</span>
+
+<span class="nc bnc" id="L47" title="All 2 branches missed.">        for (int y = 0; y &lt;= maxY; y++) {</span>
+<span class="nc" id="L48">            StringBuilder row = new StringBuilder(&quot;|&quot;);</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">            for (int x = 0; x &lt;= maxX; x++) {</span>
+<span class="nc" id="L50">                Optional&lt;MapNode&gt; node = Optional.ofNullable(nodeMap.get(x + &quot;,&quot; + y));</span>
+<span class="nc" id="L51">                row.append(renderNode(node));</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                if (x &lt; maxX) {</span>
+<span class="nc" id="L53">                    row.append(' ');</span>
+                }
+            }
+<span class="nc" id="L56">            row.append('|');</span>
+<span class="nc" id="L57">            System.out.println(row);</span>
+        }
+
+<span class="nc" id="L60">        System.out.println(CLITexts.SEPARATOR_HALF_MAP);</span>
+<span class="nc" id="L61">    }</span>
+
+    private static String renderNode(Optional&lt;MapNode&gt; node) {
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        if (node.filter(MapNode::isFortPresent).isPresent()) {</span>
+<span class="nc" id="L65">            return CLIIcons.OWN_FORT;</span>
+        }
+
+<span class="nc" id="L68">        return node</span>
+<span class="nc" id="L69">                .map(MapNode::getTerrain)</span>
+<span class="nc" id="L70">                .map(terrain -&gt; {</span>
+<span class="nc bnc" id="L71" title="All 4 branches missed.">                    switch (terrain) {</span>
+                        case GRASS:
+<span class="nc" id="L73">                            return CLIIcons.GRASS;</span>
+                        case MOUNTAIN:
+<span class="nc" id="L75">                            return CLIIcons.MOUNTAIN;</span>
+                        case WATER:
+<span class="nc" id="L77">                            return CLIIcons.WATER;</span>
+                        default:
+<span class="nc" id="L79">                            return CLIIcons.UNKNOWN;</span>
+                    }
+                })
+<span class="nc" id="L82">                .orElse(CLIIcons.UNKNOWN);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

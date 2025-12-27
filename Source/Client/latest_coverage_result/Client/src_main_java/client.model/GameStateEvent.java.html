@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>GameStateEvent.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model</a> &gt; <span class="el_source">GameStateEvent.java</span></div><h1>GameStateEvent.java</h1><pre class="source lang-java linenums">package client.model;
+
+import java.util.Objects;
+import java.util.Optional;
+
+/**
+ * Event object passed to observers when the {@link GameState} changes.
+ *
+ * &lt;p&gt;Observers can either react based on {@link #type()} or ignore it and use
+ * {@link #source()} like in the classic &quot;push the whole state&quot; observer pattern.&lt;/p&gt;
+ */
+public record GameStateEvent(
+        GameState source,
+        GameStateEventType type,
+        Optional&lt;Object&gt; oldValue,
+        Optional&lt;Object&gt; newValue
+) {
+
+    public GameStateEvent(GameState source, GameStateEventType type) {
+<span class="nc" id="L20">        this(source, type, Optional.empty(), Optional.empty());</span>
+<span class="nc" id="L21">    }</span>
+
+<span class="nc" id="L23">    public GameStateEvent {</span>
+<span class="nc" id="L24">        Objects.requireNonNull(source, &quot;source is required&quot;);</span>
+<span class="nc" id="L25">        Objects.requireNonNull(type, &quot;type is required&quot;);</span>
+<span class="nc" id="L26">        oldValue = Objects.requireNonNull(oldValue, &quot;oldValue is required&quot;);</span>
+<span class="nc" id="L27">        newValue = Objects.requireNonNull(newValue, &quot;newValue is required&quot;);</span>
+<span class="nc" id="L28">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

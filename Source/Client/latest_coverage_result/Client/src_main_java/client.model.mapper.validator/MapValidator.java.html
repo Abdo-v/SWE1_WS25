@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MapValidator.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.mapper.validator</a> &gt; <span class="el_source">MapValidator.java</span></div><h1>MapValidator.java</h1><pre class="source lang-java linenums">package client.model.mapper.validator;
+
+import client.model.common.Notification;
+import client.model.mapper.HalfMapDimensions;
+import client.model.mapper.MapRules;
+import client.model.mapper.PlayerHalfMap;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+/**
+ * Validates half-maps against map-related business rules.
+ *
+ * &lt;p&gt;The concrete business rules are implemented as rule objects and orchestrated in phases
+ * (basic vs. advanced) to support the Open-Closed Principle.
+ */
+public class MapValidator {
+
+    private static final int HALF_MAP_TOTAL_NODES = HalfMapDimensions.TOTAL_NODES;
+    private static final double MIN_MOUNTAIN_PERCENTAGE = 0.10;
+    private static final double MIN_GRASS_PERCENTAGE = 0.48;
+    private static final double MIN_WATER_PERCENTAGE = 0.14;
+    private static final double FORT_PERCENTAGE = 0.02; // Default: 1 fort (castle)
+
+    private final List&lt;HalfMapValidationRule&gt; halfMapRules;
+    private final List&lt;CrossHalfMapValidationRule&gt; crossHalfMapRules;
+
+    /**
+     * Creates a MapValidator with the default rule set.
+     */
+    public MapValidator() {
+<span class="fc" id="L33">        this(</span>
+<span class="fc" id="L34">                MapValidationRuleSets.defaultHalfMapRules(</span>
+<span class="fc" id="L35">                        HALF_MAP_TOTAL_NODES,</span>
+<span class="fc" id="L36">                        MIN_MOUNTAIN_PERCENTAGE,</span>
+<span class="fc" id="L37">                        MIN_GRASS_PERCENTAGE,</span>
+<span class="fc" id="L38">                        MIN_WATER_PERCENTAGE,</span>
+<span class="fc" id="L39">                        FORT_PERCENTAGE),</span>
+<span class="fc" id="L40">                MapValidationRuleSets.defaultCrossHalfMapRules()</span>
+        );
+<span class="fc" id="L42">    }</span>
+
+    /**
+     * Creates a MapValidator with injected rule sets.
+     *
+     * &lt;p&gt;This constructor is intentionally package-private: rules are an internal extension point
+     * of the validator module.
+     */
+<span class="fc" id="L50">    private MapValidator(List&lt;HalfMapValidationRule&gt; halfMapRules, List&lt;CrossHalfMapValidationRule&gt; crossHalfMapRules) {</span>
+<span class="fc" id="L51">        this.halfMapRules = List.copyOf(Objects.requireNonNull(halfMapRules, &quot;halfMapRules&quot;));</span>
+<span class="fc" id="L52">        this.crossHalfMapRules = List.copyOf(Objects.requireNonNull(crossHalfMapRules, &quot;crossHalfMapRules&quot;));</span>
+<span class="fc" id="L53">    }</span>
+
+    /**
+     * Validates a PlayerHalfMap according to game rules and structural requirements.
+     * Performs comprehensive validation including:
+     * - Structural integrity (presence checks, node count, coordinates)
+     * - Map dimensions (WIDTHxHEIGHT or HEIGHTxWIDTH)
+     * - Terrain distribution (minimum percentages for each terrain type)
+     * - Fort placement and count
+     * - Reachability of all walkable nodes
+     * - Edge walkability requirements
+     *
+     * @param halfMap The PlayerHalfMap to validate
+     * @return A Notification object containing any validation errors found
+     */
+    public Notification validate(PlayerHalfMap halfMap) {
+<span class="fc" id="L69">        Notification notification = new Notification();</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (Optional.ofNullable(halfMap).isEmpty()) {</span>
+<span class="fc" id="L71">            notification.addError(&quot;PlayerHalfMap must be provided.&quot;);</span>
+<span class="fc" id="L72">            return notification;</span>
+        }
+
+<span class="fc" id="L75">        Optional&lt;HalfMapBounds&gt; boundsOpt = HalfMapStructureValidator.validateAndGetBounds(</span>
+<span class="fc" id="L76">                halfMap,</span>
+<span class="fc" id="L77">                notification,</span>
+<span class="fc" id="L78">                HALF_MAP_TOTAL_NODES);</span>
+
+<span class="fc bfc" id="L80" title="All 2 branches covered.">        if (boundsOpt.isEmpty()) {</span>
+<span class="fc" id="L81">            return notification;</span>
+        }
+
+<span class="fc" id="L84">        HalfMapBounds bounds = boundsOpt.get();</span>
+<span class="fc" id="L85">        HalfMapValidationContext context = new HalfMapValidationContext(bounds.maxX(), bounds.maxY());</span>
+
+<span class="fc" id="L87">        runHalfMapRules(HalfMapRulePhase.BASIC, halfMap, context, notification);</span>
+
+        // Only proceed with expensive validations if basic rules are okay.
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (!notification.hasErrors()) {</span>
+<span class="fc" id="L91">            runHalfMapRules(HalfMapRulePhase.ADVANCED, halfMap, context, notification);</span>
+        }
+
+<span class="fc" id="L94">        return notification;</span>
+    }
+
+    private void runHalfMapRules(
+            HalfMapRulePhase phase,
+            PlayerHalfMap halfMap,
+            HalfMapValidationContext context,
+            Notification notification
+    ) {
+<span class="fc" id="L103">        Objects.requireNonNull(phase, &quot;phase&quot;);</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        for (HalfMapValidationRule rule : halfMapRules) {</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            if (rule.phase() == phase) {</span>
+<span class="fc" id="L106">                rule.validate(halfMap, context, notification);</span>
+            }
+        }
+<span class="fc" id="L109">    }</span>
+
+    /**
+     * Validates a PlayerHalfMap and also checks edge-crossing compatibility with an existing half-map.
+     * This is intended for the client that generates the second half-map.
+     *
+     * Rule: For each edge of the new half-map, at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of edge fields must allow a successful
+     * transition to the corresponding opposite edge of the existing half-map (walkable on both sides).
+     *
+     * Pairings checked:
+     * - new LEFT  (x=0)      vs existing RIGHT (x=maxX)
+     * - new RIGHT (x=maxX)   vs existing LEFT  (x=0)
+     * - new TOP   (y=0)      vs existing BOTTOM(y=maxY)
+     * - new BOTTOM(y=maxY)   vs existing TOP   (y=0)
+     */
+    public Notification validate(PlayerHalfMap newHalfMap, PlayerHalfMap existingHalfMap) {
+<span class="nc" id="L125">        Notification notification = validate(newHalfMap);</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">        if (notification.hasErrors()) {</span>
+<span class="nc" id="L127">            return notification;</span>
+        }
+
+<span class="nc" id="L130">        Optional&lt;PlayerHalfMap&gt; existingHalfMapOpt = Optional.ofNullable(existingHalfMap);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (existingHalfMapOpt.isEmpty()) {</span>
+<span class="nc" id="L132">            return notification;</span>
+        }
+
+<span class="nc" id="L135">        PlayerHalfMap existing = existingHalfMapOpt.get();</span>
+
+<span class="nc" id="L137">        int[] newDims = HalfMapDimensionUtil.determineDimensions(newHalfMap);</span>
+<span class="nc" id="L138">        int[] existingDims = HalfMapDimensionUtil.determineDimensions(existing);</span>
+
+<span class="nc bnc" id="L140" title="All 4 branches missed.">        if (newDims[0] != existingDims[0] || newDims[1] != existingDims[1]) {</span>
+<span class="nc" id="L141">            notification.addError(String.format(</span>
+<span class="nc" id="L142">                    &quot;Half-map dimensions mismatch. New=%dx%d, Existing=%dx%d&quot;,</span>
+<span class="nc" id="L143">                    newDims[0], newDims[1], existingDims[0], existingDims[1]));</span>
+<span class="nc" id="L144">            return notification;</span>
+        }
+
+<span class="nc" id="L147">        int maxX = newDims[0] - 1;</span>
+<span class="nc" id="L148">        int maxY = newDims[1] - 1;</span>
+
+<span class="nc" id="L150">        CrossHalfMapValidationContext context = new CrossHalfMapValidationContext(maxX, maxY);</span>
+<span class="nc bnc" id="L151" title="All 2 branches missed.">        for (CrossHalfMapValidationRule rule : crossHalfMapRules) {</span>
+<span class="nc" id="L152">            rule.validate(newHalfMap, existing, context, notification);</span>
+        }
+<span class="nc" id="L154">        return notification;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

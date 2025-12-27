@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>AIDecisionException.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.exception</a> &gt; <span class="el_source">AIDecisionException.java</span></div><h1>AIDecisionException.java</h1><pre class="source lang-java linenums">package client.exception;
+
+import java.util.Optional;
+
+/**
+ * Unchecked exception for AI algorithm decision-making failures.
+ *
+ * &lt;p&gt;This exception indicates that the AI could not complete a decision step
+ * (e.g., selecting a move or computing a path) given the current internal state
+ * and available game information.
+ */
+public class AIDecisionException extends RuntimeException {
+    
+    private static final long serialVersionUID = 1L;
+    
+    private final Optional&lt;String&gt; aiComponent;
+    private final Optional&lt;String&gt; decisionContext;
+    private final Optional&lt;Object&gt; gameStateSnapshot;
+    
+    /**
+     * Creates a new AIDecisionException with a message.
+     * 
+     * @param message the detail message explaining the AI decision failure
+     */
+    public AIDecisionException(String message) {
+<span class="nc" id="L26">        super(message);</span>
+<span class="nc" id="L27">        this.aiComponent = Optional.empty();</span>
+<span class="nc" id="L28">        this.decisionContext = Optional.empty();</span>
+<span class="nc" id="L29">        this.gameStateSnapshot = Optional.empty();</span>
+<span class="nc" id="L30">    }</span>
+    
+    /**
+     * Creates a new AIDecisionException with a message and cause.
+     * 
+     * @param message the detail message explaining the AI decision failure
+     * @param cause the underlying cause of the AI failure
+     */
+    public AIDecisionException(String message, Throwable cause) {
+<span class="nc" id="L39">        super(message, cause);</span>
+<span class="nc" id="L40">        this.aiComponent = Optional.empty();</span>
+<span class="nc" id="L41">        this.decisionContext = Optional.empty();</span>
+<span class="nc" id="L42">        this.gameStateSnapshot = Optional.empty();</span>
+<span class="nc" id="L43">    }</span>
+    
+    /**
+     * Creates a new AIDecisionException with detailed AI context information.
+     * 
+     * @param message the detail message explaining the AI decision failure
+     * @param aiComponent the AI component that failed (e.g., &quot;PathFinder&quot;, &quot;StrategyEngine&quot;)
+     * @param decisionContext the context of the decision being made
+     */
+    public AIDecisionException(String message, String aiComponent, String decisionContext) {
+<span class="nc" id="L53">        super(buildDetailedMessage(message, aiComponent, decisionContext));</span>
+<span class="nc" id="L54">        this.aiComponent = Optional.ofNullable(aiComponent);</span>
+<span class="nc" id="L55">        this.decisionContext = Optional.ofNullable(decisionContext);</span>
+<span class="nc" id="L56">        this.gameStateSnapshot = Optional.empty();</span>
+<span class="nc" id="L57">    }</span>
+    
+    /**
+     * Creates a new AIDecisionException with detailed AI context and game state snapshot.
+     * 
+     * @param message the detail message explaining the AI decision failure
+     * @param aiComponent the AI component that failed
+     * @param decisionContext the context of the decision being made
+     * @param gameStateSnapshot a snapshot of the game state for debugging
+     */
+    public AIDecisionException(String message, String aiComponent, String decisionContext, Object gameStateSnapshot) {
+<span class="nc" id="L68">        super(buildDetailedMessage(message, aiComponent, decisionContext));</span>
+<span class="nc" id="L69">        this.aiComponent = Optional.ofNullable(aiComponent);</span>
+<span class="nc" id="L70">        this.decisionContext = Optional.ofNullable(decisionContext);</span>
+<span class="nc" id="L71">        this.gameStateSnapshot = Optional.ofNullable(gameStateSnapshot);</span>
+<span class="nc" id="L72">    }</span>
+    
+    /**
+     * Creates a new AIDecisionException with detailed context and cause.
+     * 
+     * @param message the detail message explaining the AI decision failure
+     * @param cause the underlying cause of the AI failure
+     * @param aiComponent the AI component that failed
+     * @param decisionContext the context of the decision being made
+     * @param gameStateSnapshot a snapshot of the game state for debugging
+     */
+    public AIDecisionException(String message, Throwable cause, String aiComponent, String decisionContext, Object gameStateSnapshot) {
+<span class="nc" id="L84">        super(buildDetailedMessage(message, aiComponent, decisionContext), cause);</span>
+<span class="nc" id="L85">        this.aiComponent = Optional.ofNullable(aiComponent);</span>
+<span class="nc" id="L86">        this.decisionContext = Optional.ofNullable(decisionContext);</span>
+<span class="nc" id="L87">        this.gameStateSnapshot = Optional.ofNullable(gameStateSnapshot);</span>
+<span class="nc" id="L88">    }</span>
+    
+    /**
+     * Builds a detailed error message with AI context information.
+     */
+    private static String buildDetailedMessage(String message, String aiComponent, String decisionContext) {
+<span class="nc" id="L94">        StringBuilder sb = new StringBuilder(&quot;AI Decision Failure: &quot;).append(message);</span>
+<span class="nc" id="L95">        Optional.ofNullable(aiComponent).ifPresent(component -&gt; sb.append(&quot; [Component: &quot;).append(component).append(&quot;]&quot;));</span>
+<span class="nc" id="L96">        Optional.ofNullable(decisionContext).ifPresent(context -&gt; sb.append(&quot; [Context: &quot;).append(context).append(&quot;]&quot;));</span>
+<span class="nc" id="L97">        return sb.toString();</span>
+    }
+    
+    // Getters for additional context information
+<span class="nc" id="L101">    public Optional&lt;String&gt; getAiComponent() { return aiComponent; }</span>
+<span class="nc" id="L102">    public Optional&lt;String&gt; getDecisionContext() { return decisionContext; }</span>
+<span class="nc" id="L103">    public Optional&lt;Object&gt; getGameStateSnapshot() { return gameStateSnapshot; }</span>
+    
+    /**
+     * Creates a formatted debug report for developers.
+     * 
+     * @return a detailed debug report of the AI failure
+     */
+    public String getDebugReport() {
+<span class="nc" id="L111">        StringBuilder report = new StringBuilder();</span>
+<span class="nc" id="L112">        report.append(&quot;=== AI DECISION EXCEPTION DEBUG REPORT ===\n&quot;);</span>
+<span class="nc" id="L113">        report.append(&quot;Message: &quot;).append(getMessage()).append(&quot;\n&quot;);</span>
+<span class="nc" id="L114">        report.append(&quot;AI Component: &quot;).append(aiComponent.orElse(&quot;Unknown&quot;)).append(&quot;\n&quot;);</span>
+<span class="nc" id="L115">        report.append(&quot;Decision Context: &quot;).append(decisionContext.orElse(&quot;Unknown&quot;)).append(&quot;\n&quot;);</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        report.append(&quot;Has Game State Snapshot: &quot;).append(gameStateSnapshot.isPresent() ? &quot;Yes&quot; : &quot;No&quot;).append(&quot;\n&quot;);</span>
+<span class="nc" id="L117">        Optional.ofNullable(getCause()).ifPresent(cause -&gt; report</span>
+<span class="nc" id="L118">                .append(&quot;Underlying Cause: &quot;).append(cause.getClass().getSimpleName())</span>
+<span class="nc" id="L119">                .append(&quot; - &quot;).append(cause.getMessage()).append(&quot;\n&quot;));</span>
+<span class="nc" id="L120">        report.append(&quot;Stack Trace: Available via printStackTrace()&quot;).append(&quot;\n&quot;);</span>
+<span class="nc" id="L121">        report.append(&quot;=== END DEBUG REPORT ===&quot;);</span>
+<span class="nc" id="L122">        return report.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ServerToClientMapNodeConverter.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.controller.network.service</a> &gt; <span class="el_source">ServerToClientMapNodeConverter.java</span></div><h1>ServerToClientMapNodeConverter.java</h1><pre class="source lang-java linenums">package client.controller.network.service;
+
+import client.model.mapper.MapNode;
+import messagesbase.messagesfromserver.FullMapNode;
+
+/**
+ * Converts a server full-map node to the client/internal map node.
+ */
+class ServerToClientMapNodeConverter {
+
+    private final ServerToClientTerrainConverter terrainConverter;
+    private final ServerToClientFullMapQueries nodeQueries;
+
+<span class="nc" id="L14">    public ServerToClientMapNodeConverter(ServerToClientTerrainConverter terrainConverter, ServerToClientFullMapQueries nodeQueries) {</span>
+<span class="nc" id="L15">        this.terrainConverter = terrainConverter;</span>
+<span class="nc" id="L16">        this.nodeQueries = nodeQueries;</span>
+<span class="nc" id="L17">    }</span>
+
+    public MapNode convert(FullMapNode serverMapNode) {
+<span class="nc" id="L20">        return new MapNode(</span>
+<span class="nc" id="L21">                serverMapNode.getX(),</span>
+<span class="nc" id="L22">                serverMapNode.getY(),</span>
+<span class="nc" id="L23">                terrainConverter.convert(serverMapNode.getTerrain()),</span>
+<span class="nc" id="L24">                nodeQueries.isFortOnServerNode(serverMapNode),</span>
+<span class="nc" id="L25">                nodeQueries.isTreasureOnServerNode(serverMapNode)</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

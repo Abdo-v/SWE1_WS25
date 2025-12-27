@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>GameCommunicationException.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.exception</a> &gt; <span class="el_source">GameCommunicationException.java</span></div><h1>GameCommunicationException.java</h1><pre class="source lang-java linenums">package client.exception;
+
+import java.util.Optional;
+
+/**
+ * Checked exception for game communication failures.
+ * 
+ * This exception is thrown when communication with the game server fails
+ * in a recoverable way.
+ */
+public class GameCommunicationException extends Exception {
+    
+    private static final long serialVersionUID = 1L;
+    
+    private final Optional&lt;String&gt; serverUrl;
+    private final Optional&lt;String&gt; operation;
+    private final int httpStatusCode;
+    private final Optional&lt;String&gt; remoteExceptionName;
+    private final Optional&lt;String&gt; remoteExceptionMessage;
+    
+    /**
+     * Creates a new GameCommunicationException with a message.
+     * 
+     * @param message the detail message explaining the communication failure
+     */
+    public GameCommunicationException(String message) {
+<span class="nc" id="L27">        super(message);</span>
+<span class="nc" id="L28">        this.serverUrl = Optional.empty();</span>
+<span class="nc" id="L29">        this.operation = Optional.empty();</span>
+<span class="nc" id="L30">        this.httpStatusCode = -1;</span>
+<span class="nc" id="L31">        this.remoteExceptionName = Optional.empty();</span>
+<span class="nc" id="L32">        this.remoteExceptionMessage = Optional.empty();</span>
+<span class="nc" id="L33">    }</span>
+    
+    /**
+     * Creates a new GameCommunicationException with a message and cause.
+     * 
+     * @param message the detail message explaining the communication failure
+     * @param cause the underlying cause of the communication failure
+     */
+    public GameCommunicationException(String message, Throwable cause) {
+<span class="nc" id="L42">        super(message, cause);</span>
+<span class="nc" id="L43">        this.serverUrl = Optional.empty();</span>
+<span class="nc" id="L44">        this.operation = Optional.empty();</span>
+<span class="nc" id="L45">        this.httpStatusCode = -1;</span>
+<span class="nc" id="L46">        this.remoteExceptionName = Optional.empty();</span>
+<span class="nc" id="L47">        this.remoteExceptionMessage = Optional.empty();</span>
+<span class="nc" id="L48">    }</span>
+    
+    /**
+     * Creates a new GameCommunicationException with detailed context information.
+     * 
+     * @param message the detail message explaining the communication failure
+     * @param serverUrl the server URL that failed
+     * @param operation the operation that was being performed
+     * @param httpStatusCode the HTTP status code received (if applicable)
+     */
+    public GameCommunicationException(String message, String serverUrl, String operation, int httpStatusCode) {
+<span class="nc" id="L59">        super(buildDetailedMessage(message, serverUrl, operation, httpStatusCode));</span>
+<span class="nc" id="L60">        this.serverUrl = Optional.ofNullable(serverUrl);</span>
+<span class="nc" id="L61">        this.operation = Optional.ofNullable(operation);</span>
+<span class="nc" id="L62">        this.httpStatusCode = httpStatusCode;</span>
+<span class="nc" id="L63">        this.remoteExceptionName = Optional.empty();</span>
+<span class="nc" id="L64">        this.remoteExceptionMessage = Optional.empty();</span>
+<span class="nc" id="L65">    }</span>
+    
+    /**
+     * Creates a new GameCommunicationException with detailed context information and cause.
+     * 
+     * @param message the detail message explaining the communication failure
+     * @param cause the underlying cause of the communication failure
+     * @param serverUrl the server URL that failed
+     * @param operation the operation that was being performed
+     * @param httpStatusCode the HTTP status code received (if 0)
+     */
+    public GameCommunicationException(String message, Throwable cause, String serverUrl, String operation, int httpStatusCode) {
+<span class="fc" id="L77">        super(buildDetailedMessage(message, serverUrl, operation, httpStatusCode), cause);</span>
+<span class="fc" id="L78">        this.serverUrl = Optional.ofNullable(serverUrl);</span>
+<span class="fc" id="L79">        this.operation = Optional.ofNullable(operation);</span>
+<span class="fc" id="L80">        this.httpStatusCode = httpStatusCode;</span>
+<span class="fc" id="L81">        this.remoteExceptionName = Optional.empty();</span>
+<span class="fc" id="L82">        this.remoteExceptionMessage = Optional.empty();</span>
+<span class="fc" id="L83">    }</span>
+
+    /**
+     * Creates a new GameCommunicationException representing a server-side rejection
+     * reported via ResponseEnvelope (exception name + message).
+     */
+    public GameCommunicationException(
+            String message,
+            String serverUrl,
+            String operation,
+            int httpStatusCode,
+            String remoteExceptionName,
+            String remoteExceptionMessage
+    ) {
+<span class="nc" id="L97">        super(buildDetailedMessage(message, serverUrl, operation, httpStatusCode));</span>
+<span class="nc" id="L98">        this.serverUrl = Optional.ofNullable(serverUrl);</span>
+<span class="nc" id="L99">        this.operation = Optional.ofNullable(operation);</span>
+<span class="nc" id="L100">        this.httpStatusCode = httpStatusCode;</span>
+<span class="nc" id="L101">        this.remoteExceptionName = Optional.ofNullable(remoteExceptionName);</span>
+<span class="nc" id="L102">        this.remoteExceptionMessage = Optional.ofNullable(remoteExceptionMessage);</span>
+<span class="nc" id="L103">    }</span>
+
+    public GameCommunicationException(String message, String serverUrl, Operation operation, int httpStatusCode) {
+<span class="nc" id="L106">        this(message, serverUrl, Optional.ofNullable(operation).map(Operation::code).orElse(&quot;&quot;), httpStatusCode);</span>
+<span class="nc" id="L107">    }</span>
+
+    public GameCommunicationException(String message, Throwable cause, String serverUrl, Operation operation, int httpStatusCode) {
+<span class="fc" id="L110">        this(message, cause, serverUrl, Optional.ofNullable(operation).map(Operation::code).orElse(&quot;&quot;), httpStatusCode);</span>
+<span class="fc" id="L111">    }</span>
+    
+    /**
+     * Builds a detailed error message with context information.
+     */
+    private static String buildDetailedMessage(String message, String serverUrl, String operation, int httpStatusCode) {
+<span class="fc" id="L117">        StringBuilder sb = new StringBuilder(message);</span>
+<span class="pc bpc" id="L118" title="1 of 2 branches missed.">        Optional.ofNullable(operation).filter(op -&gt; !op.isBlank()).ifPresent(op -&gt; sb.append(&quot; [Operation: &quot;).append(op).append(&quot;]&quot;));</span>
+<span class="pc bpc" id="L119" title="1 of 2 branches missed.">        Optional.ofNullable(serverUrl).filter(url -&gt; !url.isBlank()).ifPresent(url -&gt; sb.append(&quot; [Server: &quot;).append(url).append(&quot;]&quot;));</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (httpStatusCode &gt; 0) {</span>
+<span class="nc" id="L121">            sb.append(&quot; [HTTP Status: &quot;).append(httpStatusCode).append(&quot;]&quot;);</span>
+        }
+<span class="fc" id="L123">        return sb.toString();</span>
+    }
+    
+    // Getters for additional context information
+<span class="nc" id="L127">    public Optional&lt;String&gt; getServerUrl() { return serverUrl; }</span>
+<span class="nc" id="L128">    public Optional&lt;String&gt; getOperation() { return operation; }</span>
+<span class="nc" id="L129">    public int getHttpStatusCode() { return httpStatusCode; }</span>
+<span class="nc" id="L130">    public Optional&lt;String&gt; getRemoteExceptionName() { return remoteExceptionName; }</span>
+<span class="nc" id="L131">    public Optional&lt;String&gt; getRemoteExceptionMessage() { return remoteExceptionMessage; }</span>
+    
+    /**
+     * Determines if this communication error is potentially recoverable
+     * based on the HTTP status code.
+     * 
+     * @return true if the error might be recoverable with retry logic
+     */
+    public boolean isRecoverable() {
+        // 5xx server errors are often temporary and recoverable
+        // 429 (Too Many Requests) is recoverable with backoff
+        // 408 (Request Timeout) is recoverable
+<span class="nc bnc" id="L143" title="All 6 branches missed.">        return httpStatusCode &gt;= 500 || httpStatusCode == 429 || httpStatusCode == 408;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

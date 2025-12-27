@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>WayFinderLogic.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.ai</a> &gt; <span class="el_source">WayFinderLogic.java</span></div><h1>WayFinderLogic.java</h1><pre class="source lang-java linenums">package client.model.ai;
+
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import client.exception.AIDecisionException;
+import client.exception.AIInvariantViolationException;
+import client.exception.NoValidMoveAvailableException;
+import client.model.Direction;
+import client.model.GameState;
+import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
+import client.model.mapper.Terrain;
+
+/**
+ * Extracted decision logic from WayFinder to keep WayFinder focused on orchestration/state.
+ *
+ * Package-private on purpose: internal refactoring detail.
+ */
+final class WayFinderLogic {
+
+    private final WayHelper wayHelper;
+    private final StateHolder stateHolder;
+    private final ShortestPathFinder shortestPathFinder;
+    private final StrategyGuide strategyGuide;
+
+    private final NodeVisitTracker nodeVisitTracker;
+    private final VisionCostScorer visionCostScorer;
+    private final TreasureTargetingUseCase treasureTargeting;
+    private final FortTargetingUseCase fortTargeting;
+    private final ExplorationTargetUseCase explorationTarget;
+
+<span class="nc" id="L35">    WayFinderLogic(</span>
+            WayHelper wayHelper,
+            StateHolder stateHolder,
+            ShortestPathFinder shortestPathFinder,
+            TreasureSeeker treasureSeeker,
+            FortSeeker fortSeeker,
+            StrategyGuide strategyGuide
+    ) {
+<span class="nc" id="L43">        this.wayHelper = Objects.requireNonNull(wayHelper, &quot;wayHelper must not be null&quot;);</span>
+<span class="nc" id="L44">        this.stateHolder = Objects.requireNonNull(stateHolder, &quot;stateHolder must not be null&quot;);</span>
+<span class="nc" id="L45">        this.shortestPathFinder = shortestPathFinder;</span>
+<span class="nc" id="L46">        this.strategyGuide = strategyGuide;</span>
+
+<span class="nc" id="L48">        this.nodeVisitTracker = new NodeVisitTracker(this.wayHelper);</span>
+<span class="nc" id="L49">        this.visionCostScorer = new VisionCostScorer(wayHelper, shortestPathFinder, strategyGuide);</span>
+<span class="nc" id="L50">        this.treasureTargeting = new TreasureTargetingUseCase(treasureSeeker, stateHolder, shortestPathFinder, nodeVisitTracker);</span>
+<span class="nc" id="L51">        this.fortTargeting = new FortTargetingUseCase(fortSeeker, stateHolder, shortestPathFinder);</span>
+<span class="nc" id="L52">        this.explorationTarget = new ExplorationTargetUseCase(wayHelper, treasureSeeker, visionCostScorer);</span>
+<span class="nc" id="L53">    }</span>
+
+    Direction moveBasedOnStrategy(GameState gameState, MapNode currentMapNode, Objective objective)
+            throws AIDecisionException, NoValidMoveAvailableException {
+        try {
+<span class="nc" id="L58">            Objects.requireNonNull(gameState, &quot;gameState must not be null&quot;);</span>
+<span class="nc" id="L59">            Objects.requireNonNull(currentMapNode, &quot;currentMapNode must not be null&quot;);</span>
+<span class="nc" id="L60">            Objects.requireNonNull(objective, &quot;objective must not be null&quot;);</span>
+
+<span class="nc" id="L62">            boolean nodeIsInOwnHalf = gameState.getMap()</span>
+<span class="nc" id="L63">                .map(map -&gt; map.isNodeInOwnHalf(currentMapNode))</span>
+<span class="nc" id="L64">                .orElse(gameState.isPlayerInOwnHalfMap()); // fallback if map missing</span>
+
+<span class="nc" id="L66">            nodeVisitTracker.markVisited(currentMapNode, nodeIsInOwnHalf);</span>
+
+<span class="nc bnc" id="L68" title="All 2 branches missed.">            if (currentMapNode.getTerrain() == Terrain.MOUNTAIN) {</span>
+<span class="nc" id="L69">                ArrayList&lt;MapNode&gt; extendedVisionNodes = strategyGuide.getGrassNodesFromExtendedVision(currentMapNode);</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">                for (MapNode node : extendedVisionNodes) {</span>
+<span class="nc" id="L71">                    nodeVisitTracker.markVisited(node, gameState.isPlayerInOwnHalfMap());</span>
+                }
+            }
+
+            // Fort phase: before the enemy true position is guaranteed (first 8 own moves), head to the enemy-half center.
+            // This avoids chasing potentially random enemy positions and moves us into a good scanning position.
+<span class="nc bnc" id="L77" title="All 4 branches missed.">            if (objective == Objective.FORT &amp;&amp; stateHolder.getEnemyFirstTruePosition().isEmpty()) {</span>
+<span class="nc" id="L78">                Optional&lt;Direction&gt; centerDir = tryGetDirectionToEnemyHalfCenter(gameState, currentMapNode);</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                if (centerDir.isPresent()) {</span>
+<span class="nc" id="L80">                    return centerDir.orElseThrow();</span>
+                }
+            }
+
+            // Path lock is only about exploration targets. If the objective changes, discard the lock.
+<span class="nc" id="L85">            stateHolder.clearLockedExplorationTargetIfObjectiveChanged(objective);</span>
+
+<span class="nc" id="L87">            Optional&lt;Direction&gt; treasureDirection = treasureTargeting.tryGetDirection(gameState, currentMapNode, objective);</span>
+<span class="nc bnc" id="L88" title="All 2 branches missed.">            if (treasureDirection.isPresent()) {</span>
+                // Treasure known =&gt; exploration lock is irrelevant.
+<span class="nc" id="L90">                stateHolder.clearLockedExplorationTarget();</span>
+<span class="nc" id="L91">                return treasureDirection.orElseThrow();</span>
+            }
+
+<span class="nc" id="L94">            Optional&lt;Direction&gt; fortDirection = fortTargeting.tryGetDirection(gameState, currentMapNode, objective);</span>
+<span class="nc bnc" id="L95" title="All 2 branches missed.">            if (fortDirection.isPresent()) {</span>
+<span class="nc" id="L96">                stateHolder.clearLockedExplorationTarget();</span>
+<span class="nc" id="L97">                return fortDirection.orElseThrow();</span>
+            }
+
+            // &quot;Loop killer&quot;: if we already committed to an exploration target, keep moving towards it
+            // until we reach it or it becomes invalid/unreachable.
+<span class="nc" id="L102">            Optional&lt;MapNode&gt; lockedTargetOpt = stateHolder.getLockedExplorationTarget();</span>
+<span class="nc" id="L103">            Optional&lt;Objective&gt; lockedObjectiveOpt = stateHolder.getLockedExplorationObjective();</span>
+<span class="nc bnc" id="L104" title="All 6 branches missed.">            if (lockedTargetOpt.isPresent() &amp;&amp; lockedObjectiveOpt.isPresent() &amp;&amp; lockedObjectiveOpt.orElseThrow() == objective) {</span>
+<span class="nc" id="L105">                MapNode lockedTarget = lockedTargetOpt.orElseThrow();</span>
+
+<span class="nc bnc" id="L107" title="All 4 branches missed.">                if (currentMapNode.equalsByCoordinates(lockedTarget) || isExplorationTargetAlreadyVisited(lockedTarget, objective)) {</span>
+<span class="nc" id="L108">                    stateHolder.clearLockedExplorationTarget();</span>
+<span class="nc" id="L109">                } else {</span>
+<span class="nc" id="L110">                    Optional&lt;Direction&gt; lockedDir = shortestPathFinder.findNextValidNodeToTarget(lockedTarget);</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">                    if (lockedDir.isPresent()) {</span>
+<span class="nc" id="L112">                        return lockedDir.orElseThrow();</span>
+                    }
+<span class="nc" id="L114">                    stateHolder.clearLockedExplorationTarget();</span>
+                }
+            }
+
+<span class="nc" id="L118">            Map&lt;MapNode, Integer&gt; costMap = shortestPathFinder.computeCostMapFromCurrent(MovementCostProfile.SHORTEST_PATH);</span>
+
+<span class="nc" id="L120">            MapNode bestNode = explorationTarget.selectBestNode(gameState, currentMapNode, objective, costMap);</span>
+<span class="nc" id="L121">            stateHolder.lockExplorationTarget(bestNode, objective);</span>
+
+<span class="nc" id="L123">            Optional&lt;Direction&gt; nextDirToBestOpt = shortestPathFinder.findNextValidNodeToTarget(bestNode);</span>
+<span class="nc bnc" id="L124" title="All 2 branches missed.">            if (nextDirToBestOpt.isEmpty()) {</span>
+<span class="nc" id="L125">                throw new NoValidMoveAvailableException(</span>
+<span class="nc" id="L126">                        &quot;Pathfinding failed: no valid path to target: &quot; + bestNode.printCoordinates(),</span>
+<span class="nc" id="L127">                        &quot;WayFinderLogic&quot;,</span>
+<span class="nc" id="L128">                        &quot;moveBasedOnStrategy&quot;,</span>
+<span class="nc" id="L129">                        suggestFallbackDirection(currentMapNode)</span>
+                );
+            }
+
+<span class="nc" id="L133">            Direction nextDirToBest = nextDirToBestOpt.orElseThrow();</span>
+
+<span class="nc" id="L135">            MapNode nextNode = shortestPathFinder.getNodeInDirection(currentMapNode, nextDirToBest);</span>
+
+<span class="nc" id="L137">            return shortestPathFinder.getDirectionToNeighbor(nextNode)</span>
+<span class="nc" id="L138">                    .orElseThrow(() -&gt; new AIInvariantViolationException(</span>
+<span class="nc" id="L139">                            &quot;Direction calculation failed: neighbor direction is missing&quot;,</span>
+<span class="nc" id="L140">                            &quot;WayFinderLogic&quot;,</span>
+<span class="nc" id="L141">                            &quot;neighbor direction must be present&quot;,</span>
+<span class="nc" id="L142">                            &quot;current=&quot; + currentMapNode.printCoordinates() + &quot;, next=&quot; + nextNode.printCoordinates()</span>
+<span class="nc" id="L143">                    ));</span>
+<span class="nc" id="L144">        } catch (AIDecisionException | NoValidMoveAvailableException | AIInvariantViolationException e) {</span>
+<span class="nc" id="L145">            throw e;</span>
+<span class="nc" id="L146">        } catch (Exception e) {</span>
+<span class="nc" id="L147">            throw new AIDecisionException(</span>
+<span class="nc" id="L148">                    &quot;Strategy execution failed: &quot; + e.getMessage(),</span>
+<span class="nc" id="L149">                    e,</span>
+<span class="nc" id="L150">                    &quot;WayFinder&quot;,</span>
+<span class="nc" id="L151">                    &quot;moveBasedOnStrategy&quot;,</span>
+<span class="nc" id="L152">                    currentMapNode</span>
+            );
+        }
+    }
+
+    private Optional&lt;Direction&gt; suggestFallbackDirection(MapNode currentMapNode) {
+<span class="nc" id="L158">        Objects.requireNonNull(currentMapNode, &quot;currentMapNode must not be null&quot;);</span>
+
+<span class="nc bnc" id="L160" title="All 2 branches missed.">        for (Direction direction : Direction.values()) {</span>
+            try {
+<span class="nc" id="L162">                MapNode candidate = shortestPathFinder.getNodeInDirection(currentMapNode, direction);</span>
+<span class="nc bnc" id="L163" title="All 2 branches missed.">                if (candidate.getTerrain() != Terrain.WATER) {</span>
+<span class="nc" id="L164">                    return Optional.of(direction);</span>
+                }
+<span class="nc" id="L166">            } catch (RuntimeException ignored) {</span>
+                // Out of bounds or state not initialized -&gt; ignore.
+            }
+        }
+<span class="nc" id="L170">        return Optional.empty();</span>
+    }
+
+    private Optional&lt;Direction&gt; tryGetDirectionToEnemyHalfCenter(GameState gameState, MapNode currentMapNode) {
+<span class="nc" id="L174">        Objects.requireNonNull(gameState, &quot;gameState must not be null&quot;);</span>
+<span class="nc" id="L175">        Objects.requireNonNull(currentMapNode, &quot;currentMapNode must not be null&quot;);</span>
+
+<span class="nc" id="L177">        return gameState.getMap().flatMap(map -&gt; {</span>
+<span class="nc" id="L178">            PlayerHalfMap enemyHalf = map.getOpponentHalfMap();</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            if (enemyHalf.getMapNodes().isEmpty()) {</span>
+<span class="nc" id="L180">                return Optional.empty();</span>
+            }
+
+<span class="nc" id="L183">            int minX = Integer.MAX_VALUE;</span>
+<span class="nc" id="L184">            int maxX = Integer.MIN_VALUE;</span>
+<span class="nc" id="L185">            int minY = Integer.MAX_VALUE;</span>
+<span class="nc" id="L186">            int maxY = Integer.MIN_VALUE;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">            for (MapNode node : enemyHalf.getMapNodes()) {</span>
+<span class="nc" id="L188">                minX = Math.min(minX, node.getX());</span>
+<span class="nc" id="L189">                maxX = Math.max(maxX, node.getX());</span>
+<span class="nc" id="L190">                minY = Math.min(minY, node.getY());</span>
+<span class="nc" id="L191">                maxY = Math.max(maxY, node.getY());</span>
+            }
+
+            // Half-map dimensions are 10x5 in this project: 2 center nodes across X, 1 center row in Y.
+<span class="nc" id="L195">            int centerY = (minY + maxY) / 2;</span>
+<span class="nc" id="L196">            int centerX1 = (minX + maxX) / 2;</span>
+<span class="nc" id="L197">            int centerX2 = centerX1 + 1;</span>
+
+            MapNode center1;
+            MapNode center2;
+            try {
+<span class="nc" id="L202">                center1 = map.getNode(centerX1, centerY);</span>
+<span class="nc" id="L203">                center2 = map.getNode(centerX2, centerY);</span>
+<span class="nc" id="L204">            } catch (IllegalArgumentException e) {</span>
+<span class="nc" id="L205">                return Optional.empty();</span>
+            }
+
+<span class="nc bnc" id="L208" title="All 4 branches missed.">            if (center1.getTerrain() == Terrain.WATER &amp;&amp; center2.getTerrain() == Terrain.WATER) {</span>
+<span class="nc" id="L209">                return Optional.empty();</span>
+            }
+
+            // Pick the reachable center candidate with the lower action cost.
+<span class="nc" id="L213">            Map&lt;MapNode, Integer&gt; costMap = shortestPathFinder.computeCostMapFromCurrent(MovementCostProfile.SHORTEST_PATH);</span>
+<span class="nc" id="L214">            int c1 = costMap.getOrDefault(center1, Integer.MAX_VALUE);</span>
+<span class="nc" id="L215">            int c2 = costMap.getOrDefault(center2, Integer.MAX_VALUE);</span>
+
+<span class="nc" id="L217">            Optional&lt;MapNode&gt; chosenCenter = Optional.empty();</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">            if (center1.getTerrain() == Terrain.WATER) {</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">                chosenCenter = c2 == Integer.MAX_VALUE ? Optional.empty() : Optional.of(center2);</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">            } else if (center2.getTerrain() == Terrain.WATER) {</span>
+<span class="nc bnc" id="L221" title="All 2 branches missed.">                chosenCenter = c1 == Integer.MAX_VALUE ? Optional.empty() : Optional.of(center1);</span>
+<span class="nc bnc" id="L222" title="All 2 branches missed.">            } else if (c1 &lt; c2) {</span>
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                chosenCenter = c1 == Integer.MAX_VALUE ? Optional.empty() : Optional.of(center1);</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">            } else if (c2 &lt; c1) {</span>
+<span class="nc bnc" id="L225" title="All 2 branches missed.">                chosenCenter = c2 == Integer.MAX_VALUE ? Optional.empty() : Optional.of(center2);</span>
+<span class="nc" id="L226">            } else {</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">                if (c1 != Integer.MAX_VALUE) {</span>
+<span class="nc" id="L228">                    chosenCenter = Optional.of(center1);</span>
+                }
+            }
+
+<span class="nc bnc" id="L232" title="All 2 branches missed.">            if (chosenCenter.isEmpty()) {</span>
+<span class="nc" id="L233">                return Optional.empty();</span>
+            }
+
+<span class="nc" id="L236">            MapNode target = chosenCenter.orElseThrow();</span>
+<span class="nc bnc" id="L237" title="All 2 branches missed.">            if (currentMapNode.equalsByCoordinates(target)) {</span>
+<span class="nc" id="L238">                return Optional.empty();</span>
+            }
+
+<span class="nc" id="L241">            Optional&lt;Direction&gt; next = shortestPathFinder.findNextValidNodeToTarget(target);</span>
+<span class="nc bnc" id="L242" title="All 2 branches missed.">            if (next.isEmpty()) {</span>
+<span class="nc" id="L243">                return Optional.empty();</span>
+            }
+
+            // Lock to center target to avoid oscillation.
+<span class="nc" id="L247">            stateHolder.lockExplorationTarget(target, Objective.FORT);</span>
+<span class="nc" id="L248">            return next;</span>
+        });
+    }
+
+    private boolean isExplorationTargetAlreadyVisited(MapNode target, Objective objective) {
+<span class="nc" id="L253">        Objects.requireNonNull(target, &quot;target must not be null&quot;);</span>
+<span class="nc" id="L254">        Objects.requireNonNull(objective, &quot;objective must not be null&quot;);</span>
+
+<span class="nc bnc" id="L256" title="All 2 branches missed.">        if (target.getTerrain() == Terrain.GRASS) {</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">            if (objective == Objective.TREASURE) {</span>
+<span class="nc" id="L258">                return Boolean.TRUE.equals(wayHelper.getHalfMapVisitedGrassFields().get(target));</span>
+            }
+<span class="nc" id="L260">            return Boolean.TRUE.equals(wayHelper.getOppHalfMapVisitedGrassFields().get(target));</span>
+        }
+
+<span class="nc bnc" id="L263" title="All 2 branches missed.">        if (target.getTerrain() == Terrain.MOUNTAIN) {</span>
+<span class="nc" id="L264">            return Boolean.TRUE.equals(wayHelper.getAllMountainFieldsMap().get(target));</span>
+        }
+
+<span class="nc" id="L267">        return false;</span>
+    }
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

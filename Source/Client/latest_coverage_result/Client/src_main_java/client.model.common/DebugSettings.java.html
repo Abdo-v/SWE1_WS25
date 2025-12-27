@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>DebugSettings.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.common</a> &gt; <span class="el_source">DebugSettings.java</span></div><h1>DebugSettings.java</h1><pre class="source lang-java linenums">package client.model.common;
+
+import java.util.Locale;
+import java.util.Objects;
+
+/**
+ * Central toggle for optional debug output.
+ *
+ * &lt;p&gt;To enable in CLI runs use one of:
+ * &lt;ul&gt;
+ *   &lt;li&gt;{@code -Dclient.debug=true}&lt;/li&gt;
+ *   &lt;li&gt;environment variable {@code CLIENT_DEBUG=true}&lt;/li&gt;
+ * &lt;/ul&gt;
+ *
+ * &lt;p&gt;Keeping stack traces behind a flag keeps evaluation output readable while
+ * still allowing developers to inspect root causes when needed.
+ */
+public final class DebugSettings {
+
+    private static final String DEBUG_PROPERTY = &quot;client.debug&quot;;
+    private static final String DEBUG_ENV = &quot;CLIENT_DEBUG&quot;;
+
+    private DebugSettings() {
+    }
+
+    public static boolean isDebugEnabled() {
+<span class="nc" id="L27">        String propertyValue = System.getProperty(DEBUG_PROPERTY);</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">        if (isTruthy(propertyValue)) {</span>
+<span class="nc" id="L29">            return true;</span>
+        }
+
+<span class="nc" id="L32">        String envValue = System.getenv(DEBUG_ENV);</span>
+<span class="nc" id="L33">        return isTruthy(envValue);</span>
+    }
+
+    public static void printStackTraceIfDebug(Throwable throwable) {
+<span class="nc" id="L37">        Objects.requireNonNull(throwable, &quot;throwable is required&quot;);</span>
+<span class="nc bnc" id="L38" title="All 2 branches missed.">        if (!isDebugEnabled()) {</span>
+<span class="nc" id="L39">            return;</span>
+        }
+<span class="nc" id="L41">        throwable.printStackTrace(System.err);</span>
+<span class="nc" id="L42">    }</span>
+
+    private static boolean isTruthy(String value) {
+<span class="nc" id="L45">        String normalized = Objects.requireNonNullElse(value, &quot;&quot;).trim().toLowerCase(Locale.ROOT);</span>
+<span class="nc bnc" id="L46" title="All 2 branches missed.">        return normalized.equals(&quot;1&quot;)</span>
+<span class="nc bnc" id="L47" title="All 2 branches missed.">                || normalized.equals(&quot;true&quot;)</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">                || normalized.equals(&quot;yes&quot;)</span>
+<span class="nc bnc" id="L49" title="All 2 branches missed.">                || normalized.equals(&quot;y&quot;)</span>
+<span class="nc bnc" id="L50" title="All 2 branches missed.">                || normalized.equals(&quot;on&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

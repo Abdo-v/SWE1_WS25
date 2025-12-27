@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>GameStateQueryServiceTest.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/test/java</a> &gt; <a href="index.source.html" class="el_package">client.controller</a> &gt; <span class="el_source">GameStateQueryServiceTest.java</span></div><h1>GameStateQueryServiceTest.java</h1><pre class="source lang-java linenums">package client.controller;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+
+import org.junit.jupiter.api.Test;
+
+import client.controller.network.service.NetworkCenter;
+import client.exception.GameCommunicationException;
+import messagesbase.messagesfromserver.FullMap;
+import messagesbase.messagesfromserver.GameState;
+
+<span class="fc" id="L17">class GameStateQueryServiceTest {</span>
+
+    @Test
+    void isFullMapAvailable_returnsTrue_whenServerMapHas100Nodes() throws Exception {
+<span class="fc" id="L21">        NetworkCenter networkCenter = mock(NetworkCenter.class);</span>
+<span class="fc" id="L22">        GameState serverState = mock(GameState.class);</span>
+<span class="fc" id="L23">        FullMap serverMap = mock(FullMap.class);</span>
+
+<span class="fc" id="L25">        when(networkCenter.pollGameState()).thenReturn(serverState);</span>
+<span class="fc" id="L26">        when(serverState.getMap()).thenReturn(serverMap);</span>
+<span class="fc" id="L27">        when(serverMap.getMapNodes()).thenReturn(new ArrayList&lt;&gt;(Collections.nCopies(100, null)));</span>
+
+<span class="fc" id="L29">        GameStateQueryService service = new GameStateQueryService(networkCenter);</span>
+
+<span class="fc" id="L31">        assertTrue(service.isFullMapAvailable());</span>
+<span class="fc" id="L32">        verify(networkCenter, times(1)).pollGameState();</span>
+<span class="fc" id="L33">    }</span>
+
+    @Test
+    void isFullMapAvailable_wrapsUnexpectedExceptionsIntoGameCommunicationException() throws Exception {
+<span class="fc" id="L37">        NetworkCenter networkCenter = mock(NetworkCenter.class);</span>
+<span class="fc" id="L38">        when(networkCenter.pollGameState()).thenThrow(new RuntimeException(&quot;boom&quot;));</span>
+
+<span class="fc" id="L40">        GameStateQueryService service = new GameStateQueryService(networkCenter);</span>
+
+<span class="fc" id="L42">        assertThrows(GameCommunicationException.class, service::isFullMapAvailable);</span>
+<span class="fc" id="L43">        verify(networkCenter, times(1)).pollGameState();</span>
+<span class="fc" id="L44">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

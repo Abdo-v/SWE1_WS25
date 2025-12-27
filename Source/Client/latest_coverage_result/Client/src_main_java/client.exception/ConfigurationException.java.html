@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ConfigurationException.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.exception</a> &gt; <span class="el_source">ConfigurationException.java</span></div><h1>ConfigurationException.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">package client.exception;</span>
+
+import java.util.Optional;
+
+/**
+ * Unchecked exception for application configuration failures.
+ * 
+ * This exception is thrown when the application encounters invalid
+ * configuration parameters, malformed arguments, or missing required
+ * configuration values. 
+ */
+public class ConfigurationException extends RuntimeException {
+    
+    private static final long serialVersionUID = 1L;
+    
+    private final Optional&lt;String&gt; configurationKey;
+    private final Optional&lt;String&gt; providedValue;
+    private final String[] validValues;
+    
+    /**
+     * Creates a new ConfigurationException with a message.
+     * 
+     * @param message the detail message explaining the configuration failure
+     */
+    public ConfigurationException(String message) {
+<span class="nc" id="L26">        super(message);</span>
+<span class="nc" id="L27">        this.configurationKey = Optional.empty();</span>
+<span class="nc" id="L28">        this.providedValue = Optional.empty();</span>
+<span class="nc" id="L29">        this.validValues = new String[0];</span>
+<span class="nc" id="L30">    }</span>
+    
+    /**
+     * Creates a new ConfigurationException with a message and cause.
+     * 
+     * @param message the detail message explaining the configuration failure
+     * @param cause the underlying cause of the configuration failure
+     */
+    public ConfigurationException(String message, Throwable cause) {
+<span class="nc" id="L39">        super(message, cause);</span>
+<span class="nc" id="L40">        this.configurationKey = Optional.empty();</span>
+<span class="nc" id="L41">        this.providedValue = Optional.empty();</span>
+<span class="nc" id="L42">        this.validValues = new String[0];</span>
+<span class="nc" id="L43">    }</span>
+    
+    /**
+     * Creates a new ConfigurationException with detailed configuration context.
+     * 
+     * @param message the detail message explaining the configuration failure
+     * @param configurationKey the configuration parameter that failed
+     * @param providedValue the invalid value that was provided
+     * @param validValues array of valid values for this configuration parameter
+     */
+    public ConfigurationException(String message, String configurationKey, String providedValue, String[] validValues) {
+<span class="nc" id="L54">        super(message);</span>
+<span class="nc" id="L55">        this.configurationKey = Optional.ofNullable(configurationKey);</span>
+<span class="nc" id="L56">        this.providedValue = Optional.ofNullable(providedValue);</span>
+<span class="nc" id="L57">        this.validValues = Optional.ofNullable(validValues).map(String[]::clone).orElseGet(() -&gt; new String[0]);</span>
+<span class="nc" id="L58">    }</span>
+    
+    /**
+     * Creates a new ConfigurationException with detailed context and cause.
+     * 
+     * @param message the detail message explaining the configuration failure
+     * @param cause the underlying cause of the configuration failure
+     * @param configurationKey the configuration parameter that failed
+     * @param providedValue the invalid value that was provided
+     * @param validValues array of valid values for this configuration parameter
+     */
+    public ConfigurationException(String message, Throwable cause, String configurationKey, String providedValue, String[] validValues) {
+<span class="nc" id="L70">        super(message, cause);</span>
+<span class="nc" id="L71">        this.configurationKey = Optional.ofNullable(configurationKey);</span>
+<span class="nc" id="L72">        this.providedValue = Optional.ofNullable(providedValue);</span>
+<span class="nc" id="L73">        this.validValues = Optional.ofNullable(validValues).map(String[]::clone).orElseGet(() -&gt; new String[0]);</span>
+<span class="nc" id="L74">    }</span>
+    
+    // Getters for additional context information
+<span class="nc" id="L77">    public Optional&lt;String&gt; getConfigurationKey() { return configurationKey; }</span>
+<span class="nc" id="L78">    public Optional&lt;String&gt; getProvidedValue() { return providedValue; }</span>
+<span class="nc" id="L79">    public String[] getValidValues() { return validValues.clone(); }</span>
+    
+    /**
+     * Determines if this configuration error has suggested valid values.
+     * 
+     * @return true if valid values are available for correction
+     */
+    public boolean hasValidValues() {
+<span class="nc bnc" id="L87" title="All 2 branches missed.">        return validValues.length &gt; 0;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>NoValidMoveAvailableException.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.exception</a> &gt; <span class="el_source">NoValidMoveAvailableException.java</span></div><h1>NoValidMoveAvailableException.java</h1><pre class="source lang-java linenums">package client.exception;
+
+import client.model.Direction;
+
+import java.util.Objects;
+import java.util.Optional;
+
+/**
+ * Checked exception that indicates the AI could not determine a valid next move,
+ * but the caller can often recover by applying a safe fallback move.
+ */
+public class NoValidMoveAvailableException extends Exception {
+
+    private static final long serialVersionUID = 1L;
+
+    private final Optional&lt;String&gt; aiComponent;
+    private final Optional&lt;String&gt; decisionContext;
+    private final Optional&lt;Direction&gt; suggestedFallbackDirection;
+
+    public NoValidMoveAvailableException(
+            String message,
+            String aiComponent,
+            String decisionContext,
+            Optional&lt;Direction&gt; suggestedFallbackDirection
+    ) {
+<span class="nc" id="L26">        super(Objects.requireNonNull(message, &quot;message is required&quot;));</span>
+<span class="nc" id="L27">        this.aiComponent = Optional.ofNullable(aiComponent);</span>
+<span class="nc" id="L28">        this.decisionContext = Optional.ofNullable(decisionContext);</span>
+<span class="nc" id="L29">        this.suggestedFallbackDirection = Objects.requireNonNull(suggestedFallbackDirection, &quot;suggestedFallbackDirection is required&quot;);</span>
+<span class="nc" id="L30">    }</span>
+
+    public Optional&lt;String&gt; getAiComponent() {
+<span class="nc" id="L33">        return aiComponent;</span>
+    }
+
+    public Optional&lt;String&gt; getDecisionContext() {
+<span class="nc" id="L37">        return decisionContext;</span>
+    }
+
+    public Optional&lt;Direction&gt; getSuggestedFallbackDirection() {
+<span class="nc" id="L41">        return suggestedFallbackDirection;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

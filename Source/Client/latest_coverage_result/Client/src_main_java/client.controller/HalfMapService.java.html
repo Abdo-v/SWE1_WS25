@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>HalfMapService.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.controller</a> &gt; <span class="el_source">HalfMapService.java</span></div><h1>HalfMapService.java</h1><pre class="source lang-java linenums">package client.controller;
+
+import client.controller.network.service.NetworkCenter;
+import client.exception.FailureReason;
+import client.exception.GameCommunicationException;
+import client.exception.GameStateException;
+import client.exception.Operation;
+import client.model.common.Notification;
+import client.model.mapper.HalfMapDimensions;
+import client.model.mapper.generator.MapGenerator;
+import client.model.mapper.validator.MapValidator;
+import client.model.mapper.PlayerHalfMap;
+import client.view.CLIHandler;
+import client.view.GameOutput;
+import client.view.MapGenerationView;
+import client.view.MapValidationInternalsView;
+
+import java.util.Objects;
+import java.util.Optional;
+
+class HalfMapService {
+
+    private static final int MAX_HALF_MAP_GENERATION_ATTEMPTS = 25;
+
+    private final NetworkCenter networkCenter;
+    private final GameOutput output;
+    private final MapValidator mapValidator;
+    private final MapGenerationView mapGenerationView;
+    private final MapValidationInternalsView mapValidationInternalsView;
+
+<span class="nc" id="L31">    public HalfMapService(NetworkCenter networkCenter, CLIHandler cliHandler, GameOutput output) {</span>
+<span class="nc" id="L32">        this.networkCenter = Objects.requireNonNull(networkCenter, &quot;networkCenter is required&quot;);</span>
+<span class="nc" id="L33">        this.output = Objects.requireNonNull(output, &quot;output is required&quot;);</span>
+<span class="nc" id="L34">        this.mapValidator = new MapValidator();</span>
+<span class="nc" id="L35">        this.mapGenerationView = new MapGenerationView();</span>
+<span class="nc" id="L36">        this.mapValidationInternalsView = new MapValidationInternalsView();</span>
+<span class="nc" id="L37">    }</span>
+
+    /**
+     * Generates, validates, and sends the player's half map to the server.
+     */
+    public void generateAndSendHalfMap(String playerId, String gameStateId) throws GameCommunicationException, GameStateException {
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        String safeGameStateId = Objects.requireNonNull(gameStateId, &quot;gameStateId is required&quot;).isBlank() ? &quot;unknown&quot; : gameStateId;</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        String safePlayerId = Optional.ofNullable(playerId).filter(id -&gt; !id.isBlank()).orElseThrow(() -&gt; new GameStateException(</span>
+<span class="nc" id="L45">                &quot;Cannot generate half map: player ID is missing&quot;,</span>
+<span class="nc" id="L46">                safeGameStateId,</span>
+<span class="nc" id="L47">                Operation.GENERATE_HALF_MAP,</span>
+<span class="nc" id="L48">                FailureReason.NO_PLAYER_ID</span>
+<span class="nc" id="L49">        ));</span>
+
+        try {
+<span class="nc" id="L52">            PlayerHalfMap halfMapToSend = generateValidHalfMap(safePlayerId, safeGameStateId);</span>
+<span class="nc" id="L53">            mapGenerationView.printHalfMap(halfMapToSend, &quot;Own Half Map&quot;);</span>
+<span class="nc" id="L54">            sendHalfMap(halfMapToSend);</span>
+<span class="nc" id="L55">        } catch (GameCommunicationException e) {</span>
+<span class="nc" id="L56">            throw e;</span>
+<span class="nc" id="L57">        } catch (Exception e) {</span>
+<span class="nc" id="L58">            throw new GameStateException(</span>
+<span class="nc" id="L59">                &quot;Failed to generate or send half map: &quot; + e.getMessage(),</span>
+<span class="nc" id="L60">                e,</span>
+<span class="nc" id="L61">                gameStateId,</span>
+<span class="nc" id="L62">                Operation.GENERATE_HALF_MAP,</span>
+<span class="nc" id="L63">                FailureReason.ERROR,</span>
+<span class="nc" id="L64">                FailureReason.UNKNOWN</span>
+            );
+        }
+<span class="nc" id="L67">    }</span>
+
+    private PlayerHalfMap generateHalfMap(String playerId) {
+<span class="nc" id="L70">        MapGenerator generator = new MapGenerator();</span>
+<span class="nc" id="L71">        return generator.generateMap(HalfMapDimensions.WIDTH, HalfMapDimensions.HEIGHT, playerId);</span>
+    }
+
+    private PlayerHalfMap generateValidHalfMap(String playerId, String gameStateId) {
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        for (int attempt = 1; attempt &lt;= MAX_HALF_MAP_GENERATION_ATTEMPTS; attempt++) {</span>
+<span class="nc" id="L76">            PlayerHalfMap candidate = generateHalfMap(playerId);</span>
+<span class="nc" id="L77">            Notification validation = mapValidator.validate(candidate);</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            if (!validation.hasErrors()) {</span>
+<span class="nc" id="L79">                output.showMapValidationOk();</span>
+<span class="nc" id="L80">                return candidate;</span>
+            }
+
+            // Map validation errors are not handled via exceptions. Report internals and retry.
+<span class="nc" id="L84">            mapValidationInternalsView.report(validation);</span>
+<span class="nc" id="L85">            output.showMapValidationFailed(&quot;Attempt &quot; + attempt + &quot;/&quot; + MAX_HALF_MAP_GENERATION_ATTEMPTS + &quot;: &quot; + validation.getErrorMessages());</span>
+        }
+
+<span class="nc" id="L88">        throw new GameStateException(</span>
+<span class="nc" id="L89">                &quot;Unable to generate a valid half map after &quot; + MAX_HALF_MAP_GENERATION_ATTEMPTS + &quot; attempts&quot;,</span>
+<span class="nc" id="L90">                gameStateId,</span>
+<span class="nc" id="L91">                Operation.GENERATE_HALF_MAP,</span>
+<span class="nc" id="L92">                FailureReason.MAP_ERROR</span>
+        );
+    }
+
+    private void sendHalfMap(PlayerHalfMap halfMap) throws GameCommunicationException {
+        try {
+<span class="nc" id="L98">            networkCenter.sendHalfMap(halfMap);</span>
+<span class="nc" id="L99">        } catch (Exception e) {</span>
+<span class="nc" id="L100">            throw new GameCommunicationException(</span>
+<span class="nc" id="L101">                &quot;Failed to send half map to server: &quot; + e.getMessage(),</span>
+<span class="nc" id="L102">                e,</span>
+<span class="nc" id="L103">                FailureReason.UNKNOWN.code(),</span>
+<span class="nc" id="L104">                Operation.SEND_HALF_MAP,</span>
+<span class="nc" id="L105">                -1</span>
+            );
+        }
+<span class="nc" id="L108">    }</span>
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

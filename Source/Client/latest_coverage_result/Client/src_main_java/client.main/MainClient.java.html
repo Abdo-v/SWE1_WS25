@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>MainClient.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.main</a> &gt; <span class="el_source">MainClient.java</span></div><h1>MainClient.java</h1><pre class="source lang-java linenums">package client.main;
+import client.controller.PollingDefaults;
+import client.controller.GameManager;
+import client.controller.network.GameIdFetcher;
+import client.exception.ConfigurationException;
+import client.exception.FullMapNotAvailableException;
+import client.exception.GameCommunicationException;
+import client.view.ClientStartupView;
+import client.view.GameManagerView;
+import client.view.GameOutput;
+// import org.slf4j.Logger;
+// import org.slf4j.LoggerFactory;
+
+import java.util.Objects;
+
+
+// please note that most methodes are made
+// public to allow easy testing with JUnit 5,
+// this is not a good practice in production code
+
+<span class="nc" id="L21">public class MainClient {</span>
+    // private static final Logger logger = LoggerFactory.getLogger(MainClient.class);
+
+    public static void main(String[] args) {
+<span class="nc" id="L25">        ClientStartupView view = new ClientStartupView();</span>
+<span class="nc" id="L26">        GameOutput gameOutput = new GameManagerView();</span>
+        try {
+            // Set default logging configuration - file only, no console
+            // System.setProperty(&quot;CONSOLE_LOGGING&quot;, &quot;false&quot;);
+            // System.setProperty(&quot;FILE_LOGGING&quot;, &quot;true&quot;);
+            
+            // Parse command line arguments for logging configuration
+            // parseLoggingArguments(args);
+            
+            // logger.info(&quot;Application starting...&quot;);
+            
+            // Validate basic arguments with custom exception
+<span class="nc" id="L38">            validateBasicArguments(args);</span>
+<span class="nc" id="L39">            String gameMode = args[0];</span>
+<span class="nc" id="L40">            String serverBaseUrl = args[1];</span>
+            String gameId;
+            
+            // Validate game mode with custom exception
+<span class="nc" id="L44">            validateGameMode(gameMode);</span>
+            
+            // For ATTR mode, fetch game ID automatically; otherwise use provided game ID
+<span class="nc bnc" id="L47" title="All 2 branches missed.">            if (&quot;ATTR&quot;.equals(gameMode)) {</span>
+<span class="nc" id="L48">                view.showAutoFetchGameIdStart();</span>
+<span class="nc" id="L49">                gameId = GameIdFetcher.fetchGameId(serverBaseUrl);</span>
+<span class="nc" id="L50">                view.showAutoFetchGameIdResult(gameId);</span>
+<span class="nc" id="L51">            } else {</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">                if (args.length &lt; 3) {</span>
+<span class="nc" id="L53">                    throw new ConfigurationException(</span>
+<span class="nc" id="L54">                        &quot;Game ID required for &quot; + gameMode + &quot; mode. Expected: &lt;gameMode&gt; &lt;serverBaseUrl&gt; &lt;gameId&gt;&quot;,</span>
+<span class="nc" id="L55">                        &quot;arguments&quot;,</span>
+<span class="nc" id="L56">                        &quot;count=&quot; + args.length,</span>
+<span class="nc" id="L57">                        new String[]{&quot;gameMode&quot;, &quot;serverBaseUrl&quot;, &quot;gameId&quot;}</span>
+                    );
+                }
+<span class="nc" id="L60">                gameId = args[2];</span>
+            }
+            // logger.info(&quot;Game client configuration - Mode: {}, Server: {}, GameID: {}&quot;, gameMode, serverBaseUrl, gameId);
+
+            // Inform user about logging configuration
+            // System.out.println(&quot;📋 LOGGING INFO: File logging enabled by default → logs/game-client.log&quot;);
+            // System.out.println(&quot;   Common options: -DCONSOLE_LOGGING=true (CLI only) | --no-file (no logging) | -DCONSOLE_LOGGING=true --file-log (CLI+file)&quot;);
+            // System.out.println();
+            
+<span class="nc" id="L69">            view.showStartupBanner(serverBaseUrl, gameId, gameMode);</span>
+
+            // logger.debug(&quot;Creating shared game state with gameId: {}&quot;, gameId);
+<span class="nc" id="L72">            client.model.GameState sharedGameState = new client.model.GameState(gameId);</span>
+<span class="nc" id="L73">            GameManager gameManager = new GameManager(sharedGameState, serverBaseUrl, gameMode, gameOutput);</span>
+            // logger.debug(&quot;GameManager initialized successfully&quot;);
+
+<span class="nc" id="L76">            view.showRegisteringPlayer();</span>
+            // logger.info(&quot;Attempting to register player: Abdalrahman Mohammed (abdalrahmm77)&quot;);
+<span class="nc" id="L78">            String playerId = gameManager.registerPlayer(ClientDefaults.PLAYER_FIRST_NAME, ClientDefaults.PLAYER_LAST_NAME, ClientDefaults.PLAYER_UACCOUNT);</span>
+<span class="nc" id="L79">            gameManager.setPlayerId(playerId);</span>
+<span class="nc" id="L80">            view.showPlayerRegistered(playerId);</span>
+            // logger.info(&quot;Player registration successful with ID: {}&quot;, playerId);
+
+            // logger.debug(&quot;Updating initial game state after player registration&quot;);
+<span class="nc" id="L84">            gameManager.updateGameState();</span>
+
+            // logger.debug(&quot;Waiting for game state to become ready (player status != MUST_WAIT)&quot;);
+<span class="nc bnc" id="L87" title="All 2 branches missed.">            while (gameManager.getCurrentPlayerStatus() == client.model.PlayerStatus.MUST_WAIT) {</span>
+<span class="nc" id="L88">                view.showWaitingForGameStateAfterRegister();</span>
+                // logger.trace(&quot;Player status is MUST_WAIT, continuing to poll...&quot;);
+<span class="nc" id="L90">                gameManager.updateGameState();</span>
+
+                try {
+<span class="nc" id="L93">                    Thread.sleep(PollingDefaults.MIN_POLL_INTERVAL.toMillis());</span>
+<span class="nc" id="L94">                } catch (InterruptedException e) {</span>
+<span class="nc" id="L95">                    Thread.currentThread().interrupt();</span>
+<span class="nc" id="L96">                    break;</span>
+                }
+            }
+            // logger.info(&quot;Game state ready, player status: {}&quot;, gameManager.getCurrentPlayerStatus());
+
+<span class="nc" id="L101">            view.showGeneratingAndSendingHalfMap();</span>
+            // logger.info(&quot;Starting half map generation and transmission&quot;);
+<span class="nc" id="L103">            gameManager.generateAndSendHalfMap();</span>
+            // logger.info(&quot;Half map successfully generated and sent&quot;);
+
+
+<span class="nc" id="L107">            view.showWaitingForFullMap();</span>
+<span class="nc" id="L108">            gameManager.waitForFullMap(PollingDefaults.FULL_MAP_WAIT_TIMEOUT, PollingDefaults.DEFAULT_POLL_INTERVAL);</span>
+
+			// logger.debug(&quot;Visualizing full map&quot;);
+<span class="nc" id="L111">			gameManager.visualizeMap(&quot;full&quot;);</span>
+
+<span class="nc" id="L113">            view.showStartingMainGameLoop();</span>
+			// logger.info(&quot;Entering main game loop with mode: {}&quot;, gameMode);
+<span class="nc" id="L115">			gameManager.startGameLoop(gameMode);</span>
+			// logger.info(&quot;Game loop completed&quot;);
+
+<span class="nc" id="L118">        } catch (ConfigurationException e) {</span>
+            // Handle configuration errors with user-friendly messages
+<span class="nc" id="L120">            view.showConfigurationError(e);</span>
+            // logger.error(&quot;Configuration error: {}&quot;, e.getMessage(), e);
+<span class="nc" id="L122">            System.exit(1);</span>
+<span class="nc" id="L123">        } catch (FullMapNotAvailableException e) {</span>
+<span class="nc" id="L124">            view.showFullMapNotAvailable(e);</span>
+<span class="nc" id="L125">            System.exit(1);</span>
+<span class="nc" id="L126">        } catch (GameCommunicationException e) {</span>
+            // Handle communication errors with retry suggestions
+<span class="nc" id="L128">            view.showCommunicationError(e);</span>
+            // logger.error(&quot;Communication error: {}&quot;, e.getMessage(), e);
+<span class="nc" id="L130">            System.exit(1);</span>
+<span class="nc" id="L131">        } catch (Exception e) {</span>
+<span class="nc" id="L132">            view.showUnexpectedError(e);</span>
+            // logger.error(&quot;Critical error during game execution: {}&quot;, e.getMessage(), e);
+<span class="nc" id="L134">            System.exit(1);</span>
+        }
+        
+        // logger.info(&quot;Application shutting down&quot;);
+<span class="nc" id="L138">    }</span>
+
+    /**
+     * Validates basic command line arguments.
+     * 
+     * @param args Command line arguments
+     * @throws ConfigurationException if arguments are insufficient or invalid
+     */
+    private static void validateBasicArguments(String[] args) throws ConfigurationException {
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        if (args.length &lt; 2) {</span>
+<span class="nc" id="L148">            throw new ConfigurationException(</span>
+<span class="nc" id="L149">                &quot;Insufficient arguments provided. Expected: &lt;gameMode&gt; &lt;serverBaseUrl&gt;&quot;,</span>
+<span class="nc" id="L150">                &quot;arguments&quot;,</span>
+<span class="nc" id="L151">                &quot;count=&quot; + args.length,</span>
+<span class="nc" id="L152">                new String[]{&quot;gameMode&quot;, &quot;serverBaseUrl&quot;, &quot;[options...]&quot;}</span>
+            );
+        }
+<span class="nc" id="L155">    }</span>
+
+
+
+    /**
+     * Validates the game mode parameter.
+     * 
+     * @param gameMode The game mode to validate
+     * @throws ConfigurationException if the game mode is invalid
+     */
+    private static void validateGameMode(String gameMode) throws ConfigurationException {
+<span class="nc" id="L166">        String normalizedMode = Objects.requireNonNullElse(gameMode, &quot;&quot;).trim();</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">        if (normalizedMode.isEmpty()) {</span>
+<span class="nc" id="L168">            throw new ConfigurationException(</span>
+<span class="nc" id="L169">                &quot;Game mode is required&quot;,</span>
+<span class="nc" id="L170">                &quot;gameMode&quot;,</span>
+<span class="nc" id="L171">                normalizedMode,</span>
+<span class="nc" id="L172">                new String[]{&quot;TR&quot;, &quot;TRR&quot;, &quot;ATTR&quot;}</span>
+            );
+        }
+        
+<span class="nc" id="L176">        String[] validModes = {&quot;TR&quot;, &quot;TRR&quot;, &quot;ATTR&quot;};</span>
+<span class="nc" id="L177">        boolean isValid = false;</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">        for (String validMode : validModes) {</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">            if (validMode.equals(normalizedMode)) {</span>
+<span class="nc" id="L180">                isValid = true;</span>
+<span class="nc" id="L181">                break;</span>
+            }
+        }
+        
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (!isValid) {</span>
+<span class="nc" id="L186">            throw new ConfigurationException(</span>
+<span class="nc" id="L187">                &quot;Invalid game mode provided&quot;,</span>
+<span class="nc" id="L188">                &quot;gameMode&quot;,</span>
+<span class="nc" id="L189">                normalizedMode,</span>
+<span class="nc" id="L190">                validModes</span>
+            );
+        }
+<span class="nc" id="L193">    }</span>
+
+    /**
+     * Parses command line arguments for logging configuration and sets system properties
+     * that will be used by logback.xml
+     */
+    /* LOGGING DISABLED
+    public static void parseLoggingArguments(String[] args) throws ConfigurationException {
+        for (String arg : args) {
+            if (arg.startsWith(&quot;--log-level=&quot;)) {
+                String level = arg.substring(&quot;--log-level=&quot;.length()).toUpperCase();
+                validateLogLevel(level, &quot;log-level&quot;);
+                System.setProperty(&quot;ROOT_LOG_LEVEL&quot;, level);
+                System.setProperty(&quot;CLIENT_LOG_LEVEL&quot;, level);
+                System.out.println(&quot;🔧 Root log level set to: &quot; + level);
+            } else if (arg.startsWith(&quot;--ai-log=&quot;)) {
+                String level = arg.substring(&quot;--ai-log=&quot;.length()).toUpperCase();
+                validateLogLevel(level, &quot;ai-log&quot;);
+                System.setProperty(&quot;AI_LOG_LEVEL&quot;, level);
+                System.out.println(&quot;🤖 AI log level set to: &quot; + level);
+            } else if (arg.startsWith(&quot;--network-log=&quot;)) {
+                String level = arg.substring(&quot;--network-log=&quot;.length()).toUpperCase();
+                validateLogLevel(level, &quot;network-log&quot;);
+                System.setProperty(&quot;NETWORK_LOG_LEVEL&quot;, level);
+                System.out.println(&quot;📡 Network log level set to: &quot; + level);
+            } else if (arg.startsWith(&quot;--game-log=&quot;)) {
+                String level = arg.substring(&quot;--game-log=&quot;.length()).toUpperCase();
+                validateLogLevel(level, &quot;game-log&quot;);
+                System.setProperty(&quot;GAME_LOG_LEVEL&quot;, level);
+                System.out.println(&quot;🎮 Game log level set to: &quot; + level);
+            } else if (arg.startsWith(&quot;--log-file=&quot;)) {
+                String filePath = arg.substring(&quot;--log-file=&quot;.length());
+                validateLogFilePath(filePath);
+                System.setProperty(&quot;LOG_FILE&quot;, filePath);
+                System.setProperty(&quot;FILE_LOGGING&quot;, &quot;true&quot;);
+                System.out.println(&quot;📁 Log file set to: &quot; + filePath);
+            } else if (arg.equals(&quot;--file-log&quot;)) {
+                System.setProperty(&quot;FILE_LOGGING&quot;, &quot;true&quot;);
+                System.out.println(&quot;📁 File logging enabled (logs/game-client.log)&quot;);
+            } else if (arg.equals(&quot;--no-console&quot;)) {
+                System.setProperty(&quot;CONSOLE_LOGGING&quot;, &quot;false&quot;);
+                System.out.println(&quot;🔇 Console logging disabled&quot;);
+            } else if (arg.equals(&quot;--no-file&quot;)) {
+                System.setProperty(&quot;FILE_LOGGING&quot;, &quot;false&quot;);
+                System.out.println(&quot;📁 File logging disabled&quot;);
+            } else if (arg.equals(&quot;--debug-ai&quot;)) {
+                System.setProperty(&quot;AI_LOG_LEVEL&quot;, &quot;DEBUG&quot;);
+                System.setProperty(&quot;FILE_LOGGING&quot;, &quot;true&quot;);
+                System.out.println(&quot;🤖 AI debug mode enabled (DEBUG level + file logging)&quot;);
+            } else if (arg.equals(&quot;--trace-ai&quot;)) {
+                System.setProperty(&quot;AI_LOG_LEVEL&quot;, &quot;TRACE&quot;);
+                System.setProperty(&quot;FILE_LOGGING&quot;, &quot;true&quot;);
+                System.out.println(&quot;🤖 AI trace mode enabled (TRACE level + file logging)&quot;);
+            } else if (arg.equals(&quot;--help-logging&quot;)) {
+                printLoggingHelp();
+                System.exit(0);
+            }
+        }
+        
+        // Create logs directory if file logging is enabled
+        if (&quot;true&quot;.equals(System.getProperty(&quot;FILE_LOGGING&quot;))) {
+            try {
+                java.nio.file.Files.createDirectories(java.nio.file.Paths.get(&quot;logs&quot;));
+            } catch (Exception e) {
+                throw new ConfigurationException(
+                    &quot;Could not create logs directory: &quot; + e.getMessage(),
+                    e,
+                    &quot;FILE_LOGGING&quot;,
+                    &quot;true&quot;,
+                    new String[]{&quot;Ensure write permissions&quot;, &quot;Check disk space&quot;}
+                );
+            }
+        }
+    }
+    */
+
+    /**
+     * Validates log level values.
+     * 
+     * @param level The log level to validate
+     * @param parameterName The name of the parameter for error reporting
+     * @throws ConfigurationException if the log level is invalid
+     */
+    /* LOGGING DISABLED
+    public static void validateLogLevel(String level, String parameterName) throws ConfigurationException {
+        String[] validLevels = {&quot;TRACE&quot;, &quot;DEBUG&quot;, &quot;INFO&quot;, &quot;WARN&quot;, &quot;ERROR&quot;};
+        for (String validLevel : validLevels) {
+            if (validLevel.equals(level)) {
+                return; // Valid level found
+            }
+        }
+        
+        throw new ConfigurationException(
+            &quot;Invalid log level provided&quot;,
+            parameterName,
+            level,
+            validLevels
+        );
+    }
+    */
+
+    /**
+     * Validates log file path.
+     * 
+     * @param filePath The file path to validate
+     * @throws ConfigurationException if the file path is invalid
+     */
+    /* LOGGING DISABLED
+    public static void validateLogFilePath(String filePath) throws ConfigurationException {
+        String normalizedPath = Objects.requireNonNullElse(filePath, &quot;&quot;).trim();
+        if (normalizedPath.isEmpty()) {
+            throw new ConfigurationException(
+                &quot;Log file path is required&quot;,
+                &quot;log-file&quot;,
+                normalizedPath,
+                new String[]{&quot;logs/my-game.log&quot;, &quot;debug.log&quot;, &quot;/path/to/game.log&quot;}
+            );
+        }
+        
+        // Check if the parent directory can be created
+        java.io.File file = new java.io.File(normalizedPath);
+        java.io.File parentDir = file.getParentFile();
+        Optional.ofNullable(parentDir)
+                .filter(dir -&gt; !dir.exists())
+                .ifPresent(dir -&gt; {
+                    try {
+                        if (!dir.mkdirs()) {
+                            throw new ConfigurationException(
+                                    &quot;Cannot create parent directories for log file&quot;,
+                                    &quot;log-file&quot;,
+                                    normalizedPath,
+                                    new String[]{&quot;Use existing directory&quot;, &quot;Check write permissions&quot;}
+                            );
+                        }
+                    } catch (SecurityException e) {
+                        throw new ConfigurationException(
+                                &quot;Permission denied creating log file directory: &quot; + e.getMessage(),
+                                e,
+                                &quot;log-file&quot;,
+                                normalizedPath,
+                                new String[]{&quot;Check file permissions&quot;, &quot;Use different directory&quot;}
+                        );
+                    }
+                });
+    }
+    */
+
+    /**
+     * Prints detailed help for logging configuration options
+     */
+    /* LOGGING DISABLED
+    public static void printLoggingHelp() {
+        System.out.println(&quot;📋 LOGGING CONFIGURATION HELP&quot;);
+        System.out.println(&quot;===============================&quot;);
+        System.out.println();
+        System.out.println(&quot;🎯 BASIC OPTIONS:&quot;);
+        System.out.println(&quot;  --log-level=LEVEL     Set overall log level (TRACE, DEBUG, INFO, WARN, ERROR)&quot;);
+        System.out.println(&quot;  --file-log            Enable logging to file (logs/game-client.log)&quot;);
+        System.out.println(&quot;  --no-console          Disable console logging&quot;);
+        System.out.println(&quot;  --log-file=PATH       Set custom log file path&quot;);
+        System.out.println();
+        System.out.println(&quot;🎯 COMPONENT-SPECIFIC LEVELS:&quot;);
+        System.out.println(&quot;  --ai-log=LEVEL        Set AI components log level&quot;);
+        System.out.println(&quot;  --network-log=LEVEL   Set network communication log level&quot;);
+        System.out.println(&quot;  --game-log=LEVEL      Set game controller log level&quot;);
+        System.out.println();
+        System.out.println(&quot;🎯 QUICK PRESETS:&quot;);
+        System.out.println(&quot;  --debug-ai            Enable AI debugging (DEBUG + file logging)&quot;);
+        System.out.println(&quot;  --trace-ai            Enable AI tracing (TRACE + file logging)&quot;);
+        System.out.println();
+        System.out.println(&quot;🎯 EXAMPLES:&quot;);
+        System.out.println(&quot;  # Basic file logging:&quot;);
+        System.out.println(&quot;  java MainClient TR http://localhost:8080 Ew26i --file-log&quot;);
+        System.out.println();
+        System.out.println(&quot;  # Debug AI with custom log file:&quot;);
+        System.out.println(&quot;  java MainClient TR http://localhost:8080 Ew26i --trace-ai --log-file=ai-debug.log&quot;);
+        System.out.println();
+        System.out.println(&quot;  # Only file logging, no console:&quot;);
+        System.out.println(&quot;  java MainClient TR http://localhost:8080 Ew26i --file-log --no-console&quot;);
+        System.out.println();
+        System.out.println(&quot;  # Different levels for different components:&quot;);
+        System.out.println(&quot;  java MainClient TR http://localhost:8080 Ew26i --ai-log=TRACE --network-log=DEBUG --game-log=INFO --file-log&quot;);
+    }
+    */
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

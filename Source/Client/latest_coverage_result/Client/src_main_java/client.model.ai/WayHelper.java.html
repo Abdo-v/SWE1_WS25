@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>WayHelper.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.ai</a> &gt; <span class="el_source">WayHelper.java</span></div><h1>WayHelper.java</h1><pre class="source lang-java linenums">package client.model.ai;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+
+import client.model.GameState;
+import client.model.PlayerState;
+import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
+
+/**
+ * Helper class for managing traversal paths and half-map arrangements.
+ * This class encapsulates logic for organizing and tracking map nodes for traversal strategies.
+ */
+class WayHelper implements client.observer.util.Observer {
+
+    private Optional&lt;GameState&gt; gameState;
+    private LinkedHashMap&lt;MapNode, Boolean&gt; halfMapVisitedGrassFields;
+    private LinkedHashMap&lt;MapNode, Boolean&gt; oppHalfMapVisitedGrassFields;
+    private LinkedHashMap&lt;MapNode, Boolean&gt; allMountainFields;
+
+    /**
+     * Default constructor for WayHelper.
+     */
+<span class="nc" id="L27">    public WayHelper() {</span>
+<span class="nc" id="L28">        this.gameState = Optional.empty();</span>
+<span class="nc" id="L29">        this.halfMapVisitedGrassFields = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L30">        this.oppHalfMapVisitedGrassFields = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L31">        this.allMountainFields = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc" id="L32">    }</span>
+
+    /**
+     * Returns a LinkedHashMap of grass nodes in the player's own half-map, initialized as unvisited.
+     * The keys are MapNode objects representing grass nodes, and the values are Booleans indicating whether the node has been visited.
+     * 
+     * @return A LinkedHashMap of grass nodes with their visited status.
+     */
+    public LinkedHashMap&lt;MapNode, Boolean&gt; getTraverseWayForOwnHalf(){
+<span class="nc" id="L41">        return gameState</span>
+<span class="nc" id="L42">            .flatMap(state -&gt; state.getMap().map(map -&gt; {</span>
+<span class="nc" id="L43">                Optional&lt;MapNode&gt; start = state.getCurrentPlayerState()</span>
+<span class="nc" id="L44">                        .flatMap(PlayerState::getCurrentPosition)</span>
+<span class="nc" id="L45">                        .or(state::getOwnFortPosition);</span>
+
+<span class="nc" id="L47">                return start</span>
+<span class="nc" id="L48">                        .map(pos -&gt; {</span>
+<span class="nc" id="L49">                            PlayerHalfMap ownHalfMap = HalfMapSnakeArranger.arrangeOwnHalf(map, pos);</span>
+<span class="nc" id="L50">                            return toMapNodeBooleanMap(TraversalWayBuilders.grassTraversal(ownHalfMap));</span>
+                        })
+<span class="nc" id="L52">                        .orElseGet(LinkedHashMap::new);</span>
+<span class="nc" id="L53">            }))</span>
+<span class="nc" id="L54">            .orElseGet(LinkedHashMap::new);</span>
+    }
+
+    /**
+     * Returns a LinkedHashMap of grass nodes in the opponent's half-map, initialized as unvisited.
+     * The keys are MapNode objects representing grass nodes, and the values are Booleans indicating if the node has been visited.
+     * @return A LinkedHashMap of grass nodes with their visited status.
+     */
+    public LinkedHashMap&lt;MapNode, Boolean&gt; getTraverseWayForOpponentHalf(){
+<span class="nc" id="L63">        return gameState</span>
+<span class="nc" id="L64">            .flatMap(state -&gt; state.getMap().map(map -&gt; state.getOwnFortPosition()</span>
+<span class="nc" id="L65">                    .map(start -&gt; {</span>
+<span class="nc" id="L66">                        PlayerHalfMap opponentHalfMap = HalfMapSnakeArranger.arrangeOpponentHalf(map, start);</span>
+<span class="nc" id="L67">                        return toMapNodeBooleanMap(TraversalWayBuilders.grassTraversal(opponentHalfMap));</span>
+                    })
+<span class="nc" id="L69">                    .orElseGet(LinkedHashMap::new)))</span>
+<span class="nc" id="L70">            .orElseGet(LinkedHashMap::new);</span>
+    }
+
+    /**
+     * Returns a LinkedHashMap of grass nodes in the opponent's half-map from a specific position, initialized as unvisited.
+     * @param currentPosition The current position from which to arrange the opponent half-map.
+     * @return A LinkedHashMap of grass nodes with their visited status.
+     */
+    private LinkedHashMap&lt;MapNode, Boolean&gt; getTraverseWayForOpponentHalf(MapNode currentPosition){
+<span class="nc" id="L79">        Objects.requireNonNull(currentPosition, &quot;currentPosition must not be null&quot;);</span>
+<span class="nc" id="L80">        return gameState</span>
+<span class="nc" id="L81">                .flatMap(GameState::getMap)</span>
+<span class="nc" id="L82">                .map(map -&gt; HalfMapSnakeArranger.arrangeOpponentHalf(map, currentPosition))</span>
+<span class="nc" id="L83">            .map(TraversalWayBuilders::grassTraversal)</span>
+<span class="nc" id="L84">                .map(WayHelper::toMapNodeBooleanMap)</span>
+<span class="nc" id="L85">                .orElseGet(LinkedHashMap::new);</span>
+    }
+
+    /**
+     * Filters the traversal way based on enemy position, keeping only nodes reachable within 8 moves.
+     * @param enemyTruePosition The enemy's true position.
+     * @return A filtered LinkedHashMap containing only reachable nodes.
+     */
+    public LinkedHashMap&lt;MapNode, Boolean&gt; getFilteredTraverseWay(MapNode enemyTruePosition){
+<span class="nc" id="L94">        Objects.requireNonNull(enemyTruePosition, &quot;enemyTruePosition must not be null&quot;);</span>
+<span class="nc" id="L95">        GameState state = gameState.orElseThrow(() -&gt; new IllegalStateException(&quot;GameState must be initialized&quot;));</span>
+<span class="nc" id="L96">        MapNode currentPosition = state.getCurrentPlayerState()</span>
+<span class="nc" id="L97">                .flatMap(PlayerState::getCurrentPosition)</span>
+<span class="nc" id="L98">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Current player position must be initialized&quot;));</span>
+
+<span class="nc" id="L100">        var map = state.getMap().orElseThrow(() -&gt; new IllegalStateException(&quot;GameMap must be initialized&quot;));</span>
+<span class="nc" id="L101">        LinkedHashMap&lt;MapNode, Boolean&gt; fullTraversalWay = getTraverseWayForOpponentHalf(currentPosition);</span>
+<span class="nc" id="L102">        LinkedHashMap&lt;MapNode, Boolean&gt; filteredTraversalWay = new LinkedHashMap&lt;&gt;();</span>
+        
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        for (MapNode node : fullTraversalWay.keySet()) {</span>
+<span class="nc" id="L105">            int cost = GridDijkstra.shortestPathCost(map, enemyTruePosition, node, MovementCostProfile.WAY_HELPER);</span>
+<span class="nc bnc" id="L106" title="All 2 branches missed.">            if (cost &lt;= 8) {</span>
+<span class="nc" id="L107">                filteredTraversalWay.put(node, false);</span>
+            }
+        }
+<span class="nc" id="L110">        return filteredTraversalWay;</span>
+    }
+
+    /**
+     * Returns a LinkedHashMap of all mountain fields in the game map.
+     * The keys are MapNode objects representing the mountain nodes,
+     * and the values are initialized to false (indicating unvisited).
+     * @return A LinkedHashMap containing all mountain fields.
+     */
+    public LinkedHashMap&lt;MapNode,Boolean&gt; getAllMountainFields(){
+<span class="nc" id="L120">        return gameState</span>
+<span class="nc" id="L121">                .flatMap(GameState::getMap)</span>
+<span class="nc" id="L122">            .map(TraversalWayBuilders::mountainFields)</span>
+<span class="nc" id="L123">                .map(WayHelper::toMapNodeBooleanMap)</span>
+<span class="nc" id="L124">                .orElseGet(LinkedHashMap::new);</span>
+    }
+
+    private static LinkedHashMap&lt;MapNode, Boolean&gt; toMapNodeBooleanMap(Map&lt;?, ?&gt; raw) {
+<span class="nc" id="L128">        LinkedHashMap&lt;MapNode, Boolean&gt; typed = new LinkedHashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (raw.isEmpty()) {</span>
+<span class="nc" id="L130">            return typed;</span>
+        }
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        for (Map.Entry&lt;?, ?&gt; entry : raw.entrySet()) {</span>
+<span class="nc" id="L134">            Object key = entry.getKey();</span>
+<span class="nc" id="L135">            Object value = entry.getValue();</span>
+<span class="nc bnc" id="L136" title="All 4 branches missed.">            if (key instanceof MapNode node &amp;&amp; value instanceof Boolean visited) {</span>
+<span class="nc" id="L137">                typed.put(node, visited);</span>
+            }
+        }
+<span class="nc" id="L140">        return typed;</span>
+    }
+
+    /**
+     * Returns the arranged own half map based on the current position of the player.
+     * The arrangement is done in a Y-snake traversal pattern, starting from the player's current position.
+     * 
+     * @param currentPosition The current position of the player.
+     * @return The arranged PlayerHalfMap containing nodes in Y-snake order.
+     */
+    public PlayerHalfMap getArrangedOwnHalfMap(MapNode currentPosition){
+<span class="nc" id="L151">        Objects.requireNonNull(currentPosition, &quot;currentPosition must not be null&quot;);</span>
+<span class="nc" id="L152">        GameState state = gameState.orElseThrow(() -&gt; new IllegalStateException(&quot;GameState must be initialized&quot;));</span>
+<span class="nc" id="L153">        return state.getMap()</span>
+<span class="nc" id="L154">            .map(map -&gt; HalfMapSnakeArranger.arrangeOwnHalf(map, currentPosition))</span>
+<span class="nc" id="L155">            .orElseThrow(() -&gt; new IllegalStateException(&quot;GameMap must be initialized&quot;));</span>
+    }
+
+    @Override
+    public void update(GameState gameState) {
+<span class="nc" id="L160">        this.gameState = Optional.of(Objects.requireNonNull(gameState, &quot;gameState must not be null&quot;));</span>
+<span class="nc" id="L161">    }</span>
+
+    // Getters for the fields
+    public LinkedHashMap&lt;MapNode, Boolean&gt; getHalfMapVisitedGrassFields() {
+<span class="nc" id="L165">        return halfMapVisitedGrassFields;</span>
+    }
+
+    public LinkedHashMap&lt;MapNode, Boolean&gt; getOppHalfMapVisitedGrassFields() {
+<span class="nc" id="L169">        return oppHalfMapVisitedGrassFields;</span>
+    }
+
+    public LinkedHashMap&lt;MapNode, Boolean&gt; getAllMountainFieldsMap() {
+<span class="nc" id="L173">        return allMountainFields;</span>
+    }
+
+    public void setHalfMapVisitedGrassFields(LinkedHashMap&lt;MapNode, Boolean&gt; halfMapVisitedGrassFields) {
+<span class="nc" id="L177">        this.halfMapVisitedGrassFields = Objects.requireNonNull(halfMapVisitedGrassFields, &quot;halfMapVisitedGrassFields must not be null&quot;);</span>
+<span class="nc" id="L178">    }</span>
+
+    public void setOppHalfMapVisitedGrassFields(LinkedHashMap&lt;MapNode, Boolean&gt; oppHalfMapVisitedGrassFields) {
+<span class="nc" id="L181">        this.oppHalfMapVisitedGrassFields = Objects.requireNonNull(oppHalfMapVisitedGrassFields, &quot;oppHalfMapVisitedGrassFields must not be null&quot;);</span>
+<span class="nc" id="L182">    }</span>
+
+    public void setAllMountainFields(LinkedHashMap&lt;MapNode, Boolean&gt; allMountainFields) {
+<span class="nc" id="L185">        this.allMountainFields = Objects.requireNonNull(allMountainFields, &quot;allMountainFields must not be null&quot;);</span>
+<span class="nc" id="L186">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

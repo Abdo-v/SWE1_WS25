@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>HalfMapTerrainValidator.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.model.mapper.validator</a> &gt; <span class="el_source">HalfMapTerrainValidator.java</span></div><h1>HalfMapTerrainValidator.java</h1><pre class="source lang-java linenums">package client.model.mapper.validator;
+
+import client.model.common.Notification;
+import client.model.mapper.MapNode;
+import client.model.mapper.PlayerHalfMap;
+import client.model.mapper.Terrain;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+
+final class HalfMapTerrainValidator {
+    private HalfMapTerrainValidator() {
+    }
+
+    static void validateTerrainAndFort(
+            PlayerHalfMap halfMap,
+            Notification notification,
+            int totalNodes,
+            double minMountainPercentage,
+            double minGrassPercentage,
+            double minWaterPercentage,
+            double fortPercentage
+    ) {
+<span class="fc" id="L25">        List&lt;MapNode&gt; nodes = halfMap.getMapNodes();</span>
+<span class="fc" id="L26">        int mountainCount = 0;</span>
+<span class="fc" id="L27">        int grassCount = 0;</span>
+<span class="fc" id="L28">        int waterCount = 0;</span>
+<span class="fc" id="L29">        int fortCount = 0;</span>
+<span class="fc" id="L30">        Optional&lt;MapNode&gt; fortNode = Optional.empty();</span>
+
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        for (MapNode node : nodes) {</span>
+<span class="fc" id="L33">            Terrain terrain = Objects.requireNonNull(node.getTerrain(), &quot;MapNode terrain must be set&quot;);</span>
+<span class="pc bpc" id="L34" title="1 of 4 branches missed.">            switch (terrain) {</span>
+                case MOUNTAIN:
+<span class="fc" id="L36">                    mountainCount++;</span>
+<span class="fc" id="L37">                    break;</span>
+                case GRASS:
+<span class="fc" id="L39">                    grassCount++;</span>
+<span class="fc" id="L40">                    break;</span>
+                case WATER:
+<span class="fc" id="L42">                    waterCount++;</span>
+<span class="fc" id="L43">                    break;</span>
+                default:
+<span class="nc" id="L45">                    notification.addError(&quot;Node at X=&quot; + node.getX() + &quot;, Y=&quot; + node.getY() + &quot; has an unknown terrain type.&quot;);</span>
+                    break;
+            }
+
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            if (node.isFortPresent()) {</span>
+<span class="fc" id="L50">                fortCount++;</span>
+<span class="fc" id="L51">                fortNode = Optional.of(node);</span>
+            }
+        }
+
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        if (notification.hasErrors()) {</span>
+<span class="nc" id="L56">            return;</span>
+        }
+
+<span class="fc" id="L59">        int minMountains = (int) Math.round(minMountainPercentage * totalNodes);</span>
+<span class="fc" id="L60">        int minGrass = (int) Math.round(minGrassPercentage * totalNodes);</span>
+<span class="fc" id="L61">        int minWater = (int) Math.round(minWaterPercentage * totalNodes);</span>
+<span class="fc" id="L62">        int expectedForts = (int) (fortPercentage * totalNodes);</span>
+
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (mountainCount &lt; minMountains) {</span>
+<span class="fc" id="L65">            notification.addError(String.format(&quot;Insufficient mountains. Required: &gt;=%d (%.0f%%), Found: %d&quot;,</span>
+<span class="fc" id="L66">                    minMountains, minMountainPercentage * 100, mountainCount));</span>
+        }
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (grassCount &lt; minGrass) {</span>
+<span class="nc" id="L69">            notification.addError(String.format(&quot;Insufficient grass. Required: &gt;=%d (%.0f%%), Found: %d&quot;,</span>
+<span class="nc" id="L70">                    minGrass, minGrassPercentage * 100, grassCount));</span>
+        }
+<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (waterCount &lt; minWater) {</span>
+<span class="fc" id="L73">            notification.addError(String.format(&quot;Insufficient water. Required: &gt;=%d (%.0f%%), Found: %d&quot;,</span>
+<span class="fc" id="L74">                    minWater, minWaterPercentage * 100, waterCount));</span>
+        }
+
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (mountainCount + grassCount + waterCount != totalNodes) {</span>
+<span class="nc" id="L78">            notification.addError(&quot;Sum of terrain types (&quot; + (mountainCount + grassCount + waterCount)</span>
+<span class="nc" id="L79">                    + &quot;) does not match total nodes (&quot; + totalNodes + &quot;). Check for unassigned or miscounted terrains.&quot;);</span>
+        }
+
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (fortCount != expectedForts) {</span>
+<span class="fc" id="L83">            notification.addError(&quot;Incorrect number of forts. Required: &quot; + expectedForts + &quot;, Found: &quot; + fortCount);</span>
+<span class="fc" id="L84">        } else {</span>
+<span class="fc" id="L85">            fortNode.ifPresentOrElse(</span>
+<span class="fc" id="L86">                    fort -&gt; {</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">                        if (fort.getTerrain() != Terrain.GRASS) {</span>
+<span class="nc" id="L88">                            notification.addError(&quot;Fort must be placed on a GRASS field. Found on: &quot; + fort.getTerrain()</span>
+<span class="nc" id="L89">                                    + &quot; at X=&quot; + fort.getX() + &quot;, Y=&quot; + fort.getY());</span>
+                        }
+<span class="fc" id="L91">                    },</span>
+<span class="fc" id="L92">                    () -&gt; {</span>
+<span class="nc bnc" id="L93" title="All 2 branches missed.">                        if (expectedForts &gt; 0) {</span>
+<span class="nc" id="L94">                            notification.addError(&quot;Expected &quot; + expectedForts + &quot; fort(s) but none found.&quot;);</span>
+                        }
+<span class="nc" id="L96">                    }</span>
+            );
+        }
+<span class="fc" id="L99">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

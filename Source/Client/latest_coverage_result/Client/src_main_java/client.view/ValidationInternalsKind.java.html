@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ValidationInternalsKind.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.view</a> &gt; <span class="el_source">ValidationInternalsKind.java</span></div><h1>ValidationInternalsKind.java</h1><pre class="source lang-java linenums">package client.view;
+
+/**
+ * Coarse error kinds for the technical-internals view during map generation.
+ *
+ * &lt;p&gt;This is intentionally a view-level concept: it exists to group validation
+ * errors for human-friendly display on {@link System#err}.
+ */
+<span class="fc" id="L9">public enum ValidationInternalsKind {</span>
+<span class="fc" id="L10">    PRECONDITION(&quot;PRECONDITION&quot;),</span>
+<span class="fc" id="L11">    STRUCTURE(&quot;STRUCTURE&quot;),</span>
+<span class="fc" id="L12">    DIMENSIONS(&quot;DIMENSIONS&quot;),</span>
+<span class="fc" id="L13">    TERRAIN_AND_FORT(&quot;TERRAIN_AND_FORT&quot;),</span>
+<span class="fc" id="L14">    REACHABILITY(&quot;REACHABILITY&quot;),</span>
+<span class="fc" id="L15">    EDGE_CONSTRAINTS(&quot;EDGE_CONSTRAINTS&quot;),</span>
+<span class="fc" id="L16">    ORCHESTRATION(&quot;ORCHESTRATION&quot;),</span>
+<span class="fc" id="L17">    VALIDATION(&quot;VALIDATION&quot;);</span>
+
+    private final String displayText;
+
+<span class="fc" id="L21">    ValidationInternalsKind(String displayText) {</span>
+<span class="fc" id="L22">        this.displayText = displayText;</span>
+<span class="fc" id="L23">    }</span>
+
+    public String displayText() {
+<span class="fc" id="L26">        return displayText;</span>
+    }
+
+    public static ValidationInternalsKind from(java.util.Optional&lt;StackTraceElement&gt; referenceFrame, String message) {
+<span class="fc" id="L30">        java.util.Optional&lt;StackTraceElement&gt; safeFrame = java.util.Objects.requireNonNull(referenceFrame, &quot;referenceFrame is required&quot;);</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        if (safeFrame.isPresent()) {</span>
+<span class="fc" id="L32">            String className = safeFrame.orElseThrow().getClassName();</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">            if (className.contains(&quot;HalfMapStructureValidator&quot;)) {</span>
+<span class="fc" id="L34">                return STRUCTURE;</span>
+            }
+<span class="fc bfc" id="L36" title="All 2 branches covered.">            if (className.contains(&quot;HalfMapTerrainValidator&quot;)) {</span>
+<span class="fc" id="L37">                return TERRAIN_AND_FORT;</span>
+            }
+<span class="fc bfc" id="L39" title="All 2 branches covered.">            if (className.contains(&quot;HalfMapReachabilityValidator&quot;)) {</span>
+<span class="fc" id="L40">                return REACHABILITY;</span>
+            }
+<span class="fc bfc" id="L42" title="All 2 branches covered.">            if (className.contains(&quot;HalfMapEdgeValidator&quot;)) {</span>
+<span class="fc" id="L43">                return EDGE_CONSTRAINTS;</span>
+            }
+<span class="pc bpc" id="L45" title="1 of 2 branches missed.">            if (className.contains(&quot;MapValidator&quot;)) {</span>
+<span class="fc" id="L46">                return ORCHESTRATION;</span>
+            }
+        }
+
+<span class="fc" id="L50">        String lower = java.util.Objects.requireNonNullElse(message, &quot;&quot;).toLowerCase();</span>
+<span class="pc bpc" id="L51" title="2 of 6 branches missed.">        if (lower.contains(&quot;must be provided&quot;) || lower.contains(&quot;missing&quot;) || lower.contains(&quot;required&quot;)) {</span>
+<span class="fc" id="L52">            return PRECONDITION;</span>
+        }
+<span class="pc bpc" id="L54" title="2 of 6 branches missed.">        if (lower.contains(&quot;dimension&quot;) || lower.contains(&quot;width&quot;) || lower.contains(&quot;height&quot;)) {</span>
+<span class="fc" id="L55">            return DIMENSIONS;</span>
+        }
+
+<span class="fc" id="L58">        return VALIDATION;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

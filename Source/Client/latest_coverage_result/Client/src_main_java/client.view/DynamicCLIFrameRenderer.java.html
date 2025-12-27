@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>DynamicCLIFrameRenderer.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.view</a> &gt; <span class="el_source">DynamicCLIFrameRenderer.java</span></div><h1>DynamicCLIFrameRenderer.java</h1><pre class="source lang-java linenums"><span class="nc" id="L1">package client.view;</span>
+
+import client.model.GameState;
+import client.model.PlayerState;
+import client.model.mapper.GameMap;
+import client.model.mapper.MapNode;
+
+import java.util.Objects;
+import java.util.Optional;
+
+<span class="nc" id="L11">final class DynamicCLIFrameRenderer {</span>
+
+    private static final String MAP_FOOTER = &quot;--------------------&quot;;
+
+    RenderedCLIFrame render(GameState gameState) {
+<span class="nc" id="L16">        Objects.requireNonNull(gameState, &quot;gameState is required&quot;);</span>
+
+<span class="nc" id="L18">        RenderedCLISection playerInfo = renderPlayerInfo(gameState);</span>
+<span class="nc" id="L19">        RenderedCLISection map = renderMap(gameState);</span>
+
+<span class="nc" id="L21">        String output = playerInfo.text + map.text;</span>
+<span class="nc" id="L22">        return new RenderedCLIFrame(output, playerInfo.lineCount + map.lineCount);</span>
+    }
+
+    private RenderedCLISection renderPlayerInfo(GameState gameState) {
+<span class="nc" id="L26">        StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L27">        int lines = 0;</span>
+
+<span class="nc" id="L29">        var myState = gameState.getCurrentPlayerState();</span>
+<span class="nc" id="L30">        var opponentState = gameState.getEnemyPlayerState();</span>
+
+<span class="nc" id="L32">        sb.append(CLITexts.GAME_STATE_HEADER).append('\n');</span>
+<span class="nc" id="L33">        lines++;</span>
+
+<span class="nc bnc" id="L35" title="All 2 branches missed.">        if (myState.isPresent()) {</span>
+<span class="nc" id="L36">            boolean myHasTreasure = myState.get().hasCollectedTreasure();</span>
+<span class="nc" id="L37">            sb.append('\n');</span>
+<span class="nc" id="L38">            lines++;</span>
+
+<span class="nc bnc" id="L40" title="All 2 branches missed.">            sb.append((myHasTreasure ? CLIIcons.PLAYER_WITH_TREASURE : CLIIcons.PLAYER))</span>
+<span class="nc" id="L41">                    .append(&quot; Your Player (&quot;)</span>
+<span class="nc" id="L42">                    .append(myState.get().getPlayerID())</span>
+<span class="nc" id="L43">                    .append(&quot;):&quot;)</span>
+<span class="nc" id="L44">                    .append('\n');</span>
+<span class="nc" id="L45">            lines++;</span>
+
+<span class="nc" id="L47">            Optional&lt;MapNode&gt; myPos = myState.get().getCurrentPosition();</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">            if (myPos.isPresent()) {</span>
+<span class="nc" id="L49">                sb.append(&quot;  Position: (&quot;)</span>
+<span class="nc" id="L50">                        .append(myPos.get().getX())</span>
+<span class="nc" id="L51">                        .append(',')</span>
+<span class="nc" id="L52">                        .append(myPos.get().getY())</span>
+<span class="nc" id="L53">                        .append(&quot;)&quot;)</span>
+<span class="nc" id="L54">                        .append('\n');</span>
+<span class="nc" id="L55">            } else {</span>
+<span class="nc" id="L56">                sb.append(&quot;  Position: N/A\n&quot;);</span>
+            }
+<span class="nc" id="L58">            lines++;</span>
+
+<span class="nc bnc" id="L60" title="All 2 branches missed.">            sb.append(&quot;  Treasure collected: &quot;).append(myHasTreasure ? &quot;Yes&quot; : &quot;No&quot;).append('\n');</span>
+<span class="nc" id="L61">            lines++;</span>
+<span class="nc" id="L62">        } else {</span>
+<span class="nc" id="L63">            sb.append('\n');</span>
+<span class="nc" id="L64">            lines++;</span>
+<span class="nc" id="L65">            sb.append(CLIIcons.PLAYER).append(&quot; Your Player: Data N/A\n&quot;);</span>
+<span class="nc" id="L66">            lines++;</span>
+        }
+
+<span class="nc bnc" id="L69" title="All 2 branches missed.">        if (opponentState.isPresent()) {</span>
+<span class="nc" id="L70">            boolean opponentHasTreasure = opponentState.get().hasCollectedTreasure();</span>
+<span class="nc" id="L71">            sb.append('\n');</span>
+<span class="nc" id="L72">            lines++;</span>
+
+<span class="nc bnc" id="L74" title="All 2 branches missed.">            sb.append((opponentHasTreasure ? CLIIcons.OPPONENT_WITH_TREASURE : CLIIcons.OPPONENT))</span>
+<span class="nc" id="L75">                    .append(&quot; Opponent (&quot;)</span>
+<span class="nc" id="L76">                    .append(opponentState.get().getPlayerID())</span>
+<span class="nc" id="L77">                    .append(&quot;):&quot;)</span>
+<span class="nc" id="L78">                    .append('\n');</span>
+<span class="nc" id="L79">            lines++;</span>
+
+<span class="nc" id="L81">            Optional&lt;MapNode&gt; oppPos = opponentState.get().getCurrentPosition();</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">            if (oppPos.isPresent()) {</span>
+<span class="nc" id="L83">                sb.append(&quot;  Position: (&quot;)</span>
+<span class="nc" id="L84">                        .append(oppPos.get().getX())</span>
+<span class="nc" id="L85">                        .append(',')</span>
+<span class="nc" id="L86">                        .append(oppPos.get().getY())</span>
+<span class="nc" id="L87">                        .append(&quot;)&quot;)</span>
+<span class="nc" id="L88">                        .append('\n');</span>
+<span class="nc" id="L89">            } else {</span>
+<span class="nc" id="L90">                sb.append(&quot;  Position: Unknown\n&quot;);</span>
+            }
+<span class="nc" id="L92">            lines++;</span>
+
+<span class="nc bnc" id="L94" title="All 2 branches missed.">            sb.append(&quot;  Treasure collected: &quot;).append(opponentHasTreasure ? &quot;Yes&quot; : &quot;No&quot;).append('\n');</span>
+<span class="nc" id="L95">            lines++;</span>
+<span class="nc" id="L96">        } else {</span>
+<span class="nc" id="L97">            sb.append('\n');</span>
+<span class="nc" id="L98">            lines++;</span>
+<span class="nc" id="L99">            sb.append(CLIIcons.OPPONENT).append(&quot; Opponent: Data N/A\n&quot;);</span>
+<span class="nc" id="L100">            lines++;</span>
+        }
+
+<span class="nc" id="L103">        sb.append(CLITexts.GAME_STATE_FOOTER).append('\n');</span>
+<span class="nc" id="L104">        lines++;</span>
+
+<span class="nc" id="L106">        return new RenderedCLISection(sb.toString(), lines);</span>
+    }
+
+    private RenderedCLISection renderMap(GameState gameState) {
+<span class="nc" id="L110">        var mapOptional = gameState.getMap();</span>
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (mapOptional.isEmpty()) {</span>
+<span class="nc" id="L112">            return new RenderedCLISection(CLITexts.MAP_NOT_AVAILABLE + &quot;\n&quot;, 1);</span>
+        }
+
+<span class="nc" id="L115">        GameMap map = mapOptional.orElseThrow();</span>
+<span class="nc" id="L116">        int mapHeight = map.getMaxY();</span>
+<span class="nc" id="L117">        int mapWidth = map.getMaxX();</span>
+
+<span class="nc bnc" id="L119" title="All 4 branches missed.">        if (mapHeight &lt; 0 || mapWidth &lt; 0) {</span>
+<span class="nc" id="L120">            return new RenderedCLISection(CLITexts.MAP_DIMENSIONS_INVALID + &quot;\n&quot;, 1);</span>
+        }
+
+<span class="nc" id="L123">        var myPlayerState = gameState.getCurrentPlayerState();</span>
+<span class="nc" id="L124">        var opponentState = gameState.getEnemyPlayerState();</span>
+
+<span class="nc" id="L126">        StringBuilder sb = new StringBuilder();</span>
+<span class="nc" id="L127">        int lines = 0;</span>
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        for (int r = 0; r &lt;= mapHeight; r++) {</span>
+<span class="nc" id="L130">            StringBuilder line = new StringBuilder(&quot;|&quot;);</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            for (int c = 0; c &lt;= mapWidth; c++) {</span>
+<span class="nc" id="L132">                String cell = renderCell(r, c, map, myPlayerState, opponentState, gameState);</span>
+<span class="nc" id="L133">                line.append(cell);</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">                if (c &lt; mapWidth) {</span>
+<span class="nc" id="L135">                    line.append(' ');</span>
+                }
+            }
+<span class="nc" id="L138">            line.append('|');</span>
+<span class="nc" id="L139">            sb.append(line).append('\n');</span>
+<span class="nc" id="L140">            lines++;</span>
+        }
+
+<span class="nc" id="L143">        sb.append(MAP_FOOTER).append('\n');</span>
+<span class="nc" id="L144">        lines++;</span>
+
+<span class="nc" id="L146">        return new RenderedCLISection(sb.toString(), lines);</span>
+    }
+
+    private static String renderCell(int r, int c, GameMap gameMap, Optional&lt;PlayerState&gt; myPlayerState, Optional&lt;PlayerState&gt; opponentState, GameState fullGameState) {
+<span class="nc" id="L150">        Optional&lt;MapNode&gt; currentCellNode = SafeMapNodeLookup.tryGetNode(gameMap, c, r);</span>
+
+<span class="nc" id="L152">        var myPosition = myPlayerState.flatMap(PlayerState::getCurrentPosition);</span>
+<span class="nc" id="L153">        var opponentPosition = opponentState.flatMap(PlayerState::getCurrentPosition);</span>
+
+<span class="nc" id="L155">        boolean myHasTreasure = myPlayerState.map(PlayerState::hasCollectedTreasure).orElse(false);</span>
+<span class="nc" id="L156">        boolean opponentHasTreasure = opponentState.map(PlayerState::hasCollectedTreasure).orElse(false);</span>
+
+<span class="nc" id="L158">        return MapCellRenderer.renderCell(fullGameState, currentCellNode, myPosition, opponentPosition, myHasTreasure, opponentHasTreasure);</span>
+    }
+
+    record RenderedCLIFrame(String text, int lineCount) {
+    }
+
+    record RenderedCLISection(String text, int lineCount) {
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>

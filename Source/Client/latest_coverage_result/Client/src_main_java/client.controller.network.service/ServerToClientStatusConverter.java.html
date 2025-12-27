@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../../jacoco-resources/report.gif" type="image/gif"/><title>ServerToClientStatusConverter.java</title><link rel="stylesheet" href="../../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../../index.html" class="el_report">Client (27 Dec 2025 01:09:43)</a> &gt; <a href="../../index.html" class="el_group">Client</a> &gt; <a href="../index.html" class="el_bundle">src/main/java</a> &gt; <a href="index.source.html" class="el_package">client.controller.network.service</a> &gt; <span class="el_source">ServerToClientStatusConverter.java</span></div><h1>ServerToClientStatusConverter.java</h1><pre class="source lang-java linenums">package client.controller.network.service;
+
+import client.model.PlayerStatus;
+import messagesbase.messagesfromserver.EPlayerGameState;
+
+import java.util.Objects;
+
+/**
+ * Converts network (messagesbase) player game state to client/internal player status.
+ */
+<span class="nc" id="L11">class ServerToClientStatusConverter {</span>
+
+    public PlayerStatus convert(EPlayerGameState serverStatus) {
+<span class="nc" id="L14">        Objects.requireNonNull(serverStatus, &quot;Server status must be provided&quot;);</span>
+<span class="nc bnc" id="L15" title="All 5 branches missed.">        switch (serverStatus) {</span>
+            case MustAct:
+<span class="nc" id="L17">                return PlayerStatus.MUST_ACT;</span>
+            case MustWait:
+<span class="nc" id="L19">                return PlayerStatus.MUST_WAIT;</span>
+            case Lost:
+<span class="nc" id="L21">                return PlayerStatus.LOST;</span>
+            case Won:
+<span class="nc" id="L23">                return PlayerStatus.WON;</span>
+            default:
+<span class="nc" id="L25">                throw new IllegalArgumentException(&quot;Unknown server status: &quot; + serverStatus);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span>Client (27 Dec 2025 01:09:43)</div></body></html>
