@@ -48,9 +48,6 @@ class MapValidationInternalsViewTest {
 		// Reference extraction is stack-trace based; make sure we got a validator-ish frame.
 		assertTrue(stderr.contains("Validator") || stderr.contains("validate("),
 				"Expected validator reference (class/method) in System.err output");
-
-		System.out.println("---- Captured System.err ----");
-		System.out.println(stderr);
 	}
 
 	@Test
@@ -77,10 +74,6 @@ class MapValidationInternalsViewTest {
 		}
 
 		String stderr = stderrBuffer.toString(StandardCharsets.UTF_8);
-
-		// Print for manual review (what you asked for).
-		System.out.println("---- Captured System.err (real rule violation) ----");
-		System.out.println(stderr);
 
 		// Minimal automated checks that match the task text structure.
 		assertTrue(stderr.contains("Type:"), "Expected 'Type:' marker in System.err");
