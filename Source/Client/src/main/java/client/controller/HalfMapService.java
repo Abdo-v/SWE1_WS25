@@ -24,16 +24,36 @@ class HalfMapService {
 
     private final NetworkCenter networkCenter;
     private final GameOutput output;
+    private final MapGenerator mapGenerator;
     private final MapValidator mapValidator;
     private final MapGenerationView mapGenerationView;
     private final MapValidationInternalsView mapValidationInternalsView;
 
     public HalfMapService(NetworkCenter networkCenter, CLIHandler cliHandler, GameOutput output) {
+        this(
+                Objects.requireNonNull(networkCenter, "networkCenter is required"),
+                Objects.requireNonNull(output, "output is required"),
+                new MapGenerator(),
+                new MapValidator(),
+                new MapGenerationView(),
+                new MapValidationInternalsView()
+        );
+    }
+
+    HalfMapService(
+            NetworkCenter networkCenter,
+            GameOutput output,
+            MapGenerator mapGenerator,
+            MapValidator mapValidator,
+            MapGenerationView mapGenerationView,
+            MapValidationInternalsView mapValidationInternalsView
+    ) {
         this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
         this.output = Objects.requireNonNull(output, "output is required");
-        this.mapValidator = new MapValidator();
-        this.mapGenerationView = new MapGenerationView();
-        this.mapValidationInternalsView = new MapValidationInternalsView();
+        this.mapGenerator = Objects.requireNonNull(mapGenerator, "mapGenerator is required");
+        this.mapValidator = Objects.requireNonNull(mapValidator, "mapValidator is required");
+        this.mapGenerationView = Objects.requireNonNull(mapGenerationView, "mapGenerationView is required");
+        this.mapValidationInternalsView = Objects.requireNonNull(mapValidationInternalsView, "mapValidationInternalsView is required");
     }
 
     /**
@@ -67,8 +87,7 @@ class HalfMapService {
     }
 
     private PlayerHalfMap generateHalfMap(String playerId) {
-        MapGenerator generator = new MapGenerator();
-        return generator.generateMap(HalfMapDimensions.WIDTH, HalfMapDimensions.HEIGHT, playerId);
+        return mapGenerator.generateMap(HalfMapDimensions.WIDTH, HalfMapDimensions.HEIGHT, playerId);
     }
 
     private PlayerHalfMap generateValidHalfMap(String playerId, String gameStateId) {
