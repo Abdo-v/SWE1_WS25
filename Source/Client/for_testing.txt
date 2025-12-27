@@ -4,3 +4,7 @@
 - A good test is a test that can fail, meaning testing trivial things like setters and getters (or generally methods that can never fail) is pointless. in a well written code these "trivial to test" methodes should be used in other testable public methods/classes
 - respect access level when testing, if a component is private, its public caller should be tested with cases to cover calling all of the private ones. private components that can never be tested have likely no actual functionality.
 - 100% coverage is often neither possible nor necessary100% coverage is often neither possible nor necessary
+
+- The project's **Gradle configuration** is already set up to work seamlessly with JUnit 5 and Mockito. You can start writing unit tests immediately without needing to modify any Gradle settings.
+- **Organize by Responsibility**: Respect the Single Responsibility Principle (SRP). Structure your tests by creating multiple **packages**, **classes**, and **methods** as needed.
+- **Follow Best Practices**: Refer to the best practices for unit testing covered in the course material and the tutorials to ensure your tests are effective and maintainable.

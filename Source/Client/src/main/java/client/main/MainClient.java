@@ -11,12 +11,6 @@ import client.view.GameOutput;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
-import java.util.Objects;
-
-
-// please note that most methodes are made
-// public to allow easy testing with JUnit 5,
-// this is not a good practice in production code
 
 public class MainClient {
     // private static final Logger logger = LoggerFactory.getLogger(MainClient.class);
@@ -34,30 +28,20 @@ public class MainClient {
             
             // logger.info("Application starting...");
             
-            // Validate basic arguments with custom exception
-            validateBasicArguments(args);
-            String gameMode = args[0];
-            String serverBaseUrl = args[1];
+            StartupArguments startup = StartupArgumentsParser.parse(args);
+            String gameMode = startup.gameMode();
+            String serverBaseUrl = startup.serverBaseUrl();
             String gameId;
-            
-            // Validate game mode with custom exception
-            validateGameMode(gameMode);
-            
+
             // For ATTR mode, fetch game ID automatically; otherwise use provided game ID
-            if ("ATTR".equals(gameMode)) {
+            if (startup.autoFetchGameId()) {
                 view.showAutoFetchGameIdStart();
                 gameId = GameIdFetcher.fetchGameId(serverBaseUrl);
                 view.showAutoFetchGameIdResult(gameId);
             } else {
-                if (args.length < 3) {
-                    throw new ConfigurationException(
-                        "Game ID required for " + gameMode + " mode. Expected: <gameMode> <serverBaseUrl> <gameId>",
-                        "arguments",
-                        "count=" + args.length,
-                        new String[]{"gameMode", "serverBaseUrl", "gameId"}
-                    );
-                }
-                gameId = args[2];
+                gameId = startup.gameId().orElseThrow(() -> new IllegalStateException(
+                        "gameId must be present for mode " + gameMode
+                ));
             }
             // logger.info("Game client configuration - Mode: {}, Server: {}, GameID: {}", gameMode, serverBaseUrl, gameId);
 
@@ -137,60 +121,7 @@ public class MainClient {
         // logger.info("Application shutting down");
     }
 
-    /**
-     * Validates basic command line arguments.
-     * 
-     * @param args Command line arguments
-     * @throws ConfigurationException if arguments are insufficient or invalid
-     */
-    private static void validateBasicArguments(String[] args) throws ConfigurationException {
-        if (args.length < 2) {
-            throw new ConfigurationException(
-                "Insufficient arguments provided. Expected: <gameMode> <serverBaseUrl>",
-                "arguments",
-                "count=" + args.length,
-                new String[]{"gameMode", "serverBaseUrl", "[options...]"}
-            );
-        }
-    }
 
-
-
-    /**
-     * Validates the game mode parameter.
-     * 
-     * @param gameMode The game mode to validate
-     * @throws ConfigurationException if the game mode is invalid
-     */
-    private static void validateGameMode(String gameMode) throws ConfigurationException {
-        String normalizedMode = Objects.requireNonNullElse(gameMode, "").trim();
-        if (normalizedMode.isEmpty()) {
-            throw new ConfigurationException(
-                "Game mode is required",
-                "gameMode",
-                normalizedMode,
-                new String[]{"TR", "TRR", "ATTR"}
-            );
-        }
-        
-        String[] validModes = {"TR", "TRR", "ATTR"};
-        boolean isValid = false;
-        for (String validMode : validModes) {
-            if (validMode.equals(normalizedMode)) {
-                isValid = true;
-                break;
-            }
-        }
-        
-        if (!isValid) {
-            throw new ConfigurationException(
-                "Invalid game mode provided",
-                "gameMode",
-                normalizedMode,
-                validModes
-            );
-        }
-    }
 
     /**
      * Parses command line arguments for logging configuration and sets system properties
