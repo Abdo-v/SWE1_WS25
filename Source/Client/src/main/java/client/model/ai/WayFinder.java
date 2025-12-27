@@ -190,7 +190,7 @@ public class WayFinder implements client.observer.util.Observer{
     }
 
     public void setGameState(GameState state){
-        this.gameState = Optional.of(Objects.requireNonNull(state, "state must not be null"));
+        this.gameState = Optional.of(Objects.requireNonNull(state, "state is required"));
         // logger.debug("GameState set for WayFinder");
     }
 

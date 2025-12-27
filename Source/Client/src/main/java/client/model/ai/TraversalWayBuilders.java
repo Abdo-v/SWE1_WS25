@@ -24,8 +24,9 @@ final class TraversalWayBuilders {
         Objects.requireNonNull(halfMap, "halfMap is required");
         LinkedHashMap<MapNode, Boolean> grassTraversal = new LinkedHashMap<>();
         for (MapNode node : halfMap.getMapNodes()) {
-            if (Objects.nonNull(node) && node.getTerrain() == Terrain.GRASS) {
-                grassTraversal.put(node, false);
+            MapNode requiredNode = Objects.requireNonNull(node, "half map contains a missing node");
+            if (requiredNode.getTerrain() == Terrain.GRASS) {
+                grassTraversal.put(requiredNode, false);
             }
         }
         return grassTraversal;
@@ -35,8 +36,9 @@ final class TraversalWayBuilders {
         Objects.requireNonNull(map, "map is required");
         LinkedHashMap<MapNode, Boolean> mountains = new LinkedHashMap<>();
         for (MapNode node : map.getGameMapNodes()) {
-            if (Objects.nonNull(node) && node.getTerrain() == Terrain.MOUNTAIN) {
-                mountains.put(node, false);
+            MapNode requiredNode = Objects.requireNonNull(node, "map contains a missing node");
+            if (requiredNode.getTerrain() == Terrain.MOUNTAIN) {
+                mountains.put(requiredNode, false);
             }
         }
         return mountains;

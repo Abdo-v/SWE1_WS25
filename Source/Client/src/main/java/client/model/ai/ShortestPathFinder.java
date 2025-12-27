@@ -27,7 +27,7 @@ class ShortestPathFinder implements client.observer.util.Observer {
     * @return The Direction to move towards the target node.
      */
     public Optional<Direction> findNextValidNodeToTarget(MapNode targetMapNode){
-        Objects.requireNonNull(targetMapNode, "targetMapNode must not be null");
+        Objects.requireNonNull(targetMapNode, "targetMapNode is required");
 
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before pathfinding"));
         MapNode target = targetMapNode;
@@ -66,25 +66,24 @@ class ShortestPathFinder implements client.observer.util.Observer {
      * @param start  The starting MapNode.
      * @param target The target MapNode.
      * @return An ArrayList of MapNode objects representing the shortest path from start to target.
-     *         Returns an empty list if no path is found, or if start/target is null or invalid.
+     *         Returns an empty list if no path is found, or if start/target is missing or invalid.
      *         If start and target are the same, returns a list containing just the start node.
      */
     private ArrayList<MapNode> findShortestPath(MapNode start, MapNode target) {
-        ArrayList<MapNode> path = new ArrayList<>();
-        Optional<MapNode> startNode = Optional.ofNullable(start);
-        Optional<MapNode> targetNode = Optional.ofNullable(target);
-        Optional<GameState> stateOptional = gameState;
-        Optional<GameMap> mapOptional = gameState.flatMap(GameState::getMap);
+        Objects.requireNonNull(start, "start is required");
+        Objects.requireNonNull(target, "target is required");
 
-        if (startNode.isEmpty() || targetNode.isEmpty() || stateOptional.isEmpty() || mapOptional.isEmpty()) {
+        ArrayList<MapNode> path = new ArrayList<>();
+
+        if (gameState.isEmpty() || gameState.flatMap(GameState::getMap).isEmpty()) {
             if (DebugSettings.isDebugEnabled()) {
-                System.err.println("WayFinder.findShortestPath (Dijkstra): Start, target, gameState, or map is missing.");
+                System.err.println("WayFinder.findShortestPath (Dijkstra): gameState or map is missing.");
             }
             return path;
         }
 
-        MapNode safeStart = startNode.orElseThrow();
-        MapNode safeTarget = targetNode.orElseThrow();
+        MapNode safeStart = start;
+        MapNode safeTarget = target;
 
         if (safeStart.equalsByCoordinates(safeTarget)) {
             // logger.debug("Start and target are the same, returning single-node path");
@@ -108,11 +107,11 @@ class ShortestPathFinder implements client.observer.util.Observer {
      * Get node in a specific direction from current node
      * @param startNode The starting MapNode.
      * @param direction The Direction to move in.
-     * @return The MapNode in the specified direction, or null if out of bounds.
+      * @return The MapNode in the specified direction.
      */
     public MapNode getNodeInDirection(MapNode startNode, Direction direction) {
-        Objects.requireNonNull(startNode, "startNode must not be null");
-        Objects.requireNonNull(direction, "direction must not be null");
+          Objects.requireNonNull(startNode, "startNode is required");
+          Objects.requireNonNull(direction, "direction is required");
 
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before navigation"));
         var map = state.getMap().orElseThrow(() -> new IllegalStateException("GameMap must be set before navigation"));
@@ -124,10 +123,10 @@ class ShortestPathFinder implements client.observer.util.Observer {
     /**
      * Gets the direction to a neighbor node from the current position.
      * @param neighbor The neighbor MapNode to find the direction to.
-     * @return The Direction to the neighbor node, or null if the neighbor is not adjacent.
+      * @return The Direction to the neighbor node, if the neighbor is adjacent.
      */
     public Optional<Direction> getDirectionToNeighbor(MapNode neighbor){
-        Objects.requireNonNull(neighbor, "neighbor must not be null");
+          Objects.requireNonNull(neighbor, "neighbor is required");
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before navigation"));
         MapNode current = state.getCurrentPlayerState()
                 .flatMap(player -> player.getCurrentPosition())
@@ -145,7 +144,7 @@ class ShortestPathFinder implements client.observer.util.Observer {
      * @return Map of reachable nodes to their minimum action cost. Unreachable nodes are absent.
      */
     public Map<MapNode, Integer> computeCostMapFromCurrent(MovementCostProfile costProfile) {
-        Objects.requireNonNull(costProfile, "costProfile must not be null");
+        Objects.requireNonNull(costProfile, "costProfile is required");
 
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before cost-map computation"));
         MapNode current = state.getCurrentPlayerState()
@@ -158,7 +157,7 @@ class ShortestPathFinder implements client.observer.util.Observer {
     @Override
     public void update(GameState gameState) {
         // logger.trace("ShortestPathFinder received GameState update");
-          this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
+                    this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
         //System.out.print(StaticColors.BLUE + "S" + StaticColors.RESET);
     }
 

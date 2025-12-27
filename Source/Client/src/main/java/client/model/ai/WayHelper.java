@@ -76,7 +76,7 @@ class WayHelper implements client.observer.util.Observer {
      * @return A LinkedHashMap of grass nodes with their visited status.
      */
     private LinkedHashMap<MapNode, Boolean> getTraverseWayForOpponentHalf(MapNode currentPosition){
-        Objects.requireNonNull(currentPosition, "currentPosition must not be null");
+        Objects.requireNonNull(currentPosition, "currentPosition is required");
         return gameState
                 .flatMap(GameState::getMap)
                 .map(map -> HalfMapSnakeArranger.arrangeOpponentHalf(map, currentPosition))
@@ -91,7 +91,7 @@ class WayHelper implements client.observer.util.Observer {
      * @return A filtered LinkedHashMap containing only reachable nodes.
      */
     public LinkedHashMap<MapNode, Boolean> getFilteredTraverseWay(MapNode enemyTruePosition){
-        Objects.requireNonNull(enemyTruePosition, "enemyTruePosition must not be null");
+        Objects.requireNonNull(enemyTruePosition, "enemyTruePosition is required");
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized"));
         MapNode currentPosition = state.getCurrentPlayerState()
                 .flatMap(PlayerState::getCurrentPosition)
@@ -148,7 +148,7 @@ class WayHelper implements client.observer.util.Observer {
      * @return The arranged PlayerHalfMap containing nodes in Y-snake order.
      */
     public PlayerHalfMap getArrangedOwnHalfMap(MapNode currentPosition){
-        Objects.requireNonNull(currentPosition, "currentPosition must not be null");
+        Objects.requireNonNull(currentPosition, "currentPosition is required");
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized"));
         return state.getMap()
             .map(map -> HalfMapSnakeArranger.arrangeOwnHalf(map, currentPosition))
@@ -157,7 +157,7 @@ class WayHelper implements client.observer.util.Observer {
 
     @Override
     public void update(GameState gameState) {
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
     }
 
     // Getters for the fields
@@ -174,15 +174,15 @@ class WayHelper implements client.observer.util.Observer {
     }
 
     public void setHalfMapVisitedGrassFields(LinkedHashMap<MapNode, Boolean> halfMapVisitedGrassFields) {
-        this.halfMapVisitedGrassFields = Objects.requireNonNull(halfMapVisitedGrassFields, "halfMapVisitedGrassFields must not be null");
+        this.halfMapVisitedGrassFields = Objects.requireNonNull(halfMapVisitedGrassFields, "halfMapVisitedGrassFields is required");
     }
 
     public void setOppHalfMapVisitedGrassFields(LinkedHashMap<MapNode, Boolean> oppHalfMapVisitedGrassFields) {
-        this.oppHalfMapVisitedGrassFields = Objects.requireNonNull(oppHalfMapVisitedGrassFields, "oppHalfMapVisitedGrassFields must not be null");
+        this.oppHalfMapVisitedGrassFields = Objects.requireNonNull(oppHalfMapVisitedGrassFields, "oppHalfMapVisitedGrassFields is required");
     }
 
     public void setAllMountainFields(LinkedHashMap<MapNode, Boolean> allMountainFields) {
-        this.allMountainFields = Objects.requireNonNull(allMountainFields, "allMountainFields must not be null");
+        this.allMountainFields = Objects.requireNonNull(allMountainFields, "allMountainFields is required");
     }
 
 }

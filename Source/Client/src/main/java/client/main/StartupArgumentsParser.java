@@ -11,10 +11,10 @@ final class StartupArgumentsParser {
     }
 
     static StartupArguments parse(String[] args) throws ConfigurationException {
-        validateBasicArguments(args);
+        String[] safeArgs = validateBasicArguments(args);
 
-        String gameMode = args[0];
-        String serverBaseUrl = args[1];
+        String gameMode = safeArgs[0];
+        String serverBaseUrl = safeArgs[1];
 
         String normalizedMode = validateAndNormalizeGameMode(gameMode);
 
@@ -22,28 +22,36 @@ final class StartupArgumentsParser {
             return new StartupArguments(normalizedMode, serverBaseUrl, Optional.empty());
         }
 
-        if (args.length < 3) {
+        if (safeArgs.length < 3) {
             throw new ConfigurationException(
                     "Game ID required for " + normalizedMode + " mode. Expected: <gameMode> <serverBaseUrl> <gameId>",
                     "arguments",
-                    "count=" + args.length,
+                    "count=" + safeArgs.length,
                     new String[]{"gameMode", "serverBaseUrl", "gameId"}
             );
         }
 
-        return new StartupArguments(normalizedMode, serverBaseUrl, Optional.ofNullable(args[2]));
+        return new StartupArguments(normalizedMode, serverBaseUrl, Optional.ofNullable(safeArgs[2]));
     }
 
-    private static void validateBasicArguments(String[] args) throws ConfigurationException {
-        if (args == null || args.length < 2) {
-            int count = args == null ? 0 : args.length;
+    private static String[] validateBasicArguments(String[] args) throws ConfigurationException {
+        String[] safeArgs = Optional.ofNullable(args).orElseThrow(() -> new ConfigurationException(
+                "Arguments are missing. Expected: <gameMode> <serverBaseUrl>",
+                "arguments",
+                "missing",
+                new String[]{"gameMode", "serverBaseUrl", "[options...]"}
+        ));
+
+        if (safeArgs.length < 2) {
             throw new ConfigurationException(
                     "Insufficient arguments provided. Expected: <gameMode> <serverBaseUrl>",
                     "arguments",
-                    "count=" + count,
+                    "count=" + safeArgs.length,
                     new String[]{"gameMode", "serverBaseUrl", "[options...]"}
             );
         }
+
+        return safeArgs;
     }
 
     private static String validateAndNormalizeGameMode(String gameMode) throws ConfigurationException {

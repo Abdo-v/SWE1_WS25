@@ -24,7 +24,13 @@ final class VisionCostScorer {
     }
 
     float score(GameState gameState, MapNode currentMapNode, MapNode node, Objective objective, Map<MapNode, Integer> costMap) {
-        if (Objects.isNull(node) || Objects.isNull(gameState) || Objects.isNull(costMap) || costMap.isEmpty()) {
+        Objects.requireNonNull(gameState, "gameState is required");
+        Objects.requireNonNull(currentMapNode, "currentMapNode is required");
+        Objects.requireNonNull(node, "node is required");
+        Objects.requireNonNull(objective, "objective is required");
+        Objects.requireNonNull(costMap, "costMap is required");
+
+        if (costMap.isEmpty()) {
             return -1;
         }
 
@@ -38,8 +44,8 @@ final class VisionCostScorer {
     }
 
     private float computeBenefit(MapNode node, Objective objective) {
-        Objects.requireNonNull(node, "node must not be null");
-        Objects.requireNonNull(objective, "objective must not be null");
+        Objects.requireNonNull(node, "node is required");
+        Objects.requireNonNull(objective, "objective is required");
 
         // Benefit model (simple + stable):
         // - Unvisited Grass: 1 (reveals itself)

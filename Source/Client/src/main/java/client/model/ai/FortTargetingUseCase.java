@@ -21,15 +21,15 @@ final class FortTargetingUseCase {
     private final ShortestPathFinder shortestPathFinder;
 
     FortTargetingUseCase(FortSeeker fortSeeker, StateHolder stateHolder, ShortestPathFinder shortestPathFinder) {
-        this.fortSeeker = Objects.requireNonNull(fortSeeker, "fortSeeker must not be null");
-        this.stateHolder = Objects.requireNonNull(stateHolder, "stateHolder must not be null");
-        this.shortestPathFinder = Objects.requireNonNull(shortestPathFinder, "shortestPathFinder must not be null");
+        this.fortSeeker = Objects.requireNonNull(fortSeeker, "fortSeeker is required");
+        this.stateHolder = Objects.requireNonNull(stateHolder, "stateHolder is required");
+        this.shortestPathFinder = Objects.requireNonNull(shortestPathFinder, "shortestPathFinder is required");
     }
 
     Optional<Direction> tryGetDirection(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
-        Objects.requireNonNull(gameState, "gameState must not be null");
-        Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
-        Objects.requireNonNull(objective, "objective must not be null");
+        Objects.requireNonNull(gameState, "gameState is required");
+        Objects.requireNonNull(currentMapNode, "currentMapNode is required");
+        Objects.requireNonNull(objective, "objective is required");
 
         if (objective != Objective.FORT) {
             return Optional.empty();

@@ -26,12 +26,8 @@ final class HalfMapSnakeArranger {
     }
 
     static PlayerHalfMap arrangeOwnHalf(GameMap map, MapNode currentPosition) {
-        if (Objects.isNull(map)) {
-            throw new IllegalArgumentException("GameMap cannot be null");
-        }
-        if (Objects.isNull(currentPosition)) {
-            throw new IllegalArgumentException("Current position cannot be null");
-        }
+        Objects.requireNonNull(map, "GameMap is required");
+        Objects.requireNonNull(currentPosition, "Current position is required");
 
         OwnToOppMapOrientation orientation = map.getOrientation();
         Bounds bounds = ownHalfBounds(orientation);
@@ -56,12 +52,8 @@ final class HalfMapSnakeArranger {
     }
 
     static PlayerHalfMap arrangeOpponentHalf(GameMap map, MapNode currentPosition) {
-        if (Objects.isNull(map)) {
-            throw new IllegalArgumentException("GameMap cannot be null");
-        }
-        if (Objects.isNull(currentPosition)) {
-            throw new IllegalArgumentException("Current position cannot be null");
-        }
+        Objects.requireNonNull(map, "GameMap is required");
+        Objects.requireNonNull(currentPosition, "Current position is required");
 
         OwnToOppMapOrientation orientation = map.getOrientation();
         OpponentBounds bounds = opponentHalfBounds(orientation);

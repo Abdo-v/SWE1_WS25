@@ -23,13 +23,13 @@ class StrategyGuide implements client.observer.util.Observer {
      */
     StrategyGuide(WayHelper wayHelper) {
         this.gameState = Optional.empty();
-        this.wayHelper = Objects.requireNonNull(wayHelper);
+        this.wayHelper = Objects.requireNonNull(wayHelper, "wayHelper is required");
     }
 
     @Override
     public void update(GameState gameState) {
         // logger.trace("StrategyGuide received GameState update");
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
         wayHelper.update(gameState);
 
         Optional.of(gameState)
@@ -49,7 +49,7 @@ class StrategyGuide implements client.observer.util.Observer {
      * @return An ArrayList of MapNode objects representing grass nodes surrounding the current node.
      */
     ArrayList<MapNode> getGrassNodesFromExtendedVision(MapNode currentNode){
-        if (Objects.isNull(currentNode)) return new ArrayList<>();
+        Objects.requireNonNull(currentNode, "currentNode is required");
         
         ArrayList<MapNode> grassNodes = new ArrayList<>();
         ArrayList<MapNode> surroundingNodes = getSurroundingNodes(currentNode);
@@ -72,7 +72,7 @@ class StrategyGuide implements client.observer.util.Observer {
      * @return An ArrayList of MapNode objects representing the surrounding nodes.
      */
     private ArrayList<MapNode> getSurroundingNodes(MapNode position) {
-        if (Objects.isNull(position)) return new ArrayList<>();
+        Objects.requireNonNull(position, "position is required");
         
         // logger.trace("Getting surrounding nodes for position: {}", position.printCoordinates());
         MapNode currentMapNode = position;

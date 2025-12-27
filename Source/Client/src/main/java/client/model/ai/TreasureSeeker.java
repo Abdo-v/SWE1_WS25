@@ -19,7 +19,7 @@ class TreasureSeeker implements client.observer.util.Observer {
     private final WayHelper wayHelper;
 
     /**
-     * Constructs a TreasureSeeker with no null game state.
+     * Constructs a TreasureSeeker with no missing game state.
      */
     public TreasureSeeker(WayHelper wayHelper) {
         this.gameState = Optional.empty();
@@ -36,8 +36,9 @@ class TreasureSeeker implements client.observer.util.Observer {
     }
 
     /**
-     * returns the treasure node if found in the half map visited grass fields
-     * @return the treasure node if found, otherwise null
+     * Returns the treasure node if found in the half map visited grass fields.
+     *
+     * @return the treasure node if found, otherwise empty
      */
     public Optional<MapNode> getTreasureNodeIfFound() {
         return gameState
@@ -61,7 +62,7 @@ class TreasureSeeker implements client.observer.util.Observer {
     @Override
     public void update(GameState gameState) {
         // logger.trace("TreasureSeeker received GameState update");
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
         wayHelper.update(gameState);
 
         gameState.getTreasurePosition()

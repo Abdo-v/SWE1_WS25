@@ -48,7 +48,7 @@ class FortSeeker implements client.observer.util.Observer {
     @Override
     public void update(GameState gameState) {
         // logger.trace("FortSeeker received GameState update");
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
         wayHelper.update(gameState);
 
         gameState.getOpponentFortPosition()

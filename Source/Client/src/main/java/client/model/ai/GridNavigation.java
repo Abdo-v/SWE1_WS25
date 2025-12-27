@@ -19,9 +19,9 @@ final class GridNavigation {
     }
 
     static Optional<MapNode> getNodeInDirection(GameMap map, MapNode startNode, Direction direction) {
-        Objects.requireNonNull(map, "map must not be null");
-        Objects.requireNonNull(startNode, "startNode must not be null");
-        Objects.requireNonNull(direction, "direction must not be null");
+        Objects.requireNonNull(map, "map is required");
+        Objects.requireNonNull(startNode, "startNode is required");
+        Objects.requireNonNull(direction, "direction is required");
 
         int x = startNode.getX();
         int y = startNode.getY();
@@ -41,8 +41,8 @@ final class GridNavigation {
     }
 
     static Optional<Direction> getDirectionToNeighbor(MapNode current, MapNode neighbor) {
-        Objects.requireNonNull(current, "current must not be null");
-        Objects.requireNonNull(neighbor, "neighbor must not be null");
+        Objects.requireNonNull(current, "current is required");
+        Objects.requireNonNull(neighbor, "neighbor is required");
 
         int currentX = current.getX();
         int currentY = current.getY();

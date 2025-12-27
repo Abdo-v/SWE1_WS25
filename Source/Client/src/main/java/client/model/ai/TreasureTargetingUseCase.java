@@ -27,16 +27,16 @@ final class TreasureTargetingUseCase {
             ShortestPathFinder shortestPathFinder,
             NodeVisitTracker nodeVisitTracker
     ) {
-        this.treasureSeeker = Objects.requireNonNull(treasureSeeker, "treasureSeeker must not be null");
-        this.stateHolder = Objects.requireNonNull(stateHolder, "stateHolder must not be null");
-        this.shortestPathFinder = Objects.requireNonNull(shortestPathFinder, "shortestPathFinder must not be null");
-        this.nodeVisitTracker = Objects.requireNonNull(nodeVisitTracker, "nodeVisitTracker must not be null");
+        this.treasureSeeker = Objects.requireNonNull(treasureSeeker, "treasureSeeker is required");
+        this.stateHolder = Objects.requireNonNull(stateHolder, "stateHolder is required");
+        this.shortestPathFinder = Objects.requireNonNull(shortestPathFinder, "shortestPathFinder is required");
+        this.nodeVisitTracker = Objects.requireNonNull(nodeVisitTracker, "nodeVisitTracker is required");
     }
 
     Optional<Direction> tryGetDirection(GameState gameState, MapNode currentMapNode, Objective objective) throws AIDecisionException {
-        Objects.requireNonNull(gameState, "gameState must not be null");
-        Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
-        Objects.requireNonNull(objective, "objective must not be null");
+        Objects.requireNonNull(gameState, "gameState is required");
+        Objects.requireNonNull(currentMapNode, "currentMapNode is required");
+        Objects.requireNonNull(objective, "objective is required");
 
         if (objective != Objective.TREASURE) {
             return Optional.empty();

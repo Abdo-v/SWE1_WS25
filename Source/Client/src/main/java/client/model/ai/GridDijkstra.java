@@ -35,9 +35,10 @@ final class GridDijkstra {
     }
 
     static int shortestPathCost(GameMap map, MapNode start, MapNode target, MovementCostProfile costProfile) {
-        if (Objects.isNull(map) || Objects.isNull(start) || Objects.isNull(target) || Objects.isNull(costProfile)) {
-            return Integer.MAX_VALUE;
-        }
+        Objects.requireNonNull(map, "map is required");
+        Objects.requireNonNull(start, "start is required");
+        Objects.requireNonNull(target, "target is required");
+        Objects.requireNonNull(costProfile, "costProfile is required");
         if (start.equalsByCoordinates(target)) {
             return 0;
         }
@@ -59,7 +60,7 @@ final class GridDijkstra {
             }
             settledNodes.add(u);
 
-            relaxNeighbors(map, u, settledNodes, distances, pq, costProfile, null);
+            relaxNeighbors(map, u, settledNodes, distances, pq, costProfile, Optional.empty());
         }
 
         return Integer.MAX_VALUE;
@@ -67,9 +68,10 @@ final class GridDijkstra {
 
     static ArrayList<MapNode> shortestPath(GameMap map, MapNode start, MapNode target, MovementCostProfile costProfile) {
         ArrayList<MapNode> path = new ArrayList<>();
-        if (Objects.isNull(map) || Objects.isNull(start) || Objects.isNull(target) || Objects.isNull(costProfile)) {
-            return path;
-        }
+        Objects.requireNonNull(map, "map is required");
+        Objects.requireNonNull(start, "start is required");
+        Objects.requireNonNull(target, "target is required");
+        Objects.requireNonNull(costProfile, "costProfile is required");
 
         if (start.equalsByCoordinates(target)) {
             path.add(start);
@@ -97,7 +99,7 @@ final class GridDijkstra {
             }
             settledNodes.add(u);
 
-            relaxNeighbors(map, u, settledNodes, distances, pq, costProfile, predecessors);
+            relaxNeighbors(map, u, settledNodes, distances, pq, costProfile, Optional.of(predecessors));
         }
 
         if (pathEndNode.isEmpty()) {
@@ -126,10 +128,9 @@ final class GridDijkstra {
      * @return A map of nodes to their minimum action-cost from {@code start}. Unreachable nodes are absent.
      */
     static Map<MapNode, Integer> shortestPathCosts(GameMap map, MapNode start, MovementCostProfile costProfile) {
-        Map<MapNode, Integer> empty = new HashMap<>();
-        if (Objects.isNull(map) || Objects.isNull(start) || Objects.isNull(costProfile)) {
-            return empty;
-        }
+        Objects.requireNonNull(map, "map is required");
+        Objects.requireNonNull(start, "start is required");
+        Objects.requireNonNull(costProfile, "costProfile is required");
 
         SearchState state = createSearchState(start);
         Map<MapNode, Integer> distances = state.distances();
@@ -144,7 +145,7 @@ final class GridDijkstra {
             }
             settledNodes.add(u);
 
-            relaxNeighbors(map, u, settledNodes, distances, pq, costProfile, null);
+            relaxNeighbors(map, u, settledNodes, distances, pq, costProfile, Optional.empty());
         }
 
         return distances;
@@ -157,7 +158,7 @@ final class GridDijkstra {
             Map<MapNode, Integer> distances,
             PriorityQueue<MapNode> pq,
             MovementCostProfile costProfile,
-            Map<MapNode, MapNode> predecessors) {
+            Optional<Map<MapNode, MapNode>> predecessors) {
         for (int[] dir : DIRECTIONS) {
             int newX = current.getX() + dir[0];
             int newY = current.getY() + dir[1];
@@ -178,9 +179,7 @@ final class GridDijkstra {
 
                 if (updatedDistance < previousDistance) {
                     distances.put(neighbor, updatedDistance);
-                    if (predecessors != null) {
-                        predecessors.put(neighbor, current);
-                    }
+                    predecessors.ifPresent(p -> p.put(neighbor, current));
                     pq.remove(neighbor);
                     pq.add(neighbor);
                 }

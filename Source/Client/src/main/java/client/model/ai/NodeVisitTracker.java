@@ -19,7 +19,7 @@ final class NodeVisitTracker {
     }
 
     void markVisited(MapNode node, boolean ownHalf) {
-        Objects.requireNonNull(node, "node must not be null");
+        Objects.requireNonNull(node, "node is required");
 
         if (node.getTerrain() == Terrain.GRASS) {
             if (ownHalf) {

@@ -36,7 +36,7 @@ class StateHolder implements client.observer.util.Observer {
 
     @Override
     public void update(GameState gameState) {
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState must not be null"));
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
     }
 
     // Getters and setters
@@ -62,7 +62,7 @@ class StateHolder implements client.observer.util.Observer {
     }
 
     void setEnemyFirstTruePosition(Optional<MapNode> enemyFirstTruePosition) {
-        this.enemyFirstTruePosition = Objects.requireNonNull(enemyFirstTruePosition, "enemyFirstTruePosition must not be null");
+        this.enemyFirstTruePosition = Objects.requireNonNull(enemyFirstTruePosition, "enemyFirstTruePosition is required");
     }
 
     Optional<MapNode> getLockedExplorationTarget() {
@@ -74,8 +74,8 @@ class StateHolder implements client.observer.util.Observer {
     }
 
     void lockExplorationTarget(MapNode target, Objective objective) {
-        this.lockedExplorationTarget = Optional.of(Objects.requireNonNull(target, "target must not be null"));
-        this.lockedExplorationObjective = Optional.of(Objects.requireNonNull(objective, "objective must not be null"));
+        this.lockedExplorationTarget = Optional.of(Objects.requireNonNull(target, "target is required"));
+        this.lockedExplorationObjective = Optional.of(Objects.requireNonNull(objective, "objective is required"));
     }
 
     void clearLockedExplorationTarget() {
@@ -84,7 +84,7 @@ class StateHolder implements client.observer.util.Observer {
     }
 
     void clearLockedExplorationTargetIfObjectiveChanged(Objective objective) {
-        Objects.requireNonNull(objective, "objective must not be null");
+        Objects.requireNonNull(objective, "objective is required");
         if (lockedExplorationObjective.isPresent() && lockedExplorationObjective.orElseThrow() != objective) {
             clearLockedExplorationTarget();
         }

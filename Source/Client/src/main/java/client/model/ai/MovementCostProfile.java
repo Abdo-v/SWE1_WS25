@@ -14,7 +14,9 @@ enum MovementCostProfile {
     WAY_HELPER {
         @Override
         int cost(MapNode from, MapNode to) {
-            if (Objects.isNull(to) || to.getTerrain() == Terrain.WATER) {
+            Objects.requireNonNull(from, "from is required");
+            Objects.requireNonNull(to, "to is required");
+            if (to.getTerrain() == Terrain.WATER) {
                 return Integer.MAX_VALUE;
             }
 
@@ -42,7 +44,9 @@ enum MovementCostProfile {
     SHORTEST_PATH {
         @Override
         int cost(MapNode from, MapNode to) {
-            if (Objects.isNull(to) || to.getTerrain() == Terrain.WATER) {
+            Objects.requireNonNull(from, "from is required");
+            Objects.requireNonNull(to, "to is required");
+            if (to.getTerrain() == Terrain.WATER) {
                 return Integer.MAX_VALUE;
             }
 

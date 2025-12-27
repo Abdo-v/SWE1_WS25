@@ -51,15 +51,19 @@ final class MoveExecutionService {
         try {
             Direction nextMoveDirection;
             try {
-                nextMoveDirection = Optional.ofNullable(wayFinder.findNext()).orElseThrow(() -> new AIDecisionException(
-                        "WayFinder returned null for next move",
-                        "WayFinder",
-                        "findNext",
-                        state.getCurrentPlayerState()
-                                .flatMap(PlayerState::getCurrentPosition)
-                                .map(Object::toString)
-                                .orElse("<unknown_position>")
-                ));
+                try {
+                    nextMoveDirection = Objects.requireNonNull(wayFinder.findNext(), "WayFinder returned a missing next move");
+                } catch (NullPointerException ignored) {
+                    throw new AIDecisionException(
+                            "WayFinder returned a missing next move",
+                            "WayFinder",
+                            "findNext",
+                            state.getCurrentPlayerState()
+                                    .flatMap(PlayerState::getCurrentPosition)
+                                    .map(Object::toString)
+                                    .orElse("<unknown_position>")
+                    );
+                }
             } catch (NoValidMoveAvailableException e) {
                 Optional<Direction> suggested = e.getSuggestedFallbackDirection();
                 if (suggested.isEmpty()) {

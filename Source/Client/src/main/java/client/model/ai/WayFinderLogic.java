@@ -40,8 +40,8 @@ final class WayFinderLogic {
             FortSeeker fortSeeker,
             StrategyGuide strategyGuide
     ) {
-        this.wayHelper = Objects.requireNonNull(wayHelper, "wayHelper must not be null");
-        this.stateHolder = Objects.requireNonNull(stateHolder, "stateHolder must not be null");
+        this.wayHelper = Objects.requireNonNull(wayHelper, "wayHelper is required");
+        this.stateHolder = Objects.requireNonNull(stateHolder, "stateHolder is required");
         this.shortestPathFinder = shortestPathFinder;
         this.strategyGuide = strategyGuide;
 
@@ -55,9 +55,9 @@ final class WayFinderLogic {
     Direction moveBasedOnStrategy(GameState gameState, MapNode currentMapNode, Objective objective)
             throws AIDecisionException, NoValidMoveAvailableException {
         try {
-            Objects.requireNonNull(gameState, "gameState must not be null");
-            Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
-            Objects.requireNonNull(objective, "objective must not be null");
+            Objects.requireNonNull(gameState, "gameState is required");
+            Objects.requireNonNull(currentMapNode, "currentMapNode is required");
+            Objects.requireNonNull(objective, "objective is required");
 
             boolean nodeIsInOwnHalf = gameState.getMap()
                 .map(map -> map.isNodeInOwnHalf(currentMapNode))
@@ -155,11 +155,11 @@ final class WayFinderLogic {
     }
 
     private Optional<Direction> suggestFallbackDirection(MapNode currentMapNode) {
-        Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
+        Objects.requireNonNull(currentMapNode, "currentMapNode is required");
 
         for (Direction direction : Direction.values()) {
             try {
-                MapNode candidate = shortestPathFinder.getNodeInDirection(currentMapNode, direction);
+                    MapNode candidate = shortestPathFinder.getNodeInDirection(currentMapNode, direction);
                 if (candidate.getTerrain() != Terrain.WATER) {
                     return Optional.of(direction);
                 }
@@ -171,8 +171,8 @@ final class WayFinderLogic {
     }
 
     private Optional<Direction> tryGetDirectionToEnemyHalfCenter(GameState gameState, MapNode currentMapNode) {
-        Objects.requireNonNull(gameState, "gameState must not be null");
-        Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
+        Objects.requireNonNull(gameState, "gameState is required");
+        Objects.requireNonNull(currentMapNode, "currentMapNode is required");
 
         return gameState.getMap().flatMap(map -> {
             PlayerHalfMap enemyHalf = map.getOpponentHalfMap();
@@ -250,8 +250,8 @@ final class WayFinderLogic {
     }
 
     private boolean isExplorationTargetAlreadyVisited(MapNode target, Objective objective) {
-        Objects.requireNonNull(target, "target must not be null");
-        Objects.requireNonNull(objective, "objective must not be null");
+        Objects.requireNonNull(target, "target is required");
+        Objects.requireNonNull(objective, "objective is required");
 
         if (target.getTerrain() == Terrain.GRASS) {
             if (objective == Objective.TREASURE) {

@@ -25,9 +25,9 @@ final class ExplorationTargetUseCase {
     private final VisionCostScorer scorer;
 
     ExplorationTargetUseCase(WayHelper wayHelper, TreasureSeeker treasureSeeker, VisionCostScorer scorer) {
-        this.wayHelper = Objects.requireNonNull(wayHelper, "wayHelper must not be null");
-        this.treasureSeeker = Objects.requireNonNull(treasureSeeker, "treasureSeeker must not be null");
-        this.scorer = Objects.requireNonNull(scorer, "scorer must not be null");
+        this.wayHelper = Objects.requireNonNull(wayHelper, "wayHelper is required");
+        this.treasureSeeker = Objects.requireNonNull(treasureSeeker, "treasureSeeker is required");
+        this.scorer = Objects.requireNonNull(scorer, "scorer is required");
     }
 
     MapNode selectBestNode(
@@ -37,10 +37,10 @@ final class ExplorationTargetUseCase {
         Map<MapNode, Integer> costMap
     ) throws AIDecisionException {
         try {
-            Objects.requireNonNull(gameState, "gameState must not be null");
-            Objects.requireNonNull(currentMapNode, "currentMapNode must not be null");
-            Objects.requireNonNull(objective, "objective must not be null");
-            Objects.requireNonNull(costMap, "costMap must not be null");
+            Objects.requireNonNull(gameState, "gameState is required");
+            Objects.requireNonNull(currentMapNode, "currentMapNode is required");
+            Objects.requireNonNull(objective, "objective is required");
+            Objects.requireNonNull(costMap, "costMap is required");
 
             // IMPORTANT: TraversalWayBuilders.toUnvisitedNodes(...) returns nodes where value != true.
             ArrayList<MapNode> unvisitedHalfMapNodes = new ArrayList<>();
@@ -150,7 +150,8 @@ final class ExplorationTargetUseCase {
         Optional<MapNode> bestNode = Optional.empty();
         final float EPS = 1e-6f;
 
-        GameMap map = gameState.getMap().orElse(null);
+        Optional<GameMap> mapForDepth = objective == Objective.TREASURE ? gameState.getMap() : Optional.empty();
+        boolean computeDepth = mapForDepth.isPresent();
         for (MapNode tile : candidates) {
             if (tile.getTerrain() == Terrain.WATER) continue;
             // Evaluate only nodes that are still considered unvisited.
@@ -164,9 +165,9 @@ final class ExplorationTargetUseCase {
 
                 int cost = costMap.getOrDefault(tile, Integer.MAX_VALUE);
                 boolean isMountain = tile.getTerrain() == Terrain.MOUNTAIN;
-                int depth = (objective == Objective.TREASURE && map != null)
-                        ? distanceFromEnemyBorder(map, tile)
-                        : 0;
+                int depth = computeDepth
+                    ? mapForDepth.map(map -> distanceFromEnemyBorder(map, tile)).orElse(0)
+                    : 0;
 
                 if (ratio > bestValue[0] + EPS) {
                     bestValue[0] = ratio;
@@ -205,7 +206,7 @@ final class ExplorationTargetUseCase {
                     }
 
                     // Tie-breaker 3: Prefer deeper in own half (further away from enemy border)
-                    if (objective == Objective.TREASURE && map != null) {
+                    if (computeDepth) {
                         if (depth > bestDepth[0]) {
                             bestDepth[0] = depth;
                             bestIsMountain[0] = isMountain;
@@ -243,21 +244,21 @@ final class ExplorationTargetUseCase {
         int bestAnyCost = Integer.MAX_VALUE;
 
         for (MapNode tile : candidates) {
-            if (tile == null) continue;
-            if (tile.getTerrain() == Terrain.WATER) continue;
-            if (tile.equalsByCoordinates(currentMapNode)) continue;
+            MapNode requiredTile = Objects.requireNonNull(tile, "candidate list contains a missing node");
+            if (requiredTile.getTerrain() == Terrain.WATER) continue;
+            if (requiredTile.equalsByCoordinates(currentMapNode)) continue;
 
-            int cost = costMap.getOrDefault(tile, Integer.MAX_VALUE);
+            int cost = costMap.getOrDefault(requiredTile, Integer.MAX_VALUE);
             if (cost == Integer.MAX_VALUE || cost <= 0) continue;
 
             if (cost < bestAnyCost) {
                 bestAnyCost = cost;
-                bestAny = Optional.of(tile);
+                bestAny = Optional.of(requiredTile);
             }
 
-            if (!isAlreadyVisited(tile, objective) && cost < bestUnvisitedCost) {
+            if (!isAlreadyVisited(requiredTile, objective) && cost < bestUnvisitedCost) {
                 bestUnvisitedCost = cost;
-                bestUnvisited = Optional.of(tile);
+                bestUnvisited = Optional.of(requiredTile);
             }
         }
 
@@ -285,8 +286,8 @@ final class ExplorationTargetUseCase {
     }
 
     private int distanceFromEnemyBorder(GameMap map, MapNode node) {
-        Objects.requireNonNull(map, "map must not be null");
-        Objects.requireNonNull(node, "node must not be null");
+        Objects.requireNonNull(map, "map is required");
+        Objects.requireNonNull(node, "node is required");
 
         // The map orientation defines which half is "own".
         // We approximate "depth" as the number of steps to reach the first row/col of the enemy half.
