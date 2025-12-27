@@ -4,9 +4,7 @@ package client.controller.network.service;
 // import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -19,7 +17,6 @@ import messagesbase.UniquePlayerIdentifier;
 import messagesbase.messagesfromclient.ERequestState;
 import messagesbase.messagesfromclient.PlayerRegistration;
 import messagesbase.messagesfromserver.GameState;
-import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.Objects;
@@ -28,13 +25,13 @@ import java.util.Optional;
 public class NetworkCenter {
      // private static final Logger logger = LoggerFactory.getLogger(NetworkCenter.class);
     
-    private final WebClient webClient;
+    private final NetworkCenterHttpClient httpClient;
     private final String gameId;
     private final String serverBaseUrl;
     private final NetworkCenterConfig config;
     private Optional<UniquePlayerIdentifier> playerId = Optional.empty();
-    private final ClientToServerConverter clientToServerConverter = new ClientToServerConverter();
-    private final ServerToClientConverter serverToClientConverter = new ServerToClientConverter();
+    private final ClientToServerConverter clientToServerConverter;
+    private final ServerToClientConverter serverToClientConverter;
 
     /**
      * Constructs a NetworkCenter with the given server base URL and game ID.
@@ -50,12 +47,31 @@ public class NetworkCenter {
         this.gameId = gameId;
         this.serverBaseUrl = serverBaseUrl;
         this.config = config;
-        this.webClient = WebClient.builder()
+        WebClient webClient = WebClient.builder()
                 .baseUrl(serverBaseUrl + "/games")
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE) 
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
                 .build();
+        this.httpClient = new WebClientNetworkCenterHttpClient(webClient);
+        this.clientToServerConverter = new ClientToServerConverter();
+        this.serverToClientConverter = new ServerToClientConverter();
      // logger.debug("NetworkCenter initialized successfully for game: {}", gameId);
+    }
+
+    NetworkCenter(
+            String serverBaseUrl,
+            String gameId,
+            NetworkCenterConfig config,
+            NetworkCenterHttpClient httpClient,
+            ClientToServerConverter clientToServerConverter,
+            ServerToClientConverter serverToClientConverter
+    ) {
+        this.gameId = Objects.requireNonNull(gameId, "gameId is required");
+        this.serverBaseUrl = Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required");
+        this.config = Objects.requireNonNull(config, "config is required");
+        this.httpClient = Objects.requireNonNull(httpClient, "httpClient is required");
+        this.clientToServerConverter = Objects.requireNonNull(clientToServerConverter, "clientToServerConverter is required");
+        this.serverToClientConverter = Objects.requireNonNull(serverToClientConverter, "serverToClientConverter is required");
     }
 
     /**
@@ -72,14 +88,11 @@ public class NetworkCenter {
         
         try {
          // logger.debug("Sending player registration request to server");
-            Mono<ResponseEnvelope<UniquePlayerIdentifier>> webAccess = webClient
-                    .method(HttpMethod.POST)
-                    .uri("/" + gameId + "/players")
-                    .body(BodyInserters.fromValue(playerReg))
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<UniquePlayerIdentifier>>() {});
-            
-            ResponseEnvelope<UniquePlayerIdentifier> resultReg = webAccess.block();
+            ResponseEnvelope<UniquePlayerIdentifier> resultReg = httpClient.post(
+                "/" + gameId + "/players",
+                playerReg,
+                new ParameterizedTypeReference<ResponseEnvelope<UniquePlayerIdentifier>>() {}
+            );
             
             if (resultReg.getState() == ERequestState.Error) {
              // logger.error("Player registration failed for {} {}: {}", firstName, lastName, resultReg.getExceptionMessage());
@@ -144,14 +157,11 @@ public class NetworkCenter {
                     clientToServerConverter.convertClientHalfMap(halfMap, this.playerId.get());
             
          // logger.debug("Transmitting half map to server");
-            Mono<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>> webAccess = webClient
-                    .method(HttpMethod.POST)
-                    .uri("/" + gameId + "/halfmaps")
-                    .body(BodyInserters.fromValue(clientHalfMap))
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>>() {});
-            
-            ResponseEnvelope<messagesbase.messagesfromserver.PlayerState> response = webAccess.block();
+            ResponseEnvelope<messagesbase.messagesfromserver.PlayerState> response = httpClient.post(
+                "/" + gameId + "/halfmaps",
+                clientHalfMap,
+                new ParameterizedTypeReference<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>>() {}
+            );
             
             if (response.getState() == ERequestState.Error) {
              // logger.error("Failed to send half map for player {}: {}", playerId.getUniquePlayerID(), response.getExceptionMessage());
@@ -218,14 +228,11 @@ public class NetworkCenter {
             messagesbase.messagesfromclient.PlayerMove playerMove = messagesbase.messagesfromclient.PlayerMove.of(this.playerId.get(), networkMove);
             
          // logger.trace("Transmitting move {} to server for player {}", networkMove, playerId.getUniquePlayerID());
-            Mono<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>> webAccess = webClient
-                    .method(HttpMethod.POST)
-                    .uri("/" + gameId + "/moves")
-                    .body(BodyInserters.fromValue(playerMove))
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>>() {});
-            
-            ResponseEnvelope<messagesbase.messagesfromserver.PlayerState> response = webAccess.block();
+            ResponseEnvelope<messagesbase.messagesfromserver.PlayerState> response = httpClient.post(
+                "/" + gameId + "/moves",
+                playerMove,
+                new ParameterizedTypeReference<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>>() {}
+            );
             
             if (response.getState() == ERequestState.Error) {
              // logger.error("Failed to send move {} for player {}: {}", direction, playerId.getUniquePlayerID(), response.getExceptionMessage());
@@ -295,13 +302,10 @@ public class NetworkCenter {
         try {
             Thread.sleep(config.pollGameStateDelayMillis());
             
-            Mono<ResponseEnvelope<GameState>> webAccess = webClient
-                    .method(HttpMethod.GET)
-                    .uri("/" + gameId + "/states/" + playerId.get().getUniquePlayerID())
-                    .retrieve()
-                    .bodyToMono(new ParameterizedTypeReference<ResponseEnvelope<GameState>>() {});
-            
-            ResponseEnvelope<GameState> response = webAccess.block();
+            ResponseEnvelope<GameState> response = httpClient.get(
+                "/" + gameId + "/states/" + playerId.get().getUniquePlayerID(),
+                new ParameterizedTypeReference<ResponseEnvelope<GameState>>() {}
+            );
             
             if (response.getState() == ERequestState.Error) {
              // logger.error("Failed to poll game state for player {}: {}", playerId.getUniquePlayerID(), response.getExceptionMessage());
