@@ -12,6 +12,9 @@ import client.model.mapper.MapNode;
 import client.model.mapper.OwnToOppMapOrientation;
 import client.model.mapper.Terrain;
 
+/**
+ * Tests {@link SafeMapNodeLookup} safe lookup semantics (never throws, returns empty on invalid access).
+ */
 class SafeMapNodeLookupTest {
 
     @Test

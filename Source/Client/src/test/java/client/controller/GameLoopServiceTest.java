@@ -19,6 +19,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests {@link GameLoopService} loop behavior across player statuses and recoverable/non-recoverable error paths.
+ */
 class GameLoopServiceTest {
 
     @Test

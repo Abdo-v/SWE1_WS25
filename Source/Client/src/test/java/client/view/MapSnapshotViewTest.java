@@ -14,6 +14,9 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests {@link MapSnapshotView} snapshot output for missing/incomplete maps and full-map rendering.
+ */
 class MapSnapshotViewTest {
 
     private static final String ANSI_ESCAPE_PREFIX = "\u001B[";

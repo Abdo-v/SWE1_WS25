@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests {@link ClientStartupView} output contracts (stdout vs stderr) and ensures the CLI stays ANSI-free.
+ */
 class ClientStartupViewTest {
 
     private static final String ANSI_ESCAPE_PREFIX = "\u001B[";

@@ -11,6 +11,9 @@ import org.mockito.Mockito;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests {@link PlayerRegistrationService} registration flow and error handling around missing/invalid game state.
+ */
 class PlayerRegistrationServiceTest {
 
     @Test

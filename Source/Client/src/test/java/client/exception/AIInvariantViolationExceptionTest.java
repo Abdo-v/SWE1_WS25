@@ -4,6 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests {@link AIInvariantViolationException} fail-fast behavior and optional context fields.
+ */
 class AIInvariantViolationExceptionTest {
 
     @Test

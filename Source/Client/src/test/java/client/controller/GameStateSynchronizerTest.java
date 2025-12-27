@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests {@link GameStateSynchronizer} mapping of network/payload failures into domain exceptions.
+ */
 class GameStateSynchronizerTest {
 
     @Test

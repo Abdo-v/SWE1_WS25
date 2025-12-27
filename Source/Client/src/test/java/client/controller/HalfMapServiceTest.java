@@ -16,6 +16,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * Tests {@link HalfMapService} behavior for generating, validating, and sending half maps (including error reporting).
+ */
 class HalfMapServiceTest {
 
     @Test

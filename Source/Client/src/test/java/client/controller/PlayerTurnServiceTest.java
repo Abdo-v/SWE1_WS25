@@ -12,6 +12,9 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests {@link PlayerTurnService} status resolution for the current player within a given game state.
+ */
 class PlayerTurnServiceTest {
 
     @Test

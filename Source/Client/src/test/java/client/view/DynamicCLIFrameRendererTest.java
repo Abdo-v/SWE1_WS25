@@ -13,6 +13,9 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests {@link DynamicCLIFrameRenderer} frame rendering for key game-state situations (no map, invalid map, normal play).
+ */
 class DynamicCLIFrameRendererTest {
 
     @Test

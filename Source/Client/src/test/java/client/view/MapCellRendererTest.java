@@ -16,6 +16,9 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests {@link MapCellRenderer} priority rules (clash > player > opponent > treasure > forts > terrain).
+ */
 class MapCellRendererTest {
 
     @Test

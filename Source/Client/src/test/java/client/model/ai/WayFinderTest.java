@@ -9,6 +9,9 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests {@link WayFinder} precondition checks and error signaling when state is missing or incomplete.
+ */
 class WayFinderTest {
 
     @Test

@@ -15,6 +15,9 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Edge-case tests for {@link MapValidator} focusing on borders/corners and hard invalid placements.
+ */
 class MapValidatorEdgeCasesTest {
 
     private static Stream<Arguments> cornerCoordinates() {

@@ -17,6 +17,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Regression tests for {@link WayFinder} when the fort is on a corner (avoid out-of-bounds moves).
+ */
 class WayFinderCornerFortMoveTest {
 
     @Test

@@ -30,6 +30,9 @@ import client.view.GameOutput;
 /**
  * Unit tests for {@link MoveExecutionService}.
  */
+/**
+ * Tests {@link MoveExecutionService} integration of AI decisions with network move submission and exception mapping.
+ */
 class MoveExecutionServiceTest {
 
     @Test

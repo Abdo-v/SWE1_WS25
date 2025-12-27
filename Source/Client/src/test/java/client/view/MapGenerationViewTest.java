@@ -8,6 +8,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests {@link MapGenerationView} half-map snapshot output structure and icon semantics.
+ */
 class MapGenerationViewTest {
 
     private static final String ANSI_ESCAPE_PREFIX = "\u001B[";

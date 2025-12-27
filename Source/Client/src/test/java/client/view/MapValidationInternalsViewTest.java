@@ -15,6 +15,9 @@ import client.model.mapper.validator.MapValidator;
 import client.model.mapper.PlayerHalfMap;
 import client.model.mapper.Terrain;
 
+/**
+ * Tests {@link MapValidationInternalsView} stderr reporting for validation failures, including useful references.
+ */
 class MapValidationInternalsViewTest {
 
 	@Test

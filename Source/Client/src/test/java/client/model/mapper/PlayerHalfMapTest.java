@@ -5,6 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+/**
+ * Tests {@link PlayerHalfMap} capacity constraint (must not exceed {@link HalfMapDimensions#TOTAL_NODES}).
+ */
 class PlayerHalfMapTest {
 
     @Test

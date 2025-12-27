@@ -5,6 +5,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Tests {@link StartupArgumentsParser} validation and error reporting for CLI startup arguments.
+ */
 class StartupArgumentsParserTest {
 
     @Test

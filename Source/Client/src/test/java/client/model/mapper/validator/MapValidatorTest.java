@@ -11,6 +11,9 @@ import client.model.mapper.MapNode;
 import client.model.mapper.PlayerHalfMap;
 import client.model.mapper.Terrain;
 
+/**
+ * Tests {@link MapValidator} for common validity conditions (preconditions, duplicates, and structural constraints).
+ */
 class MapValidatorTest {
 
     @Test

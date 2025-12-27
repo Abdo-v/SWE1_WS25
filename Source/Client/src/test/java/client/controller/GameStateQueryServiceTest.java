@@ -14,6 +14,9 @@ import client.exception.GameCommunicationException;
 import messagesbase.messagesfromserver.FullMap;
 import messagesbase.messagesfromserver.GameState;
 
+/**
+ * Tests {@link GameStateQueryService} polling logic for detecting full-map availability.
+ */
 class GameStateQueryServiceTest {
 
     @Test

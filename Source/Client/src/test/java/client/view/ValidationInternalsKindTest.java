@@ -9,6 +9,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+/**
+ * Tests {@link ValidationInternalsKind} classification based on stack frames and error messages.
+ */
 class ValidationInternalsKindTest {
 
     @ParameterizedTest

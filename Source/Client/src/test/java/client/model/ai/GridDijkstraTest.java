@@ -14,6 +14,9 @@ import client.model.mapper.MapNode;
 import client.model.mapper.OwnToOppMapOrientation;
 import client.model.mapper.Terrain;
 
+/**
+ * Tests {@link GridDijkstra} path cost calculation on small deterministic grids.
+ */
 class GridDijkstraTest {
 
     @Test
