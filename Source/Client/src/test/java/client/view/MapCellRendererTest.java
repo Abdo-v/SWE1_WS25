@@ -1,8 +1,6 @@
 package client.view;
 
 import client.model.GameState;
-import client.model.PlayerState;
-import client.model.PlayerStatus;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 import client.model.mapper.OwnToOppMapOrientation;
