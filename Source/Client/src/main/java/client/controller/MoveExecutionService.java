@@ -17,6 +17,11 @@ import client.view.GameOutput;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Chooses and submits the next move.
+ *
+ * <p>Wraps AI decision failures and network submission errors into domain-specific exceptions.
+ */
 final class MoveExecutionService {
 
     private final NetworkCenter networkCenter;
@@ -29,6 +34,9 @@ final class MoveExecutionService {
         this.output = Objects.requireNonNull(output, ControllerTextConfig.REQUIRE_OUTPUT);
     }
 
+    /**
+     * Determines the next direction (including optional fallbacks) and submits the move to the server.
+     */
     void makeMove(GameState gameState, GameMode gameMode)
             throws GameCommunicationException, AIDecisionException, GameStateException {
 

@@ -15,6 +15,12 @@ import messagesbase.messagesfromserver.GameState;
 
 import java.util.Objects;
 
+/**
+ * Network façade for the server REST API.
+ *
+ * <p>Handles request/response envelopes, session state (player id), throttling between polls,
+ * and conversion between server DTOs and client model types.
+ */
 public class NetworkCenter {
 
     private final String gameId;
@@ -70,6 +76,7 @@ public class NetworkCenter {
         this.gameStateSupport = new NetworkCenterGameStateSupport();
     }
 
+    /** Registers a player for this game and stores the returned id in the session. */
     public UniquePlayerIdentifier registerPlayer(String firstName, String lastName, String uAccount) throws GameCommunicationException {
         PlayerRegistration playerReg = new PlayerRegistration(firstName, lastName, uAccount);
 
@@ -88,6 +95,7 @@ public class NetworkCenter {
         return playerId;
     }
 
+    /** Converts and submits the client's half-map for the current session player. */
     public void sendHalfMap(PlayerHalfMap halfMap) throws GameCommunicationException {
         UniquePlayerIdentifier playerId = session.requirePlayerId(serverBaseUrl, ControllerTextConfig.OP_SEND_HALF_MAP,
             "Player must be registered before sending a half map");
@@ -105,6 +113,7 @@ public class NetworkCenter {
         envelopeValidator.throwOnServerRejection(ControllerTextConfig.OP_SEND_HALF_MAP, response, serverBaseUrl);
     }
 
+    /** Submits a movement command for the current session player. */
     public void sendMove(Direction direction) throws GameCommunicationException {
         UniquePlayerIdentifier playerId = session.requirePlayerId(serverBaseUrl, ControllerTextConfig.OP_SEND_MOVE,
             "Player must be registered before sending a move");
@@ -138,6 +147,11 @@ public class NetworkCenter {
         }
     }
 
+    /**
+     * Polls the server for the latest game state.
+     *
+     * <p>Applies an artificial delay as configured to avoid tight polling loops.
+     */
     public messagesbase.messagesfromserver.GameState pollGameState() throws GameCommunicationException, MapProcessingException {
         UniquePlayerIdentifier playerId = session.requirePlayerId(serverBaseUrl, ControllerTextConfig.OP_POLL_GAME_STATE,
             ControllerTextConfig.ERROR_PLAYER_MUST_BE_REGISTERED_POLL_STATE, ControllerTextConfig.HTTP_STATUS_UNKNOWN_INT);
@@ -170,6 +184,7 @@ public class NetworkCenter {
         }
     }
 
+    /** Converts a server {@code GameState} message to the client-side model, using the current session player id. */
     public client.model.GameState convertServerGamestate(messagesbase.messagesfromserver.GameState serverGameState) {
         return serverToClientConverter.convertServerGamestate(
                 serverGameState,

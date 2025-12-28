@@ -9,6 +9,7 @@ import messagesbase.UniquePlayerIdentifier;
 
 import java.util.Objects;
 
+/** Registers a new player on the server and attaches it to the local {@link GameState}. */
 final class PlayerRegistrationService {
 
     private final NetworkCenter networkCenter;
@@ -17,6 +18,7 @@ final class PlayerRegistrationService {
         this.networkCenter = networkCenter;
     }
 
+    /** Performs the registration call and stores the returned player in the shared game state. */
     String registerPlayer(GameState gameState, String firstName, String lastName, String uAccount)
             throws GameCommunicationException, GameStateException {
 

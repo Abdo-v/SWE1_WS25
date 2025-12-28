@@ -17,6 +17,11 @@ import client.view.MapValidationInternalsView;
 
 import java.util.Objects;
 
+/**
+ * Generates a valid half-map and submits it to the server.
+ *
+ * <p>Generation is retried until validation succeeds or the retry limit is exceeded.
+ */
 class HalfMapService {
 
     private static final int MAX_HALF_MAP_GENERATION_ATTEMPTS = 25;
@@ -55,9 +60,7 @@ class HalfMapService {
         this.mapValidationInternalsView = Objects.requireNonNull(mapValidationInternalsView, ControllerTextConfig.REQUIRE_MAP_VALIDATION_INTERNALS_VIEW);
     }
 
-    /**
-     * Generates, validates, and sends the player's half map to the server.
-     */
+    /** Generates, validates, and submits a half-map for the registered player. */
     public void generateAndSendHalfMap(String playerId, String gameStateId) throws GameCommunicationException, GameStateException {
         String safeGameStateId = Objects.requireNonNull(gameStateId, ControllerTextConfig.REQUIRE_GAME_STATE_ID).isBlank() ? ControllerTextConfig.UNKNOWN : gameStateId;
         String safePlayerId = ControllerTextConfig.optionalNonBlank(playerId).orElseThrow(() -> new GameStateException(

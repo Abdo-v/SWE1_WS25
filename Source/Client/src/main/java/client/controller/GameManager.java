@@ -17,6 +17,12 @@ import java.util.Optional;
 import java.util.Objects;
 import java.time.Duration;
 
+/**
+ * Top-level controller orchestrating client startup, polling, map submission, and turn execution.
+ *
+ * <p>This class wires together network access, shared {@link client.model.GameState} updates, and
+ * view/AI observers. Most heavy lifting is delegated to dedicated services.
+ */
 public class GameManager {
     // private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     
@@ -62,13 +68,7 @@ public class GameManager {
     }
 
     /**
-     * Registers a player with the server.
-     * @param firstName Player's first name.
-     * @param lastName Player's last name.
-     * @param uAccount Player's university account.
-     * @return The player's ID if registration is successful.
-     * @throws GameCommunicationException If registration fails due to network or server issues.
-     * @throws GameStateException If the game state is invalid for player registration.
+     * Registers the player on the server and records the returned player id locally.
      */
     public String registerPlayer(String firstName, String lastName, String uAccount) throws GameCommunicationException, GameStateException {
         String registeredPlayerId = playerRegistrationService.registerPlayer(gameState, firstName, lastName, uAccount);
@@ -77,18 +77,14 @@ public class GameManager {
     }
     
     /**
-     * Generates and sends the player's half map to the server.
-     * @throws GameCommunicationException If sending half map fails due to network issues.
-     * @throws GameStateException If the game state is invalid for map generation.
+     * Generates, validates, and sends the local half-map. Retries generation if validation fails.
      */
     public void generateAndSendHalfMap() throws GameCommunicationException, GameStateException {
         halfMapService.generateAndSendHalfMap(requirePlayerId(), requireGameStateId());
     }
 
     /**
-     * Updates the game state with the latest data from the server.
-     * @throws GameCommunicationException If polling fails due to network issues.
-     * @throws MapProcessingException If the received data cannot be processed.
+     * Polls the server for the current snapshot and applies it to the shared game state.
      */
     public void updateGameState() throws GameCommunicationException, MapProcessingException {
         gameStateSynchronizer.synchronize(this.gameState);
@@ -109,36 +105,21 @@ public class GameManager {
         moveExecutionService.makeMove(gameState, gameMode);
     }
 
-    /**
-     * Gets the current player status with proper exception handling.
-     * @return The current player status.
-     * @throws GameStateException If the player is not found in the game state.
-     */
     public client.model.PlayerStatus getCurrentPlayerStatus() throws GameStateException {
         return playerTurnService.getCurrentPlayerStatus(gameState, requirePlayerId());
     }
 
     /**
-     * Starts the main game loop with comprehensive exception handling.
-     * @throws GameCommunicationException If network communication fails.
-     * @throws GameStateException If game state becomes invalid.
+     * Runs the main game loop until the game ends (won/lost/unhandled state).
      */
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
         gameLoopService.startGameLoop(gameMode);
     }
 
-    /**
-     * Gets the current game state.
-     * @return The current game state.
-     */
     public client.model.GameState getGameState() {
         return gameState;
     }
 
-    /**
-     * Sets the player ID.
-     * @param playerId The player ID to set.
-     */
     public void setPlayerId(String playerId) {
         this.playerId = ControllerTextConfig.optionalNonBlank(playerId);
     }
@@ -151,9 +132,6 @@ public class GameManager {
         visualizationService.enableDynamicVisualization();
     }
 
-    /**
-     * Disable dynamic visualization
-     */
     void disableDynamicVisualization() {
         visualizationService.disableDynamicVisualization();
     }

@@ -7,6 +7,7 @@ import client.model.GameState;
 
 import java.util.Objects;
 
+/** Polls and applies the latest server game state to a shared {@link GameState}. */
 class GameStateSynchronizer {
 
     private final NetworkCenter networkCenter;
@@ -15,9 +16,7 @@ class GameStateSynchronizer {
         this.networkCenter = Objects.requireNonNull(networkCenter, ControllerTextConfig.REQUIRE_NETWORK_CENTER);
     }
 
-    /**
-     * Polls the server, converts the game state to client format, and updates the provided shared state.
-     */
+    /** Polls the server, converts the snapshot, and applies it via {@link GameState#updateGameState(GameState)}. */
     public void synchronize(GameState sharedGameState) throws GameCommunicationException, MapProcessingException {
         try {
             GameState shared = Objects.requireNonNull(sharedGameState, ControllerTextConfig.REQUIRE_SHARED_GAME_STATE);

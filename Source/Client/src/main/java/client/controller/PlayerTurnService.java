@@ -8,8 +8,14 @@ import client.model.PlayerStatus;
 import java.util.List;
 import java.util.Objects;
 
+/** Resolves the current player's server-reported {@link PlayerStatus} from the shared game state. */
 final class PlayerTurnService {
 
+    /**
+     * Looks up the matching player entry by id and returns its status.
+     *
+     * @throws GameStateException if the player list or the player entry is missing.
+     */
     PlayerStatus getCurrentPlayerStatus(GameState gameState, String playerId) throws GameStateException {
         GameState state;
         try {

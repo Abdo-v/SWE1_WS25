@@ -15,6 +15,11 @@ import client.view.GameOutput;
 import java.time.Duration;
 import java.util.Objects;
 
+/**
+ * Drives the turn-by-turn game loop: poll state, decide/make moves, and render output.
+ *
+ * <p>In dynamic modes, enables dynamic visualization after a short startup delay.
+ */
 class GameLoopService {
 
     private static final Duration DYNAMIC_VISUALIZATION_START_DELAY = Duration.ofSeconds(1);
@@ -27,6 +32,12 @@ class GameLoopService {
         this.output = ControllerTextConfig.defaultIfMissing(output, new NoOpGameOutput());
     }
 
+    /**
+     * Runs the main loop until the server reports a terminal player status.
+     *
+     * <p>Recoverable network and map-processing failures are reported and the loop continues;
+     * non-recoverable failures are re-thrown.
+     */
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
         startGameLoop(GameMode.fromCLIValue(gameMode));
     }
