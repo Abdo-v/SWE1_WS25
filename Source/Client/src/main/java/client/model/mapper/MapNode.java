@@ -2,6 +2,12 @@ package client.model.mapper;
 
 import java.util.Objects;
 
+/**
+ * A single grid cell on the game map.
+ *
+ * <p>This is used both as a lightweight DTO received from the server and as an internal reference
+ * type in pathfinding/validation.
+ */
 public class MapNode {
     private int x;
     private int y;
@@ -9,14 +15,6 @@ public class MapNode {
     private boolean fortPresent;
     private final boolean treasurePresent;
 
-    /**
-     * Constructs a MapNode with the given parameters.
-     * @param x The X coordinate of the node.
-     * @param y The Y coordinate of the node.
-     * @param terrain The terrain type of the node.
-     * @param fortPresent Whether a fort is present on the node.
-     * @param treasurePresent Whether a treasure is present on the node.
-     */
     public MapNode(int x, int y, Terrain terrain, boolean fortPresent, boolean treasurePresent) {
         this.x = x;
         this.y = y;
@@ -25,9 +23,6 @@ public class MapNode {
         this.treasurePresent = treasurePresent;
     }
 
-    /**
-     * Default constructor for MapNode.
-     */
     public MapNode() {
         this.x = -1;
         this.y = -1;
@@ -38,82 +33,42 @@ public class MapNode {
         //new Throwable("MapNode default constructor stack trace").printStackTrace(System.err);
     }
 
-    /**
-     * Gets the X coordinate of the node.
-     * @return The X coordinate of the node.
-     */
     public int getX() {
         return x;
     }
 
-    /**
-     * Sets the X coordinate of the node.
-     * @param x The X coordinate of the node.
-     */
     public void setX(int x) {
         this.x = x;
     }
 
-    /**
-     * Gets the Y coordinate of the node.
-     * @return The Y coordinate of the node.
-     */
     public int getY() {
         return y;
     }
 
-    /**
-     * Sets the Y coordinate of the node.
-     * @param y The Y coordinate of the node.
-     */
     public void setY(int y) {
         this.y = y;
     }
 
-    /**
-     * Gets the terrain type of the node.
-     * @return The terrain type of the node.
-     */
     public Terrain getTerrain() {
         return terrain;
     }
 
-    /**
-     * Sets the terrain type of the node.
-     * @param terrain The terrain type of the node.
-     */
     public void setTerrain(Terrain terrain) {
         this.terrain = Objects.requireNonNull(terrain, "terrain");
     }
 
-    /**
-     * Checks if a fort is present on the node.
-     * @return true if a fort is present on the node, false otherwise.
-     */
     public boolean isFortPresent() {
         return fortPresent;
     }
 
-    /**
-     * Sets whether a fort is present on the node.
-     * @param fortPresent Whether a fort is present on the node.
-     */
     public void setFortPresent(boolean fortPresent) {
         this.fortPresent = fortPresent;
     }
 
-    /**
-     * Checks if a treasure is present on the node.
-     * @return true if a treasure is present on the node, false otherwise.
-     */
     public boolean isTreasurePresent() {
         return treasurePresent;
     }
 
-    /**
-     * Returns a string representation of the MapNode.
-     * @return A string representation of the MapNode.
-     */
     public String toString() {
         return "MapNode{" +
                 "x=" + x +
@@ -124,21 +79,12 @@ public class MapNode {
                 '}';
     }
 
-    /**
-     * Checks if this MapNode has the same coordinates as another MapNode.
-     * @param other The other MapNode to compare to.
-     * @return true if the coordinates are the same, false otherwise.
-     */
     public boolean equalsByCoordinates(MapNode other) {
         Objects.requireNonNull(other, "other");
         if (this == other) return true;
         return this.getX() == other.getX() && this.getY() == other.getY();
     }
 
-    /**
-     * A node is walkable if its terrain is not WATER.
-     * @return true if the node is walkable, false otherwise.
-     */
     public boolean isWalkable() {
         return this.terrain != Terrain.WATER;
     }

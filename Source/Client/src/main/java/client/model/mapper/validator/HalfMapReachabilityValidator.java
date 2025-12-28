@@ -11,6 +11,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/** Connectivity validator ensuring all walkable tiles are mutually reachable. */
 final class HalfMapReachabilityValidator {
     private HalfMapReachabilityValidator() {
     }

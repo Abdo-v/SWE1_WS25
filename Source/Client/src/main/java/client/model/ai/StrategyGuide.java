@@ -11,16 +11,17 @@ import client.model.GameState;
 import client.model.mapper.MapNode;
 import client.model.mapper.Terrain;
 
+/**
+ * Helper that derives small tactical facts from the current map.
+ *
+ * <p>Consumes {@link GameState} updates and delegates shared bookkeeping to {@link WayHelper}.
+ */
 class StrategyGuide implements client.observer.util.Observer {
     // private static final Logger logger = LoggerFactory.getLogger(StrategyGuide.class);
 
     private Optional<GameState> gameState;
     private final WayHelper wayHelper;
 
-    /**
-     * Default constructor for StrategyGuide.
-     * Initializes the gameState to empty.
-     */
     StrategyGuide(WayHelper wayHelper) {
         this.gameState = Optional.empty();
         this.wayHelper = Objects.requireNonNull(wayHelper, "wayHelper is required");
@@ -43,11 +44,6 @@ class StrategyGuide implements client.observer.util.Observer {
                 });
     }
 
-    /**
-     * Returns a list of grass nodes surrounding the given node.
-     * @param currentNode The node from which to find surrounding grass nodes.
-     * @return An ArrayList of MapNode objects representing grass nodes surrounding the current node.
-     */
     ArrayList<MapNode> getGrassNodesFromExtendedVision(MapNode currentNode){
         Objects.requireNonNull(currentNode, "currentNode is required");
         
@@ -65,12 +61,6 @@ class StrategyGuide implements client.observer.util.Observer {
         return grassNodes;
     }
     
-    /**
-     * Returns a list of surrounding nodes for the given position.
-     * This includes diagonal neighbors and skips out-of-bounds coordinates.
-     * @param position The MapNode position from which to find surrounding nodes.
-     * @return An ArrayList of MapNode objects representing the surrounding nodes.
-     */
     private ArrayList<MapNode> getSurroundingNodes(MapNode position) {
         Objects.requireNonNull(position, "position is required");
         
@@ -119,12 +109,6 @@ class StrategyGuide implements client.observer.util.Observer {
         return nodes;
     }
     
-    /**
-     * Returns a LinkedHashMap of all mountain fields in the game map.
-     * The keys are MapNode objects representing the mountain nodes,
-     * and the values are initialized to false (indicating unvisited).
-     * @return A LinkedHashMap containing all mountain fields.
-     */
     LinkedHashMap<MapNode,Boolean> getAllMountainFields(){
         return wayHelper.getAllMountainFields();
     }

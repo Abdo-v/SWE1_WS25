@@ -8,35 +8,28 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.List;
 
+/**
+ * Combined map container used by the client.
+ *
+ * <p>This class stores the full node list and exposes convenience views for "own" vs "opponent"
+ * half-maps based on {@link OwnToOppMapOrientation}.
+ */
 public class GameMap {
     private final MapEssentials map;
     private final Optional<OwnToOppMapOrientation> orientation;
 
     private static final String ORIENTATION_REQUIRED_MESSAGE = ModelTextConfig.ERROR_ORIENTATION_REQUIRED;
 
-    /**
-     * Constructs a GameMap with the given parameters and dimensions.
-     * @param orientation The orientation of the map.
-     * @param maxX The maximum X coordinate.
-     * @param maxY The maximum Y coordinate.
-     */
     public GameMap(ArrayList<MapNode> nodes, OwnToOppMapOrientation orientation, int maxX, int maxY) {
         this.orientation = Optional.of(Objects.requireNonNull(orientation, ModelTextConfig.REQUIRE_ORIENTATION));
         this.map = new MapEssentials(Objects.requireNonNull(nodes, ModelTextConfig.REQUIRE_NODES), maxX, maxY);
     }
 
-    /**
-     * Default constructor for GameMap.
-     */
     public GameMap() {
         this.map = new MapEssentials(new ArrayList<>(), 0, 0);
         this.orientation = Optional.empty();
     }
 
-    /**
-     * Gets the player's own half map.
-     * @return The player's own half map.
-     */
     public PlayerHalfMap getOwnHalfMap() {
         if (map.size() == HalfMapDimensions.TOTAL_NODES) {
             return buildHalfMap(node -> true);
@@ -45,53 +38,30 @@ public class GameMap {
         return buildHalfMap(ownHalfPredicate());
     }
 
-    /**
-     * Gets the opponent's half map.
-     * @return The opponent's half map.
-     */
     public PlayerHalfMap getOpponentHalfMap() {
         return buildHalfMap(ownHalfPredicate().negate());
     }
 
-
-    /**
-     * Gets the map orientation.
-     * @return The map orientation.
-     */
     public OwnToOppMapOrientation getOrientation() {
         return orientation.orElseThrow(() -> new IllegalStateException(ORIENTATION_REQUIRED_MESSAGE));
     }
 
-    /**
-     * Gets the maximum X coordinate.
-     * @return The maximum X coordinate.
-     */
     public int getMaxX() {
         return map.getMaxX();
     }
 
-    /**
-     * Gets the maximum Y coordinate.
-     * @return The maximum Y coordinate.
-     */
     public int getMaxY() {
         return map.getMaxY();
     }
 
-    /**
-     * Gets the total number of nodes in the map.
-     * @return The total number of nodes in the map.
-     */
     public int getContentSize() {
         return map.size();
     }
 
     /**
-     * Gets the MapNode at the specified coordinates.
-     * @param x X-coordinate.
-     * @param y Y-coordinate.
-     * @return The MapNode at the specified coordinates.
-     * @throws IllegalArgumentException if coordinates are invalid.
+     * Looks up a node by coordinates.
+     *
+     * @throws IllegalArgumentException if the coordinates are outside the known map content.
      */
     public MapNode getNode(int x, int y) {
         for (MapNode node : map.getNodes()) {
@@ -102,19 +72,11 @@ public class GameMap {
         throw new IllegalArgumentException(ModelTextConfig.invalidCoordinatesMessage(x, y));
     }
 
-    /**
-     * gets the map nodes of the game map.
-     * @return An unmodifiable view of MapNode objects representing the game map nodes.
-     */
     public List<MapNode> getGameMapNodes() {
         return map.getNodes();
     }
-    /**
-     * Checks if the given node is in the player's own half of the map.
-     * The method uses the map's orientation to determine the player's half.
-     * @param node The MapNode to check.
-     * @return True if the node is in the player's own half, false otherwise.
-     */
+
+    /** True if the node belongs to the local player's half given the current orientation. */
     public boolean isNodeInOwnHalf(MapNode node) {
         Objects.requireNonNull(node, ModelTextConfig.REQUIRE_NODE);
         return ownHalfPredicate().test(node);
@@ -144,10 +106,6 @@ public class GameMap {
             case RIGHT_LEFT -> node -> node.getX() >= HalfMapDimensions.WIDTH;
         };
     }
-    /**
-     * Returns a string representation of the GameMap.
-     * @return A string representation of the GameMap.
-     */
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("GameMap{orientation=").append(orientation)

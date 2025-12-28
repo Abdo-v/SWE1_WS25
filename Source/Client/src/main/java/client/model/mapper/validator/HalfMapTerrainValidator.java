@@ -8,7 +8,7 @@ import client.model.mapper.Terrain;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
+/** Terrain distribution + fort placement validator for a half-map. */
 final class HalfMapTerrainValidator {
     private HalfMapTerrainValidator() {
     }

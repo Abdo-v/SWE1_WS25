@@ -11,6 +11,13 @@ import java.util.Optional;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
+/**
+ * High-level AI move selector.
+ *
+ * <p>Consumes {@link GameState} updates and delegates work to specialized helpers
+ * (pathfinding, target selection, visitation tracking). The result of {@link #findNext()} is a
+ * single step direction for the current turn.
+ */
 public class WayFinder implements client.observer.util.Observer{
     // private static final Logger logger = LoggerFactory.getLogger(WayFinder.class);
 
@@ -29,10 +36,6 @@ public class WayFinder implements client.observer.util.Observer{
     private final StrategyGuide strategyGuide;
     private int movesMade = 0;
 
-    /**
-     * Constructs a WayFinder without an initial GameState.
-     * game state intitilized to empty, other fields initialized to empty collections.
-     */
     public WayFinder(){
         this.gameState = Optional.empty();
         this.wayHelper = new WayHelper();
@@ -46,11 +49,6 @@ public class WayFinder implements client.observer.util.Observer{
     }
 
     @Override
-    /**
-     * Updates the WayFinder with the current GameState.
-     * called by notifier when the GameState changes.
-     * @param state The current GameState.
-     */
     public void update(GameState state) {
         // logger.debug("WayFinder received GameState update");
         updateFromState(Objects.requireNonNull(state, STATE_REQUIRED_MESSAGE));
@@ -119,9 +117,9 @@ public class WayFinder implements client.observer.util.Observer{
 
 
     /**
-     * Determines the strategy for the next move based on the game state.
-     * @return The direction for the next move.
-     * @throws AIDecisionException If the AI cannot determine a valid move.
+     * Computes the next move direction for the current turn.
+     * @return the direction to move in this turn
+     * @throws AIDecisionException if required state is missing or an invariant is violated.
      */
     public Direction findNext() throws AIDecisionException, NoValidMoveAvailableException {
         // logger.debug("Finding next move - treasure collected: {}, moves made: {}", gameState.isPresent() ? gameState.get().isTreasureCollected() : "unknown", movesMade);
@@ -174,10 +172,7 @@ public class WayFinder implements client.observer.util.Observer{
         return new WayFinderLogic(wayHelper, stateHolder, shortestPathFinder, treasureSeeker, fortSeeker, strategyGuide);
     }
 
-    /**
-     * Adds the sub-observers to the GameState.
-     * This method is used to register the observers for the WayFinder.
-     */
+    /** Registers internal helper observers on the current {@link GameState}. */
     public void addSubObservers(){
         // logger.debug("Adding sub-observers to GameState");
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before adding sub-observers"));

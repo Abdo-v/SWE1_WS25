@@ -2,6 +2,12 @@ package client.model;
 
 import java.util.Locale;
 
+/**
+ * CLI-selectable client runtime mode.
+ *
+ * <p>The mode affects visualization (dynamic vs reduced) and whether the game id is expected
+ * as an argument or fetched automatically.
+ */
 public enum GameMode {
     TR("TR"),
     TRR("TRR"),

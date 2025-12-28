@@ -7,8 +7,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Holds state information for the AI decision-making process.
- * This class encapsulates flags and positions that track the progress of treasure and fort discovery.
+ * State container for AI decision-making across turns.
+ *
+ * <p>Tracks derived flags (treasure/fort discovered), the enemy's first trustworthy position, and an
+ * exploration target "lock" to prevent oscillation.
  */
 class StateHolder implements client.observer.util.Observer {
 
@@ -22,9 +24,6 @@ class StateHolder implements client.observer.util.Observer {
     private Optional<MapNode> lockedExplorationTarget;
     private Optional<Objective> lockedExplorationObjective;
 
-    /**
-     * Default constructor for StateHolder.
-     */
     StateHolder() {
         this.gameState = Optional.empty();
         this.treasureAlreadyFound = false;
@@ -40,8 +39,6 @@ class StateHolder implements client.observer.util.Observer {
         this.treasureAlreadyFound = gameState.getTreasurePosition().isEmpty();
         this.fortAlreadyFound = gameState.getOpponentFortPosition().isEmpty();
     }
-
-    // Getters and setters
 
     boolean isTreasureAlreadyFound() {
         return treasureAlreadyFound;

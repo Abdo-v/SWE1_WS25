@@ -1,5 +1,6 @@
 package client.model.mapper;
 
+/** Terrain types used for movement and validation. */
 public enum Terrain {
     GRASS("Grass"),
     MOUNTAIN("Mountain"),
@@ -7,11 +8,6 @@ public enum Terrain {
 
     //field name to be used in outputs and logs
     private final String name;
-
-    /**
-     * Constructs a Terrain enum with the given name.
-     * @param name The name of the terrain.
-     */
     Terrain(String name) {
         this.name = name;
     }

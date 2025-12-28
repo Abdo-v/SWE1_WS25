@@ -1,5 +1,6 @@
 package client.model.mapper;
 
+/** Dimensions mandated for a single half-map. */
 public final class HalfMapDimensions {
 
     private HalfMapDimensions() {

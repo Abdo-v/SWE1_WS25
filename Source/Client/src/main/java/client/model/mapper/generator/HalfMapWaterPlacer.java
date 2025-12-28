@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
+/** Places water tiles while maintaining border constraints and connectivity invariants. */
 final class HalfMapWaterPlacer {
     private static final int MIN_WATER_PLACEMENT_ATTEMPTS = 100;
 

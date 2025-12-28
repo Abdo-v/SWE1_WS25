@@ -35,13 +35,9 @@ public class MapGenerator {
     }
 
     /**
-     * Generates a half map with the specified width, height, and player ID.
+     * Generates a half-map and keeps retrying until it validates.
      *
-     * @param width    The width of the map.
-     * @param height   The height of the map.
-     * @param playerID The ID of the player.
-     * @return The generated PlayerHalfMap.
-     * @throws IllegalArgumentException if width or height is not positive.
+     * @throws IllegalArgumentException if width/height are non-positive.
      */
     public PlayerHalfMap generateMap(int width, int height, String playerID) {
         return generateMap(width, height, playerID, Optional.empty());

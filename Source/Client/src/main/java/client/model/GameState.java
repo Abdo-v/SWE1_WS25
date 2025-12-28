@@ -10,6 +10,18 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Client-side aggregate of the current game state.
+ *
+ * <p>This class acts as both:
+ * <ul>
+ *   <li>a mutable holder of the latest state snapshot (players, map, known positions), and</li>
+ *   <li>an event source for observers/UI that want to react to changes.</li>
+ * </ul>
+ *
+ * <p>{@link #updateGameState(GameState)} applies a new snapshot and publishes fine-grained
+ * change events (old/new) before emitting a bulk update.
+ */
 public class GameState implements client.observer.util.Observable {
 
     private final GameStateData data;
@@ -47,6 +59,11 @@ public class GameState implements client.observer.util.Observable {
     public EventSource<Changed<Optional<MapNode>>> treasurePositionChanges() { return signals.treasurePositionChanges(); }
     public EventSource<Changed<Optional<MapNode>>> opponentFortPositionChanges() { return signals.opponentFortPositionChanges(); }
 
+    /**
+     * Replaces the current snapshot with {@code gameState} and publishes change events.
+     *
+     * <p>The snapshot is treated as authoritative: all tracked fields are overwritten.
+     */
     public void updateGameState(GameState gameState) {
         GameState requiredState = Objects.requireNonNull(gameState, "game state is required");
 

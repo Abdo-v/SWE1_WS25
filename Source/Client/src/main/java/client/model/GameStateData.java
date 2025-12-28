@@ -7,6 +7,11 @@ import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Mutable backing storage for {@link GameState}.
+ *
+ * <p>Separated to keep {@link GameState} focused on domain behavior and signaling.
+ */
 final class GameStateData {
 
     private final String gameStateID;

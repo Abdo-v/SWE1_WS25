@@ -1,5 +1,6 @@
 package client.model.mapper.validator;
 
+/** Computed max bounds of a validated half-map grid. */
 final class HalfMapBounds {
     private final int maxX;
     private final int maxY;

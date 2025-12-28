@@ -11,6 +11,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Validates basic structural invariants of a half-map (size, grid completeness, unique coordinates).
+ *
+ * <p>On success, returns the computed bounds used by later validation phases.
+ */
 final class HalfMapStructureValidator {
     private HalfMapStructureValidator() {
     }

@@ -7,6 +7,7 @@ import client.model.mapper.PlayerHalfMap;
 
 import java.util.Optional;
 
+/** Checks whether two half-maps allow sufficient walkable transitions across their touching edge. */
 final class HalfMapEdgeCrossingValidator {
     private HalfMapEdgeCrossingValidator() {
     }

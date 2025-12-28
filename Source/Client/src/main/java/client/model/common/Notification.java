@@ -6,6 +6,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Collects validation or domain errors without throwing immediately.
+ *
+ * <p>Used heavily by map validation/generation to accumulate multiple rule violations and present them
+ * together to the caller.
+ */
 public class Notification {
     private final List<Error> errors = new ArrayList<>();
 
@@ -35,6 +41,7 @@ public class Notification {
         return new ArrayList<>(errors); // Return a copy
     }
 
+    /** One captured error message with an optional technical cause. */
     public static class Error {
         public final String info;
         public final Optional<Exception> cause;

@@ -6,6 +6,7 @@ import client.model.mapper.PlayerHalfMap;
 import java.util.List;
 import java.util.Objects;
 
+/** Utility for inferring width/height from a node list. */
 final class HalfMapDimensionUtil {
     private HalfMapDimensionUtil() {
     }

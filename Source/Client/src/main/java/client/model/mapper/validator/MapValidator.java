@@ -27,9 +27,6 @@ public class MapValidator {
     private final List<HalfMapValidationRule> halfMapRules;
     private final List<CrossHalfMapValidationRule> crossHalfMapRules;
 
-    /**
-     * Creates a MapValidator with the default rule set.
-     */
     public MapValidator() {
         this(
                 MapValidationRuleSets.defaultHalfMapRules(
@@ -54,17 +51,10 @@ public class MapValidator {
     }
 
     /**
-     * Validates a PlayerHalfMap according to game rules and structural requirements.
-     * Performs comprehensive validation including:
-     * - Structural integrity (presence checks, node count, coordinates)
-     * - Map dimensions (WIDTHxHEIGHT or HEIGHTxWIDTH)
-     * - Terrain distribution (minimum percentages for each terrain type)
-     * - Fort placement and count
-     * - Reachability of all walkable nodes
-     * - Edge walkability requirements
+     * Validates a single half-map.
      *
-     * @param halfMap The PlayerHalfMap to validate
-     * @return A Notification object containing any validation errors found
+     * <p>Runs a cheap/basic phase first and only executes more expensive checks (e.g. reachability)
+     * if the basic phase reports no errors.
      */
     public Notification validate(PlayerHalfMap halfMap) {
         Notification notification = new Notification();
@@ -114,17 +104,10 @@ public class MapValidator {
     }
 
     /**
-     * Validates a PlayerHalfMap and also checks edge-crossing compatibility with an existing half-map.
-     * This is intended for the client that generates the second half-map.
+     * Validates a half-map and (if valid) checks whether it is edge-compatible with an existing half-map.
      *
-      * Rule: For each edge of the new half-map, at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of edge fields must allow a successful
-      * transition (walkable on both sides).
-     *
-     * Pairings checked:
-     * - new LEFT  (x=0)      vs existing RIGHT (x=maxX)
-     * - new RIGHT (x=maxX)   vs existing LEFT  (x=0)
-     * - new TOP   (y=0)      vs existing BOTTOM(y=maxY)
-     * - new BOTTOM(y=maxY)   vs existing TOP   (y=0)
+     * <p>Used when generating the "second" half-map: at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO}
+     * of each edge must be crossable (walkable on both sides).
      */
     public Notification validate(PlayerHalfMap newHalfMap, PlayerHalfMap existingHalfMap) {
         Notification notification = validate(newHalfMap);

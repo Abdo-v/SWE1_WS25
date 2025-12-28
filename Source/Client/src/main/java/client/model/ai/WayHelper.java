@@ -11,8 +11,10 @@ import client.model.mapper.MapNode;
 import client.model.mapper.PlayerHalfMap;
 
 /**
- * Helper class for managing traversal paths and half-map arrangements.
- * This class encapsulates logic for organizing and tracking map nodes for traversal strategies.
+ * Shared helper for building traversal orders and tracking visited nodes.
+ *
+ * <p>This class provides derived views (snake-arranged half maps, traversal maps) used by
+ * treasure/fort seeking and exploration logic.
  */
 class WayHelper implements client.observer.util.Observer {
 
@@ -21,9 +23,6 @@ class WayHelper implements client.observer.util.Observer {
     private LinkedHashMap<MapNode, Boolean> oppHalfMapVisitedGrassFields;
     private LinkedHashMap<MapNode, Boolean> allMountainFields;
 
-    /**
-     * Default constructor for WayHelper.
-     */
     public WayHelper() {
         this.gameState = Optional.empty();
         this.halfMapVisitedGrassFields = new LinkedHashMap<>();
@@ -87,7 +86,7 @@ class WayHelper implements client.observer.util.Observer {
 
     /**
      * Filters the traversal way based on enemy position, keeping only nodes reachable within 8 moves.
-     * @param enemyTruePosition The enemy's true position.
+     * @param enemyTruePosition The first enemy's true position.
      * @return A filtered LinkedHashMap containing only reachable nodes.
      */
     public LinkedHashMap<MapNode, Boolean> getFilteredTraverseWay(MapNode enemyTruePosition){
@@ -140,13 +139,6 @@ class WayHelper implements client.observer.util.Observer {
         return typed;
     }
 
-    /**
-     * Returns the arranged own half map based on the current position of the player.
-     * The arrangement is done in a Y-snake traversal pattern, starting from the player's current position.
-     * 
-     * @param currentPosition The current position of the player.
-     * @return The arranged PlayerHalfMap containing nodes in Y-snake order.
-     */
     public PlayerHalfMap getArrangedOwnHalfMap(MapNode currentPosition){
         Objects.requireNonNull(currentPosition, "currentPosition is required");
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be initialized"));
@@ -160,7 +152,6 @@ class WayHelper implements client.observer.util.Observer {
         this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
     }
 
-    // Getters for the fields
     public LinkedHashMap<MapNode, Boolean> getHalfMapVisitedGrassFields() {
         return halfMapVisitedGrassFields;
     }

@@ -5,6 +5,7 @@ import client.model.mapper.Terrain;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+/** Flood-fill connectivity check used to ensure all non-water tiles remain reachable. */
 final class TerrainGridConnectivity {
     private static final int[][] CARDINAL_DIRECTIONS = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 

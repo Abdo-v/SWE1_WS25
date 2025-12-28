@@ -12,6 +12,9 @@ import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 import client.model.mapper.PlayerHalfMap;
 
+/**
+ * Tracks enemy fort discovery and provides traversal helpers for the fort phase.
+ */
 class FortSeeker implements client.observer.util.Observer {
 
     // private static final Logger logger = LoggerFactory.getLogger(FortSeeker.class);
@@ -24,11 +27,6 @@ class FortSeeker implements client.observer.util.Observer {
         this.gameState = Optional.empty();
         this.wayHelper = Objects.requireNonNull(wayHelper);
     }
-    /**
-     * Returns a LinkedHashMap of grass nodes in the opponent's half-map, initialized as unvisited.
-     * The keys are MapNode objects representing grass nodes, and the values are Booleans indicating if the node has been visited.
-     * @return A LinkedHashMap of grass nodes with their visited status.
-     */
     public LinkedHashMap<MapNode, Boolean> getTraverseWay(){
         return wayHelper.getTraverseWayForOpponentHalf();
     }

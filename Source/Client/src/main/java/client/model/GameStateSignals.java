@@ -10,6 +10,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Eventing support for {@link GameState}.
+ *
+ * <p>Maintains the observer registry and publishes both coarse ({@link GameStateEvent}) and
+ * fine-grained ({@link Changed}) streams.
+ */
 final class GameStateSignals {
 
     private final GameState source;

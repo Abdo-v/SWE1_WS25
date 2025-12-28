@@ -6,6 +6,7 @@ import client.model.mapper.MapRules;
 import client.model.mapper.PlayerHalfMap;
 
 import java.util.Optional;
+/** Validates per-edge walkable/blocked ratios. */
 
 final class HalfMapEdgeWalkabilityValidator {
     private HalfMapEdgeWalkabilityValidator() {

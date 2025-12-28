@@ -3,6 +3,7 @@ package client.model.mapper.validator;
 import client.model.common.Notification;
 import client.model.mapper.PlayerHalfMap;
 
+/** Entry point for edge-related validations (walkability ratios and cross-half compatibility). */
 final class HalfMapEdgeValidator {
     private HalfMapEdgeValidator() {
     }

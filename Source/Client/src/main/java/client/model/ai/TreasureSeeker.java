@@ -11,6 +11,9 @@ import client.model.mapper.PlayerHalfMap;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
+/**
+ * Tracks treasure discovery and provides traversal helpers for the treasure phase.
+ */
 class TreasureSeeker implements client.observer.util.Observer {
 
     // private static final Logger logger = LoggerFactory.getLogger(TreasureSeeker.class);
@@ -18,9 +21,6 @@ class TreasureSeeker implements client.observer.util.Observer {
     private boolean treasureFound = false;
     private final WayHelper wayHelper;
 
-    /**
-     * Constructs a TreasureSeeker with no missing game state.
-     */
     public TreasureSeeker(WayHelper wayHelper) {
         this.gameState = Optional.empty();
         this.wayHelper = Objects.requireNonNull(wayHelper);
@@ -48,13 +48,6 @@ class TreasureSeeker implements client.observer.util.Observer {
                 .flatMap(nodes -> nodes.stream().filter(MapNode::isTreasurePresent).findFirst());
     }
 
-    /**
-     * Returns the arranged own half map based on the current position of the player.
-     * The arrangement is done in a Y-snake traversal pattern, starting from the player's current position.
-     * 
-     * @param currentPosition The current position of the player.
-     * @return The arranged PlayerHalfMap containing nodes in Y-snake order.
-     */
     public PlayerHalfMap getArrangedOwnHalfMap(MapNode currentPosition){
         return wayHelper.getArrangedOwnHalfMap(currentPosition);
     }
