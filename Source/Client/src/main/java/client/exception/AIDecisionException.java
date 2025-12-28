@@ -91,9 +91,11 @@ public class AIDecisionException extends RuntimeException {
      * Builds a detailed error message with AI context information.
      */
     private static String buildDetailedMessage(String message, String aiComponent, String decisionContext) {
-        StringBuilder sb = new StringBuilder("AI Decision Failure: ").append(message);
-        Optional.ofNullable(aiComponent).ifPresent(component -> sb.append(" [Component: ").append(component).append("]"));
-        Optional.ofNullable(decisionContext).ifPresent(context -> sb.append(" [Context: ").append(context).append("]"));
+        StringBuilder sb = new StringBuilder(TextCnofig.PREFIX_AI_DECISION_FAILURE).append(message);
+        Optional.ofNullable(aiComponent).ifPresent(component -> sb.append(TextCnofig.LABEL_BRACKET_OPEN)
+            .append(TextCnofig.LABEL_COMPONENT).append(component).append(TextCnofig.LABEL_BRACKET_CLOSE));
+        Optional.ofNullable(decisionContext).ifPresent(context -> sb.append(TextCnofig.LABEL_BRACKET_OPEN)
+            .append(TextCnofig.LABEL_CONTEXT).append(context).append(TextCnofig.LABEL_BRACKET_CLOSE));
         return sb.toString();
     }
     
@@ -109,16 +111,18 @@ public class AIDecisionException extends RuntimeException {
      */
     public String getDebugReport() {
         StringBuilder report = new StringBuilder();
-        report.append("=== AI DECISION EXCEPTION DEBUG REPORT ===\n");
-        report.append("Message: ").append(getMessage()).append("\n");
-        report.append("AI Component: ").append(aiComponent.orElse("Unknown")).append("\n");
-        report.append("Decision Context: ").append(decisionContext.orElse("Unknown")).append("\n");
-        report.append("Has Game State Snapshot: ").append(gameStateSnapshot.isPresent() ? "Yes" : "No").append("\n");
+        report.append(TextCnofig.DEBUG_REPORT_AI_HEADER);
+        report.append(TextCnofig.DEBUG_LABEL_MESSAGE).append(getMessage()).append("\n");
+        report.append(TextCnofig.DEBUG_LABEL_AI_COMPONENT).append(aiComponent.orElse(TextCnofig.UNKNOWN_TEXT)).append("\n");
+        report.append(TextCnofig.DEBUG_LABEL_DECISION_CONTEXT).append(decisionContext.orElse(TextCnofig.UNKNOWN_TEXT)).append("\n");
+        report.append(TextCnofig.DEBUG_LABEL_HAS_GAME_STATE_SNAPSHOT)
+            .append(gameStateSnapshot.isPresent() ? TextCnofig.DEBUG_YES : TextCnofig.DEBUG_NO)
+            .append("\n");
         Optional.ofNullable(getCause()).ifPresent(cause -> report
-                .append("Underlying Cause: ").append(cause.getClass().getSimpleName())
-                .append(" - ").append(cause.getMessage()).append("\n"));
-        report.append("Stack Trace: Available via printStackTrace()").append("\n");
-        report.append("=== END DEBUG REPORT ===");
+            .append(TextCnofig.DEBUG_LABEL_UNDERLYING_CAUSE).append(cause.getClass().getSimpleName())
+            .append(TextCnofig.DEBUG_CAUSE_SEPARATOR).append(cause.getMessage()).append("\n"));
+        report.append(TextCnofig.DEBUG_LABEL_STACK_TRACE_AVAILABLE).append("\n");
+        report.append(TextCnofig.DEBUG_REPORT_END);
         return report.toString();
     }
 }

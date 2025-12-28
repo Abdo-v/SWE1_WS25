@@ -77,19 +77,22 @@ public class MapProcessingException extends Exception {
             int actualNodes,
             Optional<String> coordinateContext
     ) {
-        StringBuilder sb = new StringBuilder("Map Processing Error: ").append(message);
-        Objects.requireNonNull(mapType, "mapType is required")
+        StringBuilder sb = new StringBuilder(TextCnofig.PREFIX_MAP_PROCESSING_ERROR).append(message);
+        Objects.requireNonNull(mapType, TextCnofig.REQUIRE_MAP_TYPE_IS_REQUIRED)
             .filter(value -> !value.isBlank())
-            .ifPresent(value -> sb.append(" [Map Type: ").append(value).append("]"));
-        Objects.requireNonNull(processingStage, "processingStage is required")
+            .ifPresent(value -> sb.append(TextCnofig.LABEL_BRACKET_OPEN).append(TextCnofig.LABEL_MAP_TYPE).append(value).append(TextCnofig.LABEL_BRACKET_CLOSE));
+        Objects.requireNonNull(processingStage, TextCnofig.REQUIRE_PROCESSING_STAGE_IS_REQUIRED)
             .filter(value -> !value.isBlank())
-            .ifPresent(value -> sb.append(" [Stage: ").append(value).append("]"));
+            .ifPresent(value -> sb.append(TextCnofig.LABEL_BRACKET_OPEN).append(TextCnofig.LABEL_STAGE).append(value).append(TextCnofig.LABEL_BRACKET_CLOSE));
         if (expectedNodes > 0 && actualNodes >= 0) {
-            sb.append(" [Expected Nodes: ").append(expectedNodes).append(", Actual: ").append(actualNodes).append("]");
+            sb.append(TextCnofig.LABEL_BRACKET_OPEN)
+                    .append(TextCnofig.LABEL_EXPECTED_NODES).append(expectedNodes)
+                    .append(", ").append(TextCnofig.LABEL_ACTUAL_NODES).append(actualNodes)
+                    .append(TextCnofig.LABEL_BRACKET_CLOSE);
         }
-        Objects.requireNonNull(coordinateContext, "coordinateContext is required")
+        Objects.requireNonNull(coordinateContext, TextCnofig.REQUIRE_COORDINATE_CONTEXT_IS_REQUIRED)
             .filter(value -> !value.isBlank())
-            .ifPresent(value -> sb.append(" [Coordinates: ").append(value).append("]"));
+            .ifPresent(value -> sb.append(TextCnofig.LABEL_BRACKET_OPEN).append(TextCnofig.LABEL_COORDINATES).append(value).append(TextCnofig.LABEL_BRACKET_CLOSE));
         return sb.toString();
     }
 
@@ -128,24 +131,24 @@ public class MapProcessingException extends Exception {
      */
     public String getRecoveryMessage() {
         StringBuilder recovery = new StringBuilder();
-        recovery.append("Map processing failed: ").append(getMessage()).append("\n");
+        recovery.append(TextCnofig.MAP_RECOVERY_PREFIX).append(getMessage()).append("\n");
 
-        mapType.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append("Map Type: ").append(value).append("\n"));
-        processingStage.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append("Stage: ").append(value).append("\n"));
-        coordinateContext.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append("Coordinates: ").append(value).append("\n"));
+        mapType.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append(TextCnofig.MAP_RECOVERY_MAP_TYPE_LINE).append(value).append("\n"));
+        processingStage.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append(TextCnofig.MAP_RECOVERY_STAGE_LINE).append(value).append("\n"));
+        coordinateContext.filter(value -> !value.isBlank()).ifPresent(value -> recovery.append(TextCnofig.MAP_RECOVERY_COORDINATES_LINE).append(value).append("\n"));
         
         if (hasNodeCountInfo()) {
-            recovery.append("Nodes: expected ").append(expectedNodes)
-                   .append(", received ").append(actualNodes).append("\n");
+            recovery.append(TextCnofig.MAP_RECOVERY_NODES_PREFIX).append(expectedNodes)
+                   .append(TextCnofig.MAP_RECOVERY_NODES_SEPARATOR).append(actualNodes).append("\n");
         }
         
         if (isRecoverable()) {
-            recovery.append("Action: continuing with retry/polling (recoverable).\n");
-            recovery.append("Hint: enable debug traces via -Dclient.debug=true if you need the root cause.");
+            recovery.append(TextCnofig.MAP_RECOVERY_ACTION_RECOVERABLE);
+            recovery.append(TextCnofig.MAP_RECOVERY_HINT_DEBUG_TRACES_ROOT_CAUSE);
         } else {
-            recovery.append("Action: aborting this run (not recoverable).\n");
-            recovery.append("Hint: check protocol/business-rule compatibility and server ResponseEnvelope exceptionName/exceptionMessage.\n");
-            recovery.append("Hint: enable debug traces via -Dclient.debug=true to print stack traces.");
+            recovery.append(TextCnofig.MAP_RECOVERY_ACTION_NOT_RECOVERABLE);
+            recovery.append(TextCnofig.MAP_RECOVERY_HINT_PROTOCOL_COMPAT);
+            recovery.append(TextCnofig.MAP_RECOVERY_HINT_DEBUG_TRACES_STACK);
         }
         
         return recovery.toString();

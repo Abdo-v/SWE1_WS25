@@ -31,7 +31,7 @@ final class PlayerTurnService {
 
         throw new GameStateException(
                 "Player ID not found in game state",
-                gameState.getGameStateID(),
+                state.getGameStateID(),
                 "GET_PLAYER_STATUS",
                 "player_not_found",
                 "player_present"

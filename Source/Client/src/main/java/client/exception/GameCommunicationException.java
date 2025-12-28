@@ -115,10 +115,12 @@ public class GameCommunicationException extends Exception {
      */
     private static String buildDetailedMessage(String message, String serverUrl, String operation, int httpStatusCode) {
         StringBuilder sb = new StringBuilder(message);
-        Optional.ofNullable(operation).filter(op -> !op.isBlank()).ifPresent(op -> sb.append(" [Operation: ").append(op).append("]"));
-        Optional.ofNullable(serverUrl).filter(url -> !url.isBlank()).ifPresent(url -> sb.append(" [Server: ").append(url).append("]"));
+        Optional.ofNullable(operation).filter(op -> !op.isBlank()).ifPresent(op -> sb.append(TextCnofig.LABEL_BRACKET_OPEN)
+                .append(TextCnofig.LABEL_OPERATION).append(op).append(TextCnofig.LABEL_BRACKET_CLOSE));
+        Optional.ofNullable(serverUrl).filter(url -> !url.isBlank()).ifPresent(url -> sb.append(TextCnofig.LABEL_BRACKET_OPEN)
+                .append(TextCnofig.LABEL_SERVER).append(url).append(TextCnofig.LABEL_BRACKET_CLOSE));
         if (httpStatusCode > 0) {
-            sb.append(" [HTTP Status: ").append(httpStatusCode).append("]");
+            sb.append(TextCnofig.LABEL_BRACKET_OPEN).append(TextCnofig.LABEL_HTTP_STATUS).append(httpStatusCode).append(TextCnofig.LABEL_BRACKET_CLOSE);
         }
         return sb.toString();
     }

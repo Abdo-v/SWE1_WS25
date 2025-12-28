@@ -15,14 +15,14 @@ public class FullMapNotAvailableException extends Exception {
 
     public FullMapNotAvailableException(String gameStateId, long timeoutMillis, int attempts) {
         super(buildMessage(gameStateId, timeoutMillis, attempts));
-        this.gameStateId = Objects.requireNonNullElse(gameStateId, "unknown");
+        this.gameStateId = Objects.requireNonNullElse(gameStateId, TextCnofig.FALLBACK_UNKNOWN_ID);
         this.timeoutMillis = timeoutMillis;
         this.attempts = attempts;
     }
 
     public FullMapNotAvailableException(String gameStateId, long timeoutMillis, int attempts, Throwable cause) {
         super(buildMessage(gameStateId, timeoutMillis, attempts), cause);
-        this.gameStateId = Objects.requireNonNullElse(gameStateId, "unknown");
+        this.gameStateId = Objects.requireNonNullElse(gameStateId, TextCnofig.FALLBACK_UNKNOWN_ID);
         this.timeoutMillis = timeoutMillis;
         this.attempts = attempts;
     }
@@ -40,10 +40,10 @@ public class FullMapNotAvailableException extends Exception {
     }
 
     private static String buildMessage(String gameStateId, long timeoutMillis, int attempts) {
-        String safeId = Objects.requireNonNullElse(gameStateId, "unknown");
-        return "Full map not available within timeout" +
-                " [GameStateId: " + safeId + "]" +
-                " [TimeoutMs: " + timeoutMillis + "]" +
-                " [Attempts: " + attempts + "]";
+        String safeId = Objects.requireNonNullElse(gameStateId, TextCnofig.FALLBACK_UNKNOWN_ID);
+        return TextCnofig.FULL_MAP_TIMEOUT_PREFIX +
+            TextCnofig.LABEL_BRACKET_OPEN + TextCnofig.FULL_MAP_TIMEOUT_LABEL_GAME_STATE_ID + safeId + TextCnofig.LABEL_BRACKET_CLOSE +
+            TextCnofig.LABEL_BRACKET_OPEN + TextCnofig.FULL_MAP_TIMEOUT_LABEL_TIMEOUT_MS + timeoutMillis + TextCnofig.LABEL_BRACKET_CLOSE +
+            TextCnofig.LABEL_BRACKET_OPEN + TextCnofig.FULL_MAP_TIMEOUT_LABEL_ATTEMPTS + attempts + TextCnofig.LABEL_BRACKET_CLOSE;
     }
 }

@@ -9,6 +9,7 @@ package client.exception;
 public class GameStateException extends RuntimeException {
     
     private static final long serialVersionUID = 1L;
+    private static final String UNKNOWN = TextCnofig.UNKNOWN_TEXT;
     
     private final java.util.Optional<String> gameStateId;
     private final java.util.Optional<String> operation;
@@ -139,19 +140,19 @@ public class GameStateException extends RuntimeException {
             java.util.Optional<String> currentState,
             java.util.Optional<String> expectedState
     ) {
-        StringBuilder sb = new StringBuilder("Game State Error: ").append(message);
-        java.util.Objects.requireNonNull(gameStateId, "gameStateId is required")
+        StringBuilder sb = new StringBuilder(TextCnofig.PREFIX_GAME_STATE_ERROR).append(message);
+        java.util.Objects.requireNonNull(gameStateId, TextCnofig.REQUIRE_GAME_STATE_ID_IS_REQUIRED)
             .filter(id -> !id.isBlank())
-            .ifPresent(id -> sb.append(" [Game: ").append(id).append("]"));
-        java.util.Objects.requireNonNull(operation, "operation is required")
+            .ifPresent(id -> sb.append(TextCnofig.LABEL_BRACKET_OPEN).append(TextCnofig.LABEL_GAME).append(id).append(TextCnofig.LABEL_BRACKET_CLOSE));
+        java.util.Objects.requireNonNull(operation, TextCnofig.REQUIRE_OPERATION_IS_REQUIRED)
             .filter(op -> !op.isBlank())
-            .ifPresent(op -> sb.append(" [Operation: ").append(op).append("]"));
-        java.util.Objects.requireNonNull(currentState, "currentState is required")
+            .ifPresent(op -> sb.append(TextCnofig.LABEL_BRACKET_OPEN).append(TextCnofig.LABEL_OPERATION).append(op).append(TextCnofig.LABEL_BRACKET_CLOSE));
+        java.util.Objects.requireNonNull(currentState, TextCnofig.REQUIRE_CURRENT_STATE_IS_REQUIRED)
             .filter(st -> !st.isBlank())
-            .ifPresent(st -> sb.append(" [Current State: ").append(st).append("]"));
-        java.util.Objects.requireNonNull(expectedState, "expectedState is required")
+            .ifPresent(st -> sb.append(TextCnofig.LABEL_BRACKET_OPEN).append("Current State: ").append(st).append(TextCnofig.LABEL_BRACKET_CLOSE));
+        java.util.Objects.requireNonNull(expectedState, TextCnofig.REQUIRE_EXPECTED_STATE_IS_REQUIRED)
             .filter(st -> !st.isBlank())
-            .ifPresent(st -> sb.append(" [Expected State: ").append(st).append("]"));
+            .ifPresent(st -> sb.append(TextCnofig.LABEL_BRACKET_OPEN).append("Expected State: ").append(st).append(TextCnofig.LABEL_BRACKET_CLOSE));
         return sb.toString();
     }
     
@@ -177,20 +178,20 @@ public class GameStateException extends RuntimeException {
      */
     public String getDebugReport() {
         StringBuilder report = new StringBuilder();
-        report.append("=== GAME STATE EXCEPTION DEBUG REPORT ===\n");
-        report.append("Message: ").append(getMessage()).append("\n");
-        report.append("Game State ID: ").append(gameStateId.orElse("Unknown")).append("\n");
-        report.append("Failed Operation: ").append(operation.orElse("Unknown")).append("\n");
-        report.append("Current State: ").append(currentState.orElse("Unknown")).append("\n");
-        report.append("Expected State: ").append(expectedState.orElse("Not specified")).append("\n");
+        report.append(TextCnofig.DEBUG_REPORT_GAME_STATE_HEADER);
+        report.append(TextCnofig.DEBUG_LABEL_MESSAGE).append(getMessage()).append("\n");
+        report.append(TextCnofig.DEBUG_LABEL_GAME_STATE_ID).append(gameStateId.orElse(UNKNOWN)).append("\n");
+        report.append(TextCnofig.DEBUG_LABEL_FAILED_OPERATION).append(operation.orElse(UNKNOWN)).append("\n");
+        report.append(TextCnofig.DEBUG_LABEL_CURRENT_STATE).append(currentState.orElse(UNKNOWN)).append("\n");
+        report.append(TextCnofig.DEBUG_LABEL_EXPECTED_STATE).append(expectedState.orElse(TextCnofig.NOT_SPECIFIED_TEXT)).append("\n");
         
         java.util.Optional.ofNullable(getCause()).ifPresent(cause -> report
-            .append("Underlying Cause: ").append(cause.getClass().getSimpleName())
-            .append(" - ").append(cause.getMessage()).append("\n"));
+            .append(TextCnofig.DEBUG_LABEL_UNDERLYING_CAUSE).append(cause.getClass().getSimpleName())
+            .append(TextCnofig.DEBUG_CAUSE_SEPARATOR).append(cause.getMessage()).append("\n"));
         
-        report.append("Timestamp: ").append(java.time.LocalDateTime.now()).append("\n");
-        report.append("Stack Trace: Available via printStackTrace()").append("\n");
-        report.append("=== END DEBUG REPORT ===");
+        report.append(TextCnofig.DEBUG_LABEL_TIMESTAMP).append(java.time.LocalDateTime.now()).append("\n");
+        report.append(TextCnofig.DEBUG_LABEL_STACK_TRACE_AVAILABLE).append("\n");
+        report.append(TextCnofig.DEBUG_REPORT_END);
         return report.toString();
     }
     
@@ -201,16 +202,16 @@ public class GameStateException extends RuntimeException {
      */
     public String getUserMessage() {
         StringBuilder userMsg = new StringBuilder();
-        userMsg.append("🎮 Game State Error: ").append(getMessage()).append("\n");
+        userMsg.append(TextCnofig.USER_GAME_STATE_PREFIX).append(getMessage()).append("\n");
 
-        operation.filter(op -> !op.isBlank()).ifPresent(op -> userMsg.append("📋 During operation: ").append(op).append("\n"));
+        operation.filter(op -> !op.isBlank()).ifPresent(op -> userMsg.append(TextCnofig.USER_DURING_OPERATION_PREFIX).append(op).append("\n"));
         
         if (hasExpectedState()) {
-            userMsg.append("⚠️  Expected state: ").append(expectedState.orElse(""))
-                   .append(", but found: ").append(currentState.orElse("unknown")).append("\n");
+             userMsg.append(TextCnofig.USER_EXPECTED_STATE_PREFIX).append(expectedState.orElse(""))
+                 .append(TextCnofig.USER_EXPECTED_STATE_SEPARATOR).append(currentState.orElse(TextCnofig.UNKNOWN_LOWER_TEXT)).append("\n");
         }
         
-        userMsg.append("💡 This indicates an internal error. Please try restarting the game.");
+         userMsg.append(TextCnofig.USER_INTERNAL_ERROR_HINT);
         
         return userMsg.toString();
     }

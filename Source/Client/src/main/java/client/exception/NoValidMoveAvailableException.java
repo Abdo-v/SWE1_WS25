@@ -23,10 +23,13 @@ public class NoValidMoveAvailableException extends Exception {
             String decisionContext,
             Optional<Direction> suggestedFallbackDirection
     ) {
-        super(Objects.requireNonNull(message, "message is required"));
+        super(Objects.requireNonNull(message, TextCnofig.REQUIRE_MESSAGE_IS_REQUIRED));
         this.aiComponent = Optional.ofNullable(aiComponent);
         this.decisionContext = Optional.ofNullable(decisionContext);
-        this.suggestedFallbackDirection = Objects.requireNonNull(suggestedFallbackDirection, "suggestedFallbackDirection is required");
+        this.suggestedFallbackDirection = Objects.requireNonNull(
+                suggestedFallbackDirection,
+                TextCnofig.REQUIRE_SUGGESTED_FALLBACK_DIRECTION_IS_REQUIRED
+        );
     }
 
     public Optional<String> getAiComponent() {
