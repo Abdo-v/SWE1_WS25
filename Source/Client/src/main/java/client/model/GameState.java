@@ -24,7 +24,6 @@ public class GameState implements client.observer.util.Observable {
     private final GameStateObservers observerSupport;
     private final GameStateQueries queries;
 
-    // Modern, generic, lambda-friendly event streams (composition).
     private final EventStream<GameStateEvent> events = new EventStream<>();
     private final EventStream<Changed<Optional<GameMap>>> mapChanges = new EventStream<>();
     private final EventStream<Changed<List<PlayerState>>> playerListChanges = new EventStream<>();

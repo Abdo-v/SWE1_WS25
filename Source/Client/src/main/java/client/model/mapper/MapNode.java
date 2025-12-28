@@ -143,10 +143,6 @@ public class MapNode {
         return this.terrain != Terrain.WATER;
     }
 
-    /**
-     * Checks if this MapNode has the same coordinates as another MapNode.
-     * @return true if the coordinates are the same, false otherwise.
-     */
     public String printCoordinates() {
         return "Coordinates: (" + x + ", " + y + ")";
     }

@@ -6,9 +6,9 @@ import java.util.Optional;
 record StartupArguments(String gameMode, String serverBaseUrl, Optional<String> gameId) {
 
     StartupArguments {
-        Objects.requireNonNull(gameMode, "gameMode is required");
-        Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required");
-        Objects.requireNonNull(gameId, "gameId is required");
+        Objects.requireNonNull(gameMode, MainTextConfig.REQUIRE_GAME_MODE);
+        Objects.requireNonNull(serverBaseUrl, MainTextConfig.REQUIRE_SERVER_BASE_URL);
+        Objects.requireNonNull(gameId, MainTextConfig.REQUIRE_GAME_ID);
     }
 
     boolean autoFetchGameId() {

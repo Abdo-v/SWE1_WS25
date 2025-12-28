@@ -6,9 +6,9 @@ import java.util.Optional;
 
 final class StartupArgumentsParser {
 
-    private static final String GAME_MODE = ClientDefaults.GAME_MODE_TEXT;
-    private static final String SERVER_BASE_URL = ClientDefaults.SERVER_BASE_URL_TEXT;
-    private static final String GAME_ID = ClientDefaults.GAME_ID_TEXT;
+    private static final String GAME_MODE = MainTextConfig.ARG_GAME_MODE;
+    private static final String SERVER_BASE_URL = MainTextConfig.ARG_SERVER_BASE_URL;
+    private static final String GAME_ID = MainTextConfig.ARG_GAME_ID;
 
     private StartupArgumentsParser() {
     }
@@ -27,30 +27,36 @@ final class StartupArgumentsParser {
 
         if (safeArgs.length < 3) {
             throw new ConfigurationException(
-                    "Game ID required for " + normalizedMode + " mode. Expected: <gameMode> <serverBaseUrl> <gameId>",
-                    "arguments",
-                    "count=" + safeArgs.length,
+                    MainTextConfig.ERROR_GAME_ID_REQUIRED_PREFIX + normalizedMode + MainTextConfig.ERROR_GAME_ID_REQUIRED_SUFFIX,
+                    MainTextConfig.FIELD_ARGUMENTS,
+                    MainTextConfig.DETAIL_COUNT_PREFIX + safeArgs.length,
                     new String[]{GAME_MODE, SERVER_BASE_URL, GAME_ID}
             );
         }
 
-        return new StartupArguments(normalizedMode, serverBaseUrl, Optional.ofNullable(safeArgs[2]));
+        String gameId = requireArg(safeArgs, 2, GAME_ID);
+        return new StartupArguments(normalizedMode, serverBaseUrl, Optional.of(gameId));
     }
 
     private static String[] validateBasicArguments(String[] args) throws ConfigurationException {
-        String[] safeArgs = Optional.ofNullable(args).orElseThrow(() -> new ConfigurationException(
-                "Arguments are missing. Expected: <gameMode> <serverBaseUrl>",
-                "arguments",
-                "missing",
-                new String[]{GAME_MODE, SERVER_BASE_URL, "[options...]"}
-        ));
+        String[] safeArgs;
+        try {
+            safeArgs = Objects.requireNonNull(args, MainTextConfig.ERROR_ARGS_MISSING_EXPECTED_MODE_URL);
+        } catch (NullPointerException e) {
+            throw new ConfigurationException(
+                    MainTextConfig.ERROR_ARGS_MISSING_EXPECTED_MODE_URL,
+                    MainTextConfig.FIELD_ARGUMENTS,
+                    MainTextConfig.DETAIL_MISSING,
+                    new String[]{GAME_MODE, SERVER_BASE_URL, MainTextConfig.ARG_OPTIONS}
+            );
+        }
 
         if (safeArgs.length < 2) {
             throw new ConfigurationException(
-                    "Insufficient arguments provided. Expected: <gameMode> <serverBaseUrl>",
-                    "arguments",
-                    "count=" + safeArgs.length,
-                    new String[]{GAME_MODE, SERVER_BASE_URL, "[options...]"}
+                    MainTextConfig.ERROR_ARGS_INSUFFICIENT_EXPECTED_MODE_URL,
+                    MainTextConfig.FIELD_ARGUMENTS,
+                    MainTextConfig.DETAIL_COUNT_PREFIX + safeArgs.length,
+                    new String[]{GAME_MODE, SERVER_BASE_URL, MainTextConfig.ARG_OPTIONS}
             );
         }
 
@@ -58,28 +64,57 @@ final class StartupArgumentsParser {
     }
 
     private static String validateAndNormalizeGameMode(String gameMode) throws ConfigurationException {
-        String normalizedMode = Objects.requireNonNullElse(gameMode, "").trim();
+        String normalizedMode;
+        try {
+            normalizedMode = Objects.requireNonNull(gameMode, MainTextConfig.ERROR_GAME_MODE_REQUIRED).trim();
+        } catch (NullPointerException e) {
+            normalizedMode = "";
+        }
         if (normalizedMode.isEmpty()) {
             throw new ConfigurationException(
-                    "Game mode is required",
+                    MainTextConfig.ERROR_GAME_MODE_REQUIRED,
                     GAME_MODE,
                     normalizedMode,
-                    new String[]{"TR", "TRR", "ATTR"}
+                    MainTextConfig.VALID_GAME_MODES.toArray(String[]::new)
             );
         }
 
-        String[] validModes = {"TR", "TRR", "ATTR"};
-        for (String validMode : validModes) {
+        for (String validMode : MainTextConfig.VALID_GAME_MODES) {
             if (validMode.equals(normalizedMode)) {
                 return normalizedMode;
             }
         }
 
         throw new ConfigurationException(
-                "Invalid game mode provided",
+                MainTextConfig.ERROR_GAME_MODE_INVALID,
                 GAME_MODE,
                 normalizedMode,
-                validModes
+                MainTextConfig.VALID_GAME_MODES.toArray(String[]::new)
         );
+    }
+
+    private static String requireArg(String[] args, int index, String argName) throws ConfigurationException {
+        String requiredMessage = MainTextConfig.requiredArgumentMessage(argName);
+        String value;
+        try {
+            value = Objects.requireNonNull(args[index], requiredMessage).trim();
+        } catch (NullPointerException e) {
+            throw new ConfigurationException(
+                    requiredMessage,
+                    argName,
+                    MainTextConfig.DETAIL_MISSING,
+                    new String[]{argName}
+            );
+        }
+
+        if (value.isEmpty()) {
+            throw new ConfigurationException(
+                    requiredMessage,
+                    argName,
+                    MainTextConfig.DETAIL_MISSING,
+                    new String[]{argName}
+            );
+        }
+        return value;
     }
 }

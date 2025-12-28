@@ -8,6 +8,7 @@ import client.exception.GameCommunicationException;
 import client.view.ClientStartupView;
 import client.view.GameManagerView;
 import client.view.GameOutput;
+import java.time.Duration;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ public class MainClient {
                 view.showAutoFetchGameIdResult(gameId);
             } else {
                 gameId = startup.gameId().orElseThrow(() -> new IllegalStateException(
-                        "gameId must be present for mode " + gameMode
+                        MainTextConfig.ERROR_GAME_ID_MUST_BE_PRESENT_PREFIX + gameMode
                 ));
             }
             // logger.info("Game client configuration - Mode: {}, Server: {}, GameID: {}", gameMode, serverBaseUrl, gameId);
@@ -73,10 +74,7 @@ public class MainClient {
                 // logger.trace("Player status is MUST_WAIT, continuing to poll...");
                 gameManager.updateGameState();
 
-                try {
-                    Thread.sleep(PollingDefaults.MIN_POLL_INTERVAL.toMillis());
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                if (!sleepFor(PollingDefaults.MIN_POLL_INTERVAL)) {
                     break;
                 }
             }
@@ -119,6 +117,16 @@ public class MainClient {
         }
         
         // logger.info("Application shutting down");
+    }
+
+    private static boolean sleepFor(Duration duration) {
+        try {
+            Thread.sleep(duration.toMillis());
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
 }
