@@ -4,10 +4,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Checked exception for map data processing failures.
- * 
- * This exception is thrown when map data cannot be properly processed,
- * converted, or validated.
+ * Signals failures while processing or validating map data.
+ *
+ * <p>Includes optional context (map type, stage, expected/actual nodes, coordinate context)
+ * to support user-friendly recovery messages.
  */
 public class MapProcessingException extends Exception {
     
@@ -19,13 +19,6 @@ public class MapProcessingException extends Exception {
     private final Optional<String> processingStage;
     private final Optional<String> coordinateContext;
 
-    /**
-     * Creates a new MapProcessingException with map context information.
-     * 
-     * @param message the detail message explaining the map processing failure
-     * @param mapType the type of map being processed (e.g., "FullMap", "HalfMap")
-     * @param processingStage the stage of processing where the failure occurred
-     */
     public MapProcessingException(String message, String mapType, String processingStage) {
         super(buildDetailedMessage(message,
                 Optional.ofNullable(mapType),
@@ -40,17 +33,6 @@ public class MapProcessingException extends Exception {
         this.coordinateContext = Optional.empty();
     }
     
-    /**
-     * Creates a new MapProcessingException with complete context and cause.
-     * 
-     * @param message the detail message explaining the map processing failure
-     * @param cause the underlying cause of the map processing failure
-     * @param mapType the type of map being processed
-     * @param processingStage the stage of processing where the failure occurred
-     * @param expectedNodes the expected number of map nodes
-     * @param actualNodes the actual number of map nodes found
-     * @param coordinateContext information about problematic coordinates
-     */
     public MapProcessingException(String message, Throwable cause, String mapType, String processingStage, 
                                 int expectedNodes, int actualNodes, String coordinateContext) {
         super(buildDetailedMessage(message,
@@ -66,9 +48,6 @@ public class MapProcessingException extends Exception {
         this.coordinateContext = Optional.ofNullable(coordinateContext);
     }
 
-    /**
-     * Builds a detailed error message with map processing context information.
-     */
     private static String buildDetailedMessage(
             String message,
             Optional<String> mapType,
@@ -96,21 +75,10 @@ public class MapProcessingException extends Exception {
         return sb.toString();
     }
 
-    /**
-     * Determines if this exception includes node count information.
-     * 
-     * @return true if both expected and actual node counts are available
-     */
     private boolean hasNodeCountInfo() {
         return expectedNodes > 0 && actualNodes >= 0;
     }
-    
-    /**
-     * Determines if this map processing error is potentially recoverable.
-     * Recoverable errors include temporary server issues, partial data, etc.
-     * 
-     * @return true if the error might be recoverable with retry logic
-     */
+
     public boolean isRecoverable() {
         // Consider recoverable if it's a node count issue (might be partial data)
         // or if it's during server conversion (might be temporary server issue)
@@ -124,11 +92,6 @@ public class MapProcessingException extends Exception {
                 .orElse(false);
     }
 
-    /**
-     * Creates a user-friendly error message with recovery suggestions.
-     * 
-     * @return a formatted error message with suggestions for handling the map issue
-     */
     public String getRecoveryMessage() {
         StringBuilder recovery = new StringBuilder();
         recovery.append(TextCnofig.MAP_RECOVERY_PREFIX).append(getMessage()).append("\n");

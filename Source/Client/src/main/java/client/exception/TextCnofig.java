@@ -1,5 +1,8 @@
 package client.exception;
 
+/**
+ * Shared text fragments for exception messages and user-facing recovery hints.
+ */
 final class TextCnofig {
 
     private TextCnofig() {

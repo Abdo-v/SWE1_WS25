@@ -1,5 +1,8 @@
 package client.exception;
 
+/**
+ * High-level operations used to tag errors with where they occurred.
+ */
 public enum Operation {
     PLAYER_REGISTRATION("PLAYER_REGISTRATION"),
     SEND_HALF_MAP("SEND_HALF_MAP"),

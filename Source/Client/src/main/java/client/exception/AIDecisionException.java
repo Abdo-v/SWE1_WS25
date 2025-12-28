@@ -3,11 +3,10 @@ package client.exception;
 import java.util.Optional;
 
 /**
- * Unchecked exception for AI algorithm decision-making failures.
+ * Signals that the AI could not produce a decision for the current situation.
  *
- * <p>This exception indicates that the AI could not complete a decision step
- * (e.g., selecting a move or computing a path) given the current internal state
- * and available game information.
+ * <p>Optionally carries lightweight context (component, decision context, and a state snapshot)
+ * to make debugging easier without forcing callers to log internals everywhere.
  */
 public class AIDecisionException extends RuntimeException {
     
@@ -17,11 +16,6 @@ public class AIDecisionException extends RuntimeException {
     private final Optional<String> decisionContext;
     private final Optional<Object> gameStateSnapshot;
     
-    /**
-     * Creates a new AIDecisionException with a message.
-     * 
-     * @param message the detail message explaining the AI decision failure
-     */
     public AIDecisionException(String message) {
         super(message);
         this.aiComponent = Optional.empty();
@@ -29,12 +23,6 @@ public class AIDecisionException extends RuntimeException {
         this.gameStateSnapshot = Optional.empty();
     }
     
-    /**
-     * Creates a new AIDecisionException with a message and cause.
-     * 
-     * @param message the detail message explaining the AI decision failure
-     * @param cause the underlying cause of the AI failure
-     */
     public AIDecisionException(String message, Throwable cause) {
         super(message, cause);
         this.aiComponent = Optional.empty();
@@ -42,13 +30,6 @@ public class AIDecisionException extends RuntimeException {
         this.gameStateSnapshot = Optional.empty();
     }
     
-    /**
-     * Creates a new AIDecisionException with detailed AI context information.
-     * 
-     * @param message the detail message explaining the AI decision failure
-     * @param aiComponent the AI component that failed (e.g., "PathFinder", "StrategyEngine")
-     * @param decisionContext the context of the decision being made
-     */
     public AIDecisionException(String message, String aiComponent, String decisionContext) {
         super(buildDetailedMessage(message, aiComponent, decisionContext));
         this.aiComponent = Optional.ofNullable(aiComponent);
@@ -56,14 +37,6 @@ public class AIDecisionException extends RuntimeException {
         this.gameStateSnapshot = Optional.empty();
     }
     
-    /**
-     * Creates a new AIDecisionException with detailed AI context and game state snapshot.
-     * 
-     * @param message the detail message explaining the AI decision failure
-     * @param aiComponent the AI component that failed
-     * @param decisionContext the context of the decision being made
-     * @param gameStateSnapshot a snapshot of the game state for debugging
-     */
     public AIDecisionException(String message, String aiComponent, String decisionContext, Object gameStateSnapshot) {
         super(buildDetailedMessage(message, aiComponent, decisionContext));
         this.aiComponent = Optional.ofNullable(aiComponent);
@@ -71,15 +44,6 @@ public class AIDecisionException extends RuntimeException {
         this.gameStateSnapshot = Optional.ofNullable(gameStateSnapshot);
     }
     
-    /**
-     * Creates a new AIDecisionException with detailed context and cause.
-     * 
-     * @param message the detail message explaining the AI decision failure
-     * @param cause the underlying cause of the AI failure
-     * @param aiComponent the AI component that failed
-     * @param decisionContext the context of the decision being made
-     * @param gameStateSnapshot a snapshot of the game state for debugging
-     */
     public AIDecisionException(String message, Throwable cause, String aiComponent, String decisionContext, Object gameStateSnapshot) {
         super(buildDetailedMessage(message, aiComponent, decisionContext), cause);
         this.aiComponent = Optional.ofNullable(aiComponent);
@@ -87,9 +51,6 @@ public class AIDecisionException extends RuntimeException {
         this.gameStateSnapshot = Optional.ofNullable(gameStateSnapshot);
     }
     
-    /**
-     * Builds a detailed error message with AI context information.
-     */
     private static String buildDetailedMessage(String message, String aiComponent, String decisionContext) {
         StringBuilder sb = new StringBuilder(TextCnofig.PREFIX_AI_DECISION_FAILURE).append(message);
         Optional.ofNullable(aiComponent).ifPresent(component -> sb.append(TextCnofig.LABEL_BRACKET_OPEN)
@@ -99,16 +60,10 @@ public class AIDecisionException extends RuntimeException {
         return sb.toString();
     }
     
-    // Getters for additional context information
     public Optional<String> getAiComponent() { return aiComponent; }
     public Optional<String> getDecisionContext() { return decisionContext; }
     public Optional<Object> getGameStateSnapshot() { return gameStateSnapshot; }
-    
-    /**
-     * Creates a formatted debug report for developers.
-     * 
-     * @return a detailed debug report of the AI failure
-     */
+
     public String getDebugReport() {
         StringBuilder report = new StringBuilder();
         report.append(TextCnofig.DEBUG_REPORT_AI_HEADER);

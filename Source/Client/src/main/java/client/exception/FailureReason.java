@@ -3,6 +3,12 @@ package client.exception;
 import java.util.Objects;
 import java.util.Locale;
 
+/**
+ * Coarse-grained failure categories used for diagnostics and error reporting.
+ *
+ * <p>Values are mapped from a stable string {@link #code()} to keep logs and messages
+ * consistent across layers.
+ */
 public enum FailureReason {
     UNINITIALIZED("uninitialized"),
     INVALID_STATE("invalid_state"),
