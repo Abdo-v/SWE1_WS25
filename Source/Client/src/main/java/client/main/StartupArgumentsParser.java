@@ -4,6 +4,18 @@ import client.exception.ConfigurationException;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Parses and validates CLI startup arguments.
+ *
+ * <p>Expected argument forms:
+ * <ul>
+ *   <li>{@code <gameMode> <serverBaseUrl> <gameId>} for {@code TR}/{@code TRR}</li>
+ *   <li>{@code <gameMode> <serverBaseUrl>} for {@code ATTR} (game id auto-fetched)</li>
+ * </ul>
+ *
+ * <p>Validation failures are surfaced as {@link ConfigurationException} with additional context
+ * (argument name, provided value, and valid options) for user-friendly error reporting.
+ */
 final class StartupArgumentsParser {
 
     private static final String GAME_MODE = MainTextConfig.ARG_GAME_MODE;

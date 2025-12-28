@@ -2,6 +2,11 @@ package client.main;
 
 import java.util.List;
 
+/**
+ * Central place for CLI argument names and user-facing error messages.
+ *
+ * <p>Keeping strings here avoids message drift between validation and reporting.
+ */
 final class MainTextConfig {
 
     private MainTextConfig() {

@@ -12,7 +12,15 @@ import java.time.Duration;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;
 
-
+/**
+ * Application entry point.
+ *
+ * <p>Bootstraps the client from CLI arguments, performs the initial handshake
+ * (register player, send half-map, wait for full map), and then hands control to the game loop.
+ *
+ * <p>In {@code ATTR} mode, the game id is fetched from the server; in other modes it must be
+ * provided as a third argument.
+ */
 public class MainClient {
     // private static final Logger logger = LoggerFactory.getLogger(MainClient.class);
 
