@@ -18,7 +18,7 @@ final class VisionCostScorer {
     private final WayHelper wayHelper;
     private final StrategyGuide strategyGuide;
 
-    VisionCostScorer(WayHelper wayHelper, ShortestPathFinder shortestPathFinder, StrategyGuide strategyGuide) {
+    VisionCostScorer(WayHelper wayHelper, StrategyGuide strategyGuide) {
         this.wayHelper = wayHelper;
         this.strategyGuide = strategyGuide;
     }

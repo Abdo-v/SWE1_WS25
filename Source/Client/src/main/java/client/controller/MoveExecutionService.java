@@ -29,7 +29,7 @@ final class MoveExecutionService {
         this.output = Objects.requireNonNull(output, "output is required");
     }
 
-    void makeMove(GameState gameState, String playerId, GameMode gameMode)
+    void makeMove(GameState gameState, GameMode gameMode)
             throws GameCommunicationException, AIDecisionException, GameStateException {
 
         GameState state = Optional.ofNullable(gameState).orElseThrow(() -> new GameStateException(

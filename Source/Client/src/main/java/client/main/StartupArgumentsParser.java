@@ -1,11 +1,14 @@
 package client.main;
 
 import client.exception.ConfigurationException;
-
 import java.util.Objects;
 import java.util.Optional;
 
 final class StartupArgumentsParser {
+
+    private static final String GAME_MODE = ClientDefaults.GAME_MODE_TEXT;
+    private static final String SERVER_BASE_URL = ClientDefaults.SERVER_BASE_URL_TEXT;
+    private static final String GAME_ID = ClientDefaults.GAME_ID_TEXT;
 
     private StartupArgumentsParser() {
     }
@@ -27,7 +30,7 @@ final class StartupArgumentsParser {
                     "Game ID required for " + normalizedMode + " mode. Expected: <gameMode> <serverBaseUrl> <gameId>",
                     "arguments",
                     "count=" + safeArgs.length,
-                    new String[]{"gameMode", "serverBaseUrl", "gameId"}
+                    new String[]{GAME_MODE, SERVER_BASE_URL, GAME_ID}
             );
         }
 
@@ -39,7 +42,7 @@ final class StartupArgumentsParser {
                 "Arguments are missing. Expected: <gameMode> <serverBaseUrl>",
                 "arguments",
                 "missing",
-                new String[]{"gameMode", "serverBaseUrl", "[options...]"}
+                new String[]{GAME_MODE, SERVER_BASE_URL, "[options...]"}
         ));
 
         if (safeArgs.length < 2) {
@@ -47,7 +50,7 @@ final class StartupArgumentsParser {
                     "Insufficient arguments provided. Expected: <gameMode> <serverBaseUrl>",
                     "arguments",
                     "count=" + safeArgs.length,
-                    new String[]{"gameMode", "serverBaseUrl", "[options...]"}
+                    new String[]{GAME_MODE, SERVER_BASE_URL, "[options...]"}
             );
         }
 
@@ -59,7 +62,7 @@ final class StartupArgumentsParser {
         if (normalizedMode.isEmpty()) {
             throw new ConfigurationException(
                     "Game mode is required",
-                    "gameMode",
+                    GAME_MODE,
                     normalizedMode,
                     new String[]{"TR", "TRR", "ATTR"}
             );
@@ -74,7 +77,7 @@ final class StartupArgumentsParser {
 
         throw new ConfigurationException(
                 "Invalid game mode provided",
-                "gameMode",
+                GAME_MODE,
                 normalizedMode,
                 validModes
         );

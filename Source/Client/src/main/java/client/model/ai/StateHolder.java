@@ -36,7 +36,9 @@ class StateHolder implements client.observer.util.Observer {
 
     @Override
     public void update(GameState gameState) {
-        this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
+        this.gameState = Optional.of(Objects.requireNonNull(gameState, MessageConfig.STATE_REQUIRED_MESSAGE));
+        this.treasureAlreadyFound = gameState.getTreasurePosition().isEmpty();
+        this.fortAlreadyFound = gameState.getOpponentFortPosition().isEmpty();
     }
 
     // Getters and setters

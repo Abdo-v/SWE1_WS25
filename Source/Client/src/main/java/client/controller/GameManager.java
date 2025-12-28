@@ -108,7 +108,7 @@ public class GameManager {
     }
 
     void makeMove(GameMode gameMode) throws GameCommunicationException, AIDecisionException, GameStateException {
-        moveExecutionService.makeMove(gameState, requirePlayerId(), gameMode);
+        moveExecutionService.makeMove(gameState, gameMode);
     }
 
     /**

@@ -55,9 +55,8 @@ public class GameIdFetcher {
                 }
             
             // Parse the XML to extract uniqueGameID
-                String gameId = getString(serverBaseUrl, response);
+                return getString(serverBaseUrl, response);
 
-                return gameId;
             } finally {
                 connection.disconnect();
             }

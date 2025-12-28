@@ -46,7 +46,7 @@ final class WayFinderLogic {
         this.strategyGuide = strategyGuide;
 
         this.nodeVisitTracker = new NodeVisitTracker(this.wayHelper);
-        this.visionCostScorer = new VisionCostScorer(wayHelper, shortestPathFinder, strategyGuide);
+        this.visionCostScorer = new VisionCostScorer(wayHelper, strategyGuide);
         this.treasureTargeting = new TreasureTargetingUseCase(treasureSeeker, stateHolder, shortestPathFinder, nodeVisitTracker);
         this.fortTargeting = new FortTargetingUseCase(fortSeeker, stateHolder, shortestPathFinder);
         this.explorationTarget = new ExplorationTargetUseCase(wayHelper, treasureSeeker, visionCostScorer);

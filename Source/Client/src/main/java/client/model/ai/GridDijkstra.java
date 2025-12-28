@@ -25,6 +25,10 @@ final class GridDijkstra {
     }
 
     private static final int[][] DIRECTIONS = { {0, -1}, {0, 1}, {-1, 0}, {1, 0} };
+    private static final String MAP_REQUIRED = MessageConfig.MAP_REQUIRED;
+    private static final String START_REQUIRED = MessageConfig.START_REQUIRED;
+    private static final String TARGET_REQUIRED = MessageConfig.TARGET_REQUIRED;
+    private static final String COST_PROFILE_REQUIRED = MessageConfig.COST_PROFILE_REQUIRED;
 
     private static Optional<MapNode> getNodeSafely(GameMap map, int x, int y) {
         try {
@@ -35,10 +39,10 @@ final class GridDijkstra {
     }
 
     static int shortestPathCost(GameMap map, MapNode start, MapNode target, MovementCostProfile costProfile) {
-        Objects.requireNonNull(map, "map is required");
-        Objects.requireNonNull(start, "start is required");
-        Objects.requireNonNull(target, "target is required");
-        Objects.requireNonNull(costProfile, "costProfile is required");
+        Objects.requireNonNull(map, MAP_REQUIRED);
+        Objects.requireNonNull(start, START_REQUIRED);
+        Objects.requireNonNull(target, TARGET_REQUIRED);
+        Objects.requireNonNull(costProfile, COST_PROFILE_REQUIRED);
         if (start.equalsByCoordinates(target)) {
             return 0;
         }
@@ -68,10 +72,10 @@ final class GridDijkstra {
 
     static ArrayList<MapNode> shortestPath(GameMap map, MapNode start, MapNode target, MovementCostProfile costProfile) {
         ArrayList<MapNode> path = new ArrayList<>();
-        Objects.requireNonNull(map, "map is required");
-        Objects.requireNonNull(start, "start is required");
-        Objects.requireNonNull(target, "target is required");
-        Objects.requireNonNull(costProfile, "costProfile is required");
+        Objects.requireNonNull(map, MAP_REQUIRED);
+        Objects.requireNonNull(start, START_REQUIRED);
+        Objects.requireNonNull(target, TARGET_REQUIRED);
+        Objects.requireNonNull(costProfile, COST_PROFILE_REQUIRED);
 
         if (start.equalsByCoordinates(target)) {
             path.add(start);
@@ -128,9 +132,9 @@ final class GridDijkstra {
      * @return A map of nodes to their minimum action-cost from {@code start}. Unreachable nodes are absent.
      */
     static Map<MapNode, Integer> shortestPathCosts(GameMap map, MapNode start, MovementCostProfile costProfile) {
-        Objects.requireNonNull(map, "map is required");
-        Objects.requireNonNull(start, "start is required");
-        Objects.requireNonNull(costProfile, "costProfile is required");
+        Objects.requireNonNull(map, MAP_REQUIRED);
+        Objects.requireNonNull(start, START_REQUIRED);
+        Objects.requireNonNull(costProfile, COST_PROFILE_REQUIRED);
 
         SearchState state = createSearchState(start);
         Map<MapNode, Integer> distances = state.distances();

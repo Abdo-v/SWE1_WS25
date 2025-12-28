@@ -8,7 +8,6 @@ import java.util.Optional;
 import client.model.Direction;
 import client.model.GameState;
 import client.model.common.DebugSettings;
-import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
 // import org.slf4j.Logger;
 // import org.slf4j.LoggerFactory;

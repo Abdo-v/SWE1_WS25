@@ -17,6 +17,7 @@ public class WayFinder implements client.observer.util.Observer{
     private static final int HALF_MAP_TOTAL_NODES = HalfMapDimensions.TOTAL_NODES;
     private static final int FULL_MAP_TOTAL_NODES = HALF_MAP_TOTAL_NODES * 2;
     private static final int MOVES_UNTIL_ENEMY_TRUE_POSITION = 8;
+    private static final String STATE_REQUIRED_MESSAGE = MessageConfig.STATE_REQUIRED_MESSAGE;
 
     private Optional<GameState> gameState;
     private final WayHelper wayHelper;
@@ -52,11 +53,11 @@ public class WayFinder implements client.observer.util.Observer{
      */
     public void update(GameState state) {
         // logger.debug("WayFinder received GameState update");
-        updateFromState(Objects.requireNonNull(state, "state is required"));
+        updateFromState(Objects.requireNonNull(state, STATE_REQUIRED_MESSAGE));
     }
 
     private void updateFromState(GameState state) {
-        this.gameState = Optional.of(Objects.requireNonNull(state, "state is required"));
+        this.gameState = Optional.of(Objects.requireNonNull(state, STATE_REQUIRED_MESSAGE));
 
         wayHelper.update(state);
         stateHolder.update(state);
@@ -190,7 +191,7 @@ public class WayFinder implements client.observer.util.Observer{
     }
 
     public void setGameState(GameState state){
-        this.gameState = Optional.of(Objects.requireNonNull(state, "state is required"));
+        this.gameState = Optional.of(Objects.requireNonNull(state, STATE_REQUIRED_MESSAGE));
         // logger.debug("GameState set for WayFinder");
     }
 

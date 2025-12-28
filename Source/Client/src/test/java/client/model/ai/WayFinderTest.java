@@ -5,8 +5,6 @@ import client.model.GameState;
 import client.model.PlayerState;
 import org.junit.jupiter.api.Test;
 
-import java.util.ArrayList;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**

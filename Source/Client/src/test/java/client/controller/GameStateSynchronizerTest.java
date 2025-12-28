@@ -1,7 +1,6 @@
 package client.controller;
 
 import client.controller.network.service.NetworkCenter;
-import client.exception.GameCommunicationException;
 import client.exception.MapProcessingException;
 import client.model.GameState;
 import org.junit.jupiter.api.Test;

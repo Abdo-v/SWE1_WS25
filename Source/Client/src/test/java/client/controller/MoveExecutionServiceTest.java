@@ -40,7 +40,7 @@ class MoveExecutionServiceTest {
         MoveExecutionService service = new MoveExecutionService(mock(NetworkCenter.class), mock(WayFinder.class), mock(GameOutput.class));
         GameState state = new GameState("gs-1");
 
-        assertThrows(GameStateException.class, () -> service.makeMove(state, "p1", GameMode.UNKNOWN));
+        assertThrows(GameStateException.class, () -> service.makeMove(state, GameMode.UNKNOWN));
     }
 
     @Test
@@ -52,7 +52,7 @@ class MoveExecutionServiceTest {
         MoveExecutionService service = new MoveExecutionService(networkCenter, wayFinder, mock(GameOutput.class));
 
         GameState state = newGameStateWithSinglePlayerAt("gs-2", 0, 0);
-        assertThrows(AIDecisionException.class, () -> service.makeMove(state, "p1", GameMode.UNKNOWN));
+        assertThrows(AIDecisionException.class, () -> service.makeMove(state, GameMode.UNKNOWN));
     }
 
     @Test
@@ -71,7 +71,7 @@ class MoveExecutionServiceTest {
         MoveExecutionService service = new MoveExecutionService(networkCenter, wayFinder, output);
         GameState state = newGameStateWithSinglePlayerAt("gs-3", 1, 1);
 
-        service.makeMove(state, "p1", GameMode.TRR);
+        service.makeMove(state, GameMode.TRR);
 
         verify(output, times(1)).showAiError(org.mockito.ArgumentMatchers.contains("Falling back"));
         verify(networkCenter, times(1)).sendMove(Direction.LEFT);
@@ -92,7 +92,7 @@ class MoveExecutionServiceTest {
         MoveExecutionService service = new MoveExecutionService(networkCenter, wayFinder, mock(GameOutput.class));
         GameState state = newGameStateWithSinglePlayerAt("gs-4", 1, 1);
 
-        assertThrows(AIDecisionException.class, () -> service.makeMove(state, "p1", GameMode.UNKNOWN));
+        assertThrows(AIDecisionException.class, () -> service.makeMove(state, GameMode.UNKNOWN));
     }
 
     @Test
@@ -107,7 +107,7 @@ class MoveExecutionServiceTest {
 
         GameCommunicationException ex = assertThrows(
                 GameCommunicationException.class,
-                () -> service.makeMove(state, "p1", GameMode.UNKNOWN)
+                () -> service.makeMove(state, GameMode.UNKNOWN)
         );
         assertEquals(-1, ex.getHttpStatusCode());
     }

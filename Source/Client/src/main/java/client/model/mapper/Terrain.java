@@ -5,6 +5,7 @@ public enum Terrain {
     MOUNTAIN("Mountain"),
     WATER("Water");
 
+    //field name to be used in outputs and logs
     private final String name;
 
     /**

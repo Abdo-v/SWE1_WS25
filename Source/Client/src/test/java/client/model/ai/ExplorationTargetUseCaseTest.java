@@ -1,6 +1,5 @@
 package client.model.ai;
 
-import client.exception.AIDecisionException;
 import client.model.GameState;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
@@ -14,7 +13,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
