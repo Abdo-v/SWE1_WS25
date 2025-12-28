@@ -22,6 +22,12 @@ final class GameManagerWiring {
         return new CLIHandler(ControllerTextConfig.defaultIfMissing(gameMode, GameMode.UNKNOWN));
     }
 
+    /**
+     * Wires model observers/subscriptions for the CLI view, dynamic view, and AI.
+     *
+     * <p>Performs an initial view update, then subscribes to fine-grained change streams so
+     * rendering can be coalesced without missing events.
+     */
     static void wireObservers(GameState gameState, CLIHandler cliHandler, WayFinder wayFinder, DynamicCLIGameView dynamicView) {
         Objects.requireNonNull(gameState, ControllerTextConfig.REQUIRE_GAME_STATE);
         Objects.requireNonNull(cliHandler, ControllerTextConfig.REQUIRE_CLI_HANDLER);

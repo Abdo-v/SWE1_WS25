@@ -22,6 +22,11 @@ class ServerToClientMapConverter {
         this.mapNodeConverter = mapNodeConverter;
     }
 
+    /**
+     * Converts the server map and infers own-vs-opponent orientation from the fort position.
+     *
+     * <p>Returns an empty {@link GameMap} until orientation can be determined.
+     */
     public GameMap convert(FullMap serverMap) {
         if (serverMap.isEmpty()) {
             return new GameMap();

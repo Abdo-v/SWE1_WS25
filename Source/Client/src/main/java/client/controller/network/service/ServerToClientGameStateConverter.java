@@ -33,6 +33,18 @@ class ServerToClientGameStateConverter {
         this.mapQueries = mapQueries;
     }
 
+    /**
+     * Converts the server snapshot into the client model.
+     *
+     * <p>Key behaviors:
+     * <ul>
+     *   <li>Attempts to place the local player's {@link MapNode} by scanning {@code FullMapNode} position state.</li>
+     *   <li>Creates an enemy player entry similarly (when present).</li>
+     *   <li>Derives convenience flags/positions (treasure collected, enemy fort found/position).</li>
+     * </ul>
+     *
+     * <p>Preserves the previous "best effort" null-handling semantics.
+     */
     public GameState convert(messagesbase.messagesfromserver.GameState serverGameState, UniquePlayerIdentifier playerId) {
         ArrayList<PlayerState> clientPlayers = new ArrayList<>();
         messagesbase.messagesfromserver.FullMap serverMap = serverGameState.getMap();
@@ -58,6 +70,7 @@ class ServerToClientGameStateConverter {
                 for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverPlayers) {
                     if (serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId)) {
                         MapNode playerMapNode = new MapNode();
+                        // Find the node that represents the local player.
                         for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
                             if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition
                                     || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition) {
@@ -76,6 +89,7 @@ class ServerToClientGameStateConverter {
             for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverPlayers) {
                 if (!hasMyPlayerUniqueId || !serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId)) {
                     MapNode playerMapNode = new MapNode();
+                    // Find the node that represents the enemy player.
                     for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
                         if (node.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition
                                 || node.getPlayerPositionState() == EPlayerPositionState.BothPlayerPosition) {
@@ -96,6 +110,7 @@ class ServerToClientGameStateConverter {
                 mapConverter.convert(serverGameState.getMap())
         );
 
+        // Derive flags and special positions from the server map.
         gameState.setTreasureCollected(clientPlayers.get(0).hasCollectedTreasure());
         gameState.setOpponentFortFound(mapQueries.serverMapHasEnemyFort(serverGameState.getMap()));
 

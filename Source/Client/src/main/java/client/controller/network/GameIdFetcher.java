@@ -10,24 +10,14 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Objects;
 
-/**
- * Responsible for fetching game IDs from the game server.
- * This class encapsulates the logic for retrieving unique game identifiers
- * from the server's API endpoint.
- */
+/** Fetches a fresh game id from the server's "create/list games" endpoint. */
 public class GameIdFetcher {
     
     /**
-     * Fetches the game ID from the server by making an HTTP GET request.
-     * Parses the XML response to extract the uniqueGameID value.
-     * 
-     * @param serverBaseUrl The base URL of the game server
-     * @return The unique game ID extracted from the server response
-     * @throws GameCommunicationException if the request fails or game ID cannot be extracted
+     * Performs an HTTP GET and extracts {@code <uniqueGameID>...</uniqueGameID>} from the XML response.
      */
     public static String fetchGameId(String serverBaseUrl) throws GameCommunicationException {
         try {
-            // Construct the URL for fetching game ID
             String urlString = Objects.requireNonNull(serverBaseUrl, ControllerTextConfig.REQUIRE_SERVER_BASE_URL);
             if (!urlString.endsWith("/")) {
                 urlString += "/";
@@ -56,7 +46,6 @@ public class GameIdFetcher {
                     reader.lines().forEach(response::append);
                 }
             
-            // Parse the XML to extract uniqueGameID
                 return getString(serverBaseUrl, response);
 
             } finally {

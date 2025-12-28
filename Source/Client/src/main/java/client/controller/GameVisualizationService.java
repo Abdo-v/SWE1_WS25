@@ -6,6 +6,9 @@ import client.view.MapVisualizationType;
 import client.view.CLIHandler;
 import client.view.MapSnapshotView;
 
+/**
+ * Owns map visualization decisions (snapshot vs dynamic) for the current {@link GameState}.
+ */
 final class GameVisualizationService {
 
     private final DynamicCLIGameView dynamicView;
@@ -18,6 +21,11 @@ final class GameVisualizationService {
         this.snapshotView = new MapSnapshotView();
     }
 
+    /**
+     * Renders a one-off map snapshot for the given CLI argument.
+     *
+     * <p>No-op in reduced mode.
+     */
     void visualizeMap(String mapType) {
         visualizeMap(MapVisualizationType.fromCLIValue(mapType));
     }

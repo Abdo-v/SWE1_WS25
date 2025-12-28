@@ -7,6 +7,11 @@ import client.exception.Operation;
 
 import java.util.Objects;
 
+/**
+ * Controller-layer queries derived from server state.
+ *
+ * <p>Intentionally performs "best effort" null handling to match the rest of the controller layer.
+ */
 class GameStateQueryService {
 
     private final NetworkCenter networkCenter;
@@ -15,6 +20,11 @@ class GameStateQueryService {
         this.networkCenter = Objects.requireNonNull(networkCenter, ControllerTextConfig.REQUIRE_NETWORK_CENTER);
     }
 
+    /**
+     * Returns whether the full map is available (node count is 100).
+     *
+     * <p>If the server state has no map yet, returns {@code false}.
+     */
     public boolean isFullMapAvailable() throws GameCommunicationException {
         try {
             messagesbase.messagesfromserver.GameState serverGameState = pollGameState();
