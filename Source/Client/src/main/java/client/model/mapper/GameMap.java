@@ -1,5 +1,7 @@
 package client.model.mapper;
 
+import client.model.ModelTextConfig;
+
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
@@ -10,7 +12,7 @@ public class GameMap {
     private final MapEssentials map;
     private final Optional<OwnToOppMapOrientation> orientation;
 
-    private static final String ORIENTATION_REQUIRED_MESSAGE = "Map orientation must be set";
+    private static final String ORIENTATION_REQUIRED_MESSAGE = ModelTextConfig.ERROR_ORIENTATION_REQUIRED;
 
     /**
      * Constructs a GameMap with the given parameters and dimensions.
@@ -19,8 +21,8 @@ public class GameMap {
      * @param maxY The maximum Y coordinate.
      */
     public GameMap(ArrayList<MapNode> nodes, OwnToOppMapOrientation orientation, int maxX, int maxY) {
-        this.orientation = Optional.of(Objects.requireNonNull(orientation, "orientation"));
-        this.map = new MapEssentials(Objects.requireNonNull(nodes, "nodes"), maxX, maxY);
+        this.orientation = Optional.of(Objects.requireNonNull(orientation, ModelTextConfig.REQUIRE_ORIENTATION));
+        this.map = new MapEssentials(Objects.requireNonNull(nodes, ModelTextConfig.REQUIRE_NODES), maxX, maxY);
     }
 
     /**
@@ -97,7 +99,7 @@ public class GameMap {
                 return node;
             }
         }
-        throw new IllegalArgumentException("Invalid coordinates: (" + x + ", " + y + "), not found in gameMap");
+        throw new IllegalArgumentException(ModelTextConfig.invalidCoordinatesMessage(x, y));
     }
 
     /**
@@ -114,12 +116,12 @@ public class GameMap {
      * @return True if the node is in the player's own half, false otherwise.
      */
     public boolean isNodeInOwnHalf(MapNode node) {
-        Objects.requireNonNull(node, "node");
+        Objects.requireNonNull(node, ModelTextConfig.REQUIRE_NODE);
         return ownHalfPredicate().test(node);
     }
 
     private PlayerHalfMap buildHalfMap(Predicate<MapNode> includeNode) {
-        Objects.requireNonNull(includeNode, "includeNode");
+        Objects.requireNonNull(includeNode, ModelTextConfig.REQUIRE_INCLUDE_NODE);
 
         PlayerHalfMap halfMap = new PlayerHalfMap();
         for (MapNode node : map.getNodes()) {

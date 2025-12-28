@@ -1,5 +1,6 @@
 package client.model.mapper.validator;
 
+import client.model.ModelTextConfig;
 import client.model.common.Notification;
 import client.model.mapper.HalfMapDimensions;
 import client.model.mapper.MapRules;
@@ -48,8 +49,8 @@ public class MapValidator {
      * of the validator module.
      */
     private MapValidator(List<HalfMapValidationRule> halfMapRules, List<CrossHalfMapValidationRule> crossHalfMapRules) {
-        this.halfMapRules = List.copyOf(Objects.requireNonNull(halfMapRules, "halfMapRules"));
-        this.crossHalfMapRules = List.copyOf(Objects.requireNonNull(crossHalfMapRules, "crossHalfMapRules"));
+        this.halfMapRules = List.copyOf(Objects.requireNonNull(halfMapRules, ModelTextConfig.REQUIRE_HALF_MAP_RULES));
+        this.crossHalfMapRules = List.copyOf(Objects.requireNonNull(crossHalfMapRules, ModelTextConfig.REQUIRE_CROSS_HALF_MAP_RULES));
     }
 
     /**
@@ -67,13 +68,17 @@ public class MapValidator {
      */
     public Notification validate(PlayerHalfMap halfMap) {
         Notification notification = new Notification();
-        if (Optional.ofNullable(halfMap).isEmpty()) {
-            notification.addError("PlayerHalfMap must be provided.");
+
+        final PlayerHalfMap requiredHalfMap;
+        try {
+            requiredHalfMap = Objects.requireNonNull(halfMap);
+        } catch (NullPointerException e) {
+            notification.addError(ModelTextConfig.ERROR_PLAYER_HALF_MAP_REQUIRED);
             return notification;
         }
 
         Optional<HalfMapBounds> boundsOpt = HalfMapStructureValidator.validateAndGetBounds(
-                halfMap,
+                requiredHalfMap,
                 notification,
                 HALF_MAP_TOTAL_NODES);
 
@@ -84,11 +89,11 @@ public class MapValidator {
         HalfMapBounds bounds = boundsOpt.get();
         HalfMapValidationContext context = new HalfMapValidationContext(bounds.maxX(), bounds.maxY());
 
-        runHalfMapRules(HalfMapRulePhase.BASIC, halfMap, context, notification);
+        runHalfMapRules(HalfMapRulePhase.BASIC, requiredHalfMap, context, notification);
 
         // Only proceed with expensive validations if basic rules are okay.
         if (!notification.hasErrors()) {
-            runHalfMapRules(HalfMapRulePhase.ADVANCED, halfMap, context, notification);
+            runHalfMapRules(HalfMapRulePhase.ADVANCED, requiredHalfMap, context, notification);
         }
 
         return notification;
@@ -100,7 +105,7 @@ public class MapValidator {
             HalfMapValidationContext context,
             Notification notification
     ) {
-        Objects.requireNonNull(phase, "phase");
+        Objects.requireNonNull(phase, ModelTextConfig.REQUIRE_PHASE);
         for (HalfMapValidationRule rule : halfMapRules) {
             if (rule.phase() == phase) {
                 rule.validate(halfMap, context, notification);
@@ -112,8 +117,8 @@ public class MapValidator {
      * Validates a PlayerHalfMap and also checks edge-crossing compatibility with an existing half-map.
      * This is intended for the client that generates the second half-map.
      *
-     * Rule: For each edge of the new half-map, at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of edge fields must allow a successful
-     * transition to the corresponding opposite edge of the existing half-map (walkable on both sides).
+      * Rule: For each edge of the new half-map, at least {@link MapRules#MIN_EDGE_CROSSABLE_RATIO} of edge fields must allow a successful
+      * transition (walkable on both sides).
      *
      * Pairings checked:
      * - new LEFT  (x=0)      vs existing RIGHT (x=maxX)
@@ -127,12 +132,12 @@ public class MapValidator {
             return notification;
         }
 
-        Optional<PlayerHalfMap> existingHalfMapOpt = Optional.ofNullable(existingHalfMap);
-        if (existingHalfMapOpt.isEmpty()) {
+        final PlayerHalfMap existing;
+        try {
+            existing = Objects.requireNonNull(existingHalfMap);
+        } catch (NullPointerException e) {
             return notification;
         }
-
-        PlayerHalfMap existing = existingHalfMapOpt.get();
 
         int[] newDims = HalfMapDimensionUtil.determineDimensions(newHalfMap);
         int[] existingDims = HalfMapDimensionUtil.determineDimensions(existing);
@@ -140,7 +145,11 @@ public class MapValidator {
         if (newDims[0] != existingDims[0] || newDims[1] != existingDims[1]) {
             notification.addError(String.format(
                     "Half-map dimensions mismatch. New=%dx%d, Existing=%dx%d",
-                    newDims[0], newDims[1], existingDims[0], existingDims[1]));
+                    newDims[0],
+                    newDims[1],
+                    existingDims[0],
+                    existingDims[1]
+            ));
             return notification;
         }
 

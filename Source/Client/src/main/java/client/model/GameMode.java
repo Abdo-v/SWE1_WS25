@@ -1,7 +1,6 @@
 package client.model;
 
 import java.util.Locale;
-import java.util.Optional;
 
 public enum GameMode {
     TR("TR"),
@@ -28,16 +27,18 @@ public enum GameMode {
     }
 
     public static GameMode fromCLIValue(String value) {
-        return Optional.ofNullable(value)
-                .map(v -> v.trim().toUpperCase(Locale.ROOT))
-                .flatMap(normalized -> {
-                    for (GameMode mode : values()) {
-                        if (mode.cliValue.equals(normalized)) {
-                            return Optional.of(mode);
-                        }
-                    }
-                    return Optional.empty();
-                })
-                .orElse(UNKNOWN);
+        final String normalized;
+        try {
+            normalized = value.trim().toUpperCase(Locale.ROOT);
+        } catch (NullPointerException e) {
+            return UNKNOWN;
+        }
+
+        for (GameMode mode : values()) {
+            if (mode.cliValue.equals(normalized)) {
+                return mode;
+            }
+        }
+        return UNKNOWN;
     }
 }

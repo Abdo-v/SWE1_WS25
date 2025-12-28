@@ -1,5 +1,7 @@
 package client.model.mapper;
 
+import client.model.ModelTextConfig;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,7 +35,7 @@ public class PlayerHalfMap {
     public boolean addMapNode(MapNode mapNode) {
         Objects.requireNonNull(mapNode, "mapNode");
         if (map.size() >= HalfMapDimensions.TOTAL_NODES) {
-            throw new IllegalStateException("Cannot add more than " + HalfMapDimensions.TOTAL_NODES + " map nodes to a half map.");
+            throw new IllegalStateException(ModelTextConfig.tooManyHalfMapNodesMessage(HalfMapDimensions.TOTAL_NODES));
         }
         return map.addNode(mapNode);
     }

@@ -9,7 +9,6 @@ import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -31,19 +30,19 @@ final class GameStateObservers {
     private final Map<GameStateEventType, Set<Observer>> observersByType = new EnumMap<>(GameStateEventType.class);
 
     GameStateObservers(GameState source) {
-        this.source = Objects.requireNonNull(source, "source game state is required");
+        this.source = Objects.requireNonNull(source, ModelTextConfig.REQUIRE_SOURCE_GAME_STATE);
     }
 
     void addObserver(Observer observer) {
-        Observer requiredObserver = Objects.requireNonNull(observer, "observer is required");
+        Observer requiredObserver = Objects.requireNonNull(observer, ModelTextConfig.REQUIRE_OBSERVER);
         if (globalObservers.add(requiredObserver)) {
             notifySingleObserver(requiredObserver, new GameStateEvent(source, GameStateEventType.BULK_UPDATE));
         }
     }
 
     void addObserver(GameStateEventType eventType, Observer observer) {
-        Observer requiredObserver = Objects.requireNonNull(observer, "observer is required");
-        GameStateEventType requiredType = Objects.requireNonNull(eventType, "event type is required");
+        Observer requiredObserver = Objects.requireNonNull(observer, ModelTextConfig.REQUIRE_OBSERVER);
+        GameStateEventType requiredType = Objects.requireNonNull(eventType, ModelTextConfig.REQUIRE_EVENT_TYPE);
 
         observersByType.computeIfAbsent(requiredType, ignored -> new LinkedHashSet<>()).add(requiredObserver);
         notifySingleObserver(requiredObserver, new GameStateEvent(source, requiredType));
@@ -57,9 +56,13 @@ final class GameStateObservers {
     }
 
     void removeObserver(GameStateEventType eventType, Observer observer) {
-        Observer requiredObserver = Objects.requireNonNull(observer, "observer is required");
-        GameStateEventType requiredType = Objects.requireNonNull(eventType, "event type is required");
-        Optional.ofNullable(observersByType.get(requiredType)).ifPresent(bucket -> bucket.remove(requiredObserver));
+        Observer requiredObserver = Objects.requireNonNull(observer, ModelTextConfig.REQUIRE_OBSERVER);
+        GameStateEventType requiredType = Objects.requireNonNull(eventType, ModelTextConfig.REQUIRE_EVENT_TYPE);
+        try {
+            observersByType.get(requiredType).remove(requiredObserver);
+        } catch (NullPointerException ignored) {
+            // no bucket registered
+        }
     }
 
     void notifyObservers() {
@@ -67,17 +70,21 @@ final class GameStateObservers {
     }
 
     void notifyObservers(GameStateEventType eventType) {
-        notifyObservers(new GameStateEvent(source, Objects.requireNonNull(eventType, "event type is required")));
+        notifyObservers(new GameStateEvent(source, Objects.requireNonNull(eventType, ModelTextConfig.REQUIRE_EVENT_TYPE)));
     }
 
     void notifyObservers(GameStateEvent event) {
-        notifyObserversInternal(Objects.requireNonNull(event, "event is required"));
+        notifyObserversInternal(Objects.requireNonNull(event, ModelTextConfig.REQUIRE_EVENT));
     }
 
     private void notifyObserversInternal(GameStateEvent event) {
         Set<Observer> targets = new LinkedHashSet<>();
         targets.addAll(globalObservers);
-        Optional.ofNullable(observersByType.get(event.type())).ifPresent(targets::addAll);
+        try {
+            targets.addAll(observersByType.get(event.type()));
+        } catch (NullPointerException ignored) {
+            // no bucket registered
+        }
 
         for (Observer observer : new ArrayList<>(targets)) {
             notifySingleObserver(observer, event);
@@ -88,7 +95,7 @@ final class GameStateObservers {
         try {
             observer.update(event);
         } catch (RuntimeException ex) {
-            logger.warn("Observer threw during update (type={})", event.type(), ex);
+            logger.warn(ModelTextConfig.LOG_OBSERVER_THREW_DURING_UPDATE, event.type(), ex);
         }
     }
 }

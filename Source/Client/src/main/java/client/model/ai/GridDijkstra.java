@@ -32,7 +32,9 @@ final class GridDijkstra {
 
     private static Optional<MapNode> getNodeSafely(GameMap map, int x, int y) {
         try {
-            return Optional.ofNullable(map.getNode(x, y));
+            return Optional.of(Objects.requireNonNull(map.getNode(x, y)));
+        } catch (NullPointerException e) {
+            return Optional.empty();
         } catch (IllegalArgumentException e) {
             return Optional.empty();
         }
@@ -114,7 +116,11 @@ final class GridDijkstra {
         while (currentTrace.isPresent()) {
             MapNode node = currentTrace.orElseThrow();
             path.add(node);
-            currentTrace = Optional.ofNullable(predecessors.get(node));
+            try {
+                currentTrace = Optional.of(Objects.requireNonNull(predecessors.get(node)));
+            } catch (NullPointerException e) {
+                currentTrace = Optional.empty();
+            }
         }
         java.util.Collections.reverse(path);
         return path;

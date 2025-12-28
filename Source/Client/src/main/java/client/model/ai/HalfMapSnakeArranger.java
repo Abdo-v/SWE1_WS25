@@ -1,11 +1,13 @@
 package client.model.ai;
 
+import client.model.ModelTextConfig;
 import client.model.mapper.GameMap;
 import client.model.mapper.HalfMapDimensions;
-import java.util.Optional;
 import client.model.mapper.MapNode;
 import client.model.mapper.OwnToOppMapOrientation;
 import client.model.mapper.PlayerHalfMap;
+
+import java.util.Objects;
 
 /**
  * Builds a snake (Y alternating) traversal ordering for half-maps.
@@ -26,12 +28,16 @@ final class HalfMapSnakeArranger {
     }
 
     private static <T> T requireArgument(T value, String message) {
-        return Optional.ofNullable(value).orElseThrow(() -> new IllegalArgumentException(message));
+        try {
+            return Objects.requireNonNull(value);
+        } catch (NullPointerException e) {
+            throw new IllegalArgumentException(message);
+        }
     }
 
     static PlayerHalfMap arrangeOwnHalf(GameMap map, MapNode currentPosition) {
-        GameMap requiredMap = requireArgument(map, "GameMap is required");
-        MapNode requiredCurrentPosition = requireArgument(currentPosition, "Current position is required");
+        GameMap requiredMap = requireArgument(map, ModelTextConfig.REQUIRE_GAME_MAP);
+        MapNode requiredCurrentPosition = requireArgument(currentPosition, ModelTextConfig.REQUIRE_CURRENT_POSITION);
 
         OwnToOppMapOrientation orientation = requiredMap.getOrientation();
         Bounds bounds = ownHalfBounds(orientation);
@@ -56,8 +62,8 @@ final class HalfMapSnakeArranger {
     }
 
     static PlayerHalfMap arrangeOpponentHalf(GameMap map, MapNode currentPosition) {
-        GameMap requiredMap = requireArgument(map, "GameMap is required");
-        MapNode requiredCurrentPosition = requireArgument(currentPosition, "Current position is required");
+        GameMap requiredMap = requireArgument(map, ModelTextConfig.REQUIRE_GAME_MAP);
+        MapNode requiredCurrentPosition = requireArgument(currentPosition, ModelTextConfig.REQUIRE_CURRENT_POSITION);
 
         OwnToOppMapOrientation orientation = requiredMap.getOrientation();
         OpponentBounds bounds = opponentHalfBounds(orientation);
@@ -142,7 +148,7 @@ final class HalfMapSnakeArranger {
                 minY = HALF_HEIGHT;
                 maxY = (HALF_HEIGHT * 2) - 1;
             }
-            default -> throw new IllegalArgumentException("Invalid orientation: " + orientation);
+            default -> throw new IllegalArgumentException(ModelTextConfig.ERROR_INVALID_ORIENTATION_PREFIX + orientation);
         }
 
         int xMidPointThreshold = minX + (HALF_WIDTH / 2);
@@ -187,7 +193,7 @@ final class HalfMapSnakeArranger {
                 minY = 0;
                 maxY = HALF_HEIGHT - 1;
             }
-            default -> throw new IllegalArgumentException("Invalid orientation: " + orientation);
+            default -> throw new IllegalArgumentException(ModelTextConfig.ERROR_INVALID_ORIENTATION_PREFIX + orientation);
         }
 
         return new OpponentBounds(minX, maxX, minY, maxY, own.xMidPointThreshold, own.yMidPointThreshold);

@@ -32,17 +32,17 @@ public class PlayerState {
     }
 
     public PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, MapNode playerMapNode, PlayerStatus status) {
-        this(uniquePlayerID, firstName2, lastName2, uAccount2, hasCollectedTreasure, Optional.ofNullable(playerMapNode), status);
+        this(uniquePlayerID, firstName2, lastName2, uAccount2, hasCollectedTreasure, ModelTextConfig.optionalIfPresent(playerMapNode), status);
     }
 
     private PlayerState(String uniquePlayerID, String firstName2, String lastName2, String uAccount2, boolean hasCollectedTreasure, Optional<MapNode> playerMapNode, PlayerStatus status) {
-        this.playerID = Objects.requireNonNullElse(uniquePlayerID, "");
-        this.firstName = Objects.requireNonNullElse(firstName2, "");
-        this.lastName = Objects.requireNonNullElse(lastName2, "");
-        this.uAccount = Objects.requireNonNullElse(uAccount2, "");
+        this.playerID = ModelTextConfig.safeStringOrDefault(uniquePlayerID, "");
+        this.firstName = ModelTextConfig.safeStringOrDefault(firstName2, "");
+        this.lastName = ModelTextConfig.safeStringOrDefault(lastName2, "");
+        this.uAccount = ModelTextConfig.safeStringOrDefault(uAccount2, "");
         this.collectedTreasure = hasCollectedTreasure;
-        this.currentPosition = Objects.requireNonNullElse(playerMapNode, Optional.empty());
-        this.status = Objects.requireNonNullElse(status, DEFAULT_STATUS);
+        this.currentPosition = ModelTextConfig.defaultIfMissing(playerMapNode, Optional.empty());
+        this.status = ModelTextConfig.defaultIfMissing(status, DEFAULT_STATUS);
     }
 
     /**

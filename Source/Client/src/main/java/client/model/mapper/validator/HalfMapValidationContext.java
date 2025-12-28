@@ -1,5 +1,7 @@
 package client.model.mapper.validator;
 
+import client.model.ModelTextConfig;
+
 /**
  * Derived values used by half-map validation rules.
  *
@@ -8,7 +10,7 @@ package client.model.mapper.validator;
 record HalfMapValidationContext(int maxX, int maxY) {
     HalfMapValidationContext {
         if (maxX < 0 || maxY < 0) {
-            throw new IllegalArgumentException("maxX/maxY must be non-negative");
+            throw new IllegalArgumentException(ModelTextConfig.ERROR_MAX_XY_NON_NEGATIVE);
         }
     }
 }

@@ -1,5 +1,7 @@
 package client.model.common;
 
+import client.model.ModelTextConfig;
+
 import java.util.Locale;
 import java.util.Objects;
 
@@ -34,7 +36,7 @@ public final class DebugSettings {
     }
 
     public static void printStackTraceIfDebug(Throwable throwable) {
-        Objects.requireNonNull(throwable, "throwable is required");
+        Objects.requireNonNull(throwable, ModelTextConfig.REQUIRE_THROWABLE);
         if (!isDebugEnabled()) {
             return;
         }
@@ -42,7 +44,7 @@ public final class DebugSettings {
     }
 
     private static boolean isTruthy(String value) {
-        String normalized = Objects.requireNonNullElse(value, "").trim().toLowerCase(Locale.ROOT);
+        String normalized = ModelTextConfig.safeStringOrDefault(value, "").trim().toLowerCase(Locale.ROOT);
         return normalized.equals("1")
                 || normalized.equals("true")
                 || normalized.equals("yes")

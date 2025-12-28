@@ -1,5 +1,6 @@
 package client.model.mapper.generator;
 
+import client.model.ModelTextConfig;
 import client.model.common.Notification;
 import client.model.mapper.MapNode;
 import client.model.mapper.MapRules;
@@ -55,7 +56,7 @@ public class MapGenerator {
      */
     private PlayerHalfMap generateMap(int width, int height, String playerID, Optional<PlayerHalfMap> existingHalfMap) {
         if (width <= 0 || height <= 0) {
-            throw new IllegalArgumentException("Width and height must be positive");
+            throw new IllegalArgumentException(ModelTextConfig.ERROR_WIDTH_HEIGHT_POSITIVE);
         }
 
         Objects.requireNonNull(playerID, "playerID");
@@ -115,6 +116,6 @@ public class MapGenerator {
             }
         }
 
-        throw new IllegalStateException("Map generation failed unexpectedly");
+        throw new IllegalStateException(ModelTextConfig.ERROR_MAP_GENERATION_FAILED_UNEXPECTED);
     }
 }
