@@ -12,14 +12,12 @@ import java.util.Objects;
  */
 class FullMapWaitService {
 
-    private static final String UNKNOWN_GAME_STATE_ID = "unknown";
-
     private final GameStateSynchronizer gameStateSynchronizer;
     private final GameStateQueryService gameStateQueryService;
 
     public FullMapWaitService(GameStateSynchronizer gameStateSynchronizer, GameStateQueryService gameStateQueryService) {
-        this.gameStateSynchronizer = Objects.requireNonNull(gameStateSynchronizer, "gameStateSynchronizer is required");
-        this.gameStateQueryService = Objects.requireNonNull(gameStateQueryService, "gameStateQueryService is required");
+        this.gameStateSynchronizer = Objects.requireNonNull(gameStateSynchronizer, ControllerTextConfig.REQUIRE_GAME_STATE_SYNCHRONIZER);
+        this.gameStateQueryService = Objects.requireNonNull(gameStateQueryService, ControllerTextConfig.REQUIRE_GAME_STATE_QUERY_SERVICE);
     }
 
     /**
@@ -32,13 +30,13 @@ class FullMapWaitService {
 
         Objects.requireNonNull(gameState, "gameState is required");
 
-        Duration safeTimeout = Objects.requireNonNullElse(timeout, PollingDefaults.FULL_MAP_WAIT_TIMEOUT);
-        Duration requestedPoll = Objects.requireNonNullElse(pollInterval, PollingDefaults.DEFAULT_POLL_INTERVAL);
+        Duration safeTimeout = ControllerTextConfig.defaultIfMissing(timeout, PollingDefaults.FULL_MAP_WAIT_TIMEOUT);
+        Duration requestedPoll = ControllerTextConfig.defaultIfMissing(pollInterval, PollingDefaults.DEFAULT_POLL_INTERVAL);
         Duration safePoll = requestedPoll.compareTo(PollingDefaults.MIN_POLL_INTERVAL) < 0
             ? PollingDefaults.MIN_POLL_INTERVAL
             : requestedPoll;
 
-        String gameStateId = Objects.requireNonNullElse(gameState.getGameStateID(), UNKNOWN_GAME_STATE_ID);
+        String gameStateId = ControllerTextConfig.safeStringOrDefault(gameState.getGameStateID(), ControllerTextConfig.UNKNOWN);
 
         long deadlineNanos = System.nanoTime() + safeTimeout.toNanos();
         int attempts = 0;

@@ -1,5 +1,6 @@
 package client.controller.network.service;
 
+import client.controller.ControllerTextConfig;
 import client.model.Direction;
 import messagesbase.messagesfromclient.EMove;
 
@@ -18,7 +19,7 @@ class ClientToServerMoveConverter {
         } else if (direction == Direction.RIGHT) {
             return EMove.Right;
         } else {
-            throw new IllegalArgumentException("Unsupported direction: " + direction);
+            throw new IllegalArgumentException(ControllerTextConfig.ERROR_UNSUPPORTED_DIRECTION_PREFIX + direction);
         }
     }
 }

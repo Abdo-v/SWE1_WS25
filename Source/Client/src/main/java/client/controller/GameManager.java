@@ -36,16 +36,14 @@ public class GameManager {
     private final GameVisualizationService visualizationService;
     private final PlayerTurnService playerTurnService;
 
-    private static final String UNKNOWN_GAME_STATE_ID = "unknown";
-
     public GameManager(client.model.GameState state, String serverBaseUrl, String gameMode, GameOutput output){
         this(state, serverBaseUrl, GameMode.fromCLIValue(gameMode), output);
     }
 
     private GameManager(client.model.GameState state, String serverBaseUrl, GameMode gameMode, GameOutput output){
-        this.gameState = Objects.requireNonNull(state, "state is required");
-        this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required"), this.gameState.getGameStateID());
-        this.output = Objects.requireNonNull(output, "output is required");
+        this.gameState = Objects.requireNonNull(state, ControllerTextConfig.REQUIRE_STATE);
+        this.networkCenter = new NetworkCenter(Objects.requireNonNull(serverBaseUrl, ControllerTextConfig.REQUIRE_SERVER_BASE_URL), this.gameState.getGameStateID());
+        this.output = Objects.requireNonNull(output, ControllerTextConfig.REQUIRE_OUTPUT);
         this.playerId = Optional.empty();
 
         var cliHandler = GameManagerWiring.createCLIHandler(gameMode);
@@ -142,8 +140,7 @@ public class GameManager {
      * @param playerId The player ID to set.
      */
     public void setPlayerId(String playerId) {
-        this.playerId = Optional.ofNullable(playerId)
-                .filter(id -> !id.isBlank());
+        this.playerId = ControllerTextConfig.optionalNonBlank(playerId);
     }
 
     public void visualizeMap(String mapType) {
@@ -163,18 +160,15 @@ public class GameManager {
 
     private String requirePlayerId() {
         return playerId.filter(id -> !id.isBlank()).orElseThrow(() -> new GameStateException(
-                "Player identifier is missing",
+                ControllerTextConfig.ERROR_PLAYER_IDENTIFIER_MISSING,
                 requireGameStateId(),
-                "PLAYER_ID",
-                "missing"
+                ControllerTextConfig.PLAYER_ID_KEY,
+                ControllerTextConfig.MISSING
         ));
     }
 
     private String requireGameStateId() {
-        return Optional.ofNullable(gameState)
-                .map(client.model.GameState::getGameStateID)
-                .filter(id -> !id.isBlank())
-                .orElse(UNKNOWN_GAME_STATE_ID);
+        return ControllerTextConfig.nonBlankOrUnknown(gameState.getGameStateID());
     }
 
 }

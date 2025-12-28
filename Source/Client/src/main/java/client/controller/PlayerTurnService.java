@@ -2,39 +2,51 @@ package client.controller;
 
 import client.exception.GameStateException;
 import client.model.GameState;
+import client.model.PlayerState;
 import client.model.PlayerStatus;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.Objects;
 
 final class PlayerTurnService {
 
     PlayerStatus getCurrentPlayerStatus(GameState gameState, String playerId) throws GameStateException {
-        GameState state = Optional.ofNullable(gameState).orElseThrow(() -> new GameStateException(
-            "Cannot get player status: game state is missing",
-            "unknown",
-            "GET_PLAYER_STATUS",
-            "missing"
-        ));
+        GameState state;
+        try {
+            state = Objects.requireNonNull(gameState);
+        } catch (NullPointerException e) {
+            throw new GameStateException(
+                    ControllerTextConfig.ERROR_CANNOT_GET_PLAYER_STATUS_GAME_STATE_MISSING,
+                    ControllerTextConfig.UNKNOWN,
+                    ControllerTextConfig.OP_GET_PLAYER_STATUS,
+                    ControllerTextConfig.MISSING
+            );
+        }
 
-        var players = Optional.ofNullable(state.getPlayers()).orElseThrow(() -> new GameStateException(
-            "Cannot get player status: players list is missing",
-            state.getGameStateID(),
-            "GET_PLAYER_STATUS",
-            "missing_players"
-        ));
+        final List<PlayerState> players;
+        try {
+            players = Objects.requireNonNull(state.getPlayers());
+        } catch (NullPointerException e) {
+            throw new GameStateException(
+                    ControllerTextConfig.ERROR_CANNOT_GET_PLAYER_STATUS_PLAYERS_MISSING,
+                    state.getGameStateID(),
+                    ControllerTextConfig.OP_GET_PLAYER_STATUS,
+                    ControllerTextConfig.REASON_MISSING_PLAYERS
+            );
+        }
 
-        for (client.model.PlayerState playerState : players) {
+        for (PlayerState playerState : players) {
             if (playerState.getPlayerID().equals(playerId)) {
                 return playerState.getStatus();
             }
         }
 
         throw new GameStateException(
-                "Player ID not found in game state",
+            ControllerTextConfig.ERROR_PLAYER_ID_NOT_FOUND,
                 state.getGameStateID(),
-                "GET_PLAYER_STATUS",
-                "player_not_found",
-                "player_present"
+            ControllerTextConfig.OP_GET_PLAYER_STATUS,
+            ControllerTextConfig.REASON_PLAYER_NOT_FOUND,
+            ControllerTextConfig.EXPECTED_PLAYER_PRESENT
         );
     }
 

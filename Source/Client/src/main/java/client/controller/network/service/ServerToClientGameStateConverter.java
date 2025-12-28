@@ -9,7 +9,7 @@ import messagesbase.messagesfromserver.EPlayerPositionState;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
+import java.util.Objects;
 
 /**
  * Converts a server game state to the client/internal game state.
@@ -37,16 +37,26 @@ class ServerToClientGameStateConverter {
         ArrayList<PlayerState> clientPlayers = new ArrayList<>();
         messagesbase.messagesfromserver.FullMap serverMap = serverGameState.getMap();
 
-        Collection<messagesbase.messagesfromserver.PlayerState> serverPlayers =
-                Optional.ofNullable(serverGameState.getPlayers()).orElse(Collections.emptySet());
+        Collection<messagesbase.messagesfromserver.PlayerState> serverPlayers;
+        try {
+            serverPlayers = Objects.requireNonNull(serverGameState.getPlayers());
+        } catch (NullPointerException e) {
+            serverPlayers = Collections.emptySet();
+        }
 
-        Optional<String> myPlayerUniqueId = Optional.ofNullable(playerId).map(UniquePlayerIdentifier::getUniquePlayerID);
+        String myPlayerUniqueId = "";
+        boolean hasMyPlayerUniqueId;
+        try {
+            myPlayerUniqueId = Objects.requireNonNull(playerId).getUniquePlayerID();
+            hasMyPlayerUniqueId = true;
+        } catch (NullPointerException e) {
+            hasMyPlayerUniqueId = false;
+        }
 
         if (!serverPlayers.isEmpty()) {
-            if (myPlayerUniqueId.isPresent()) {
-                String myId = myPlayerUniqueId.get();
+            if (hasMyPlayerUniqueId) {
                 for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverPlayers) {
-                    if (serverPlayer.getUniquePlayerID().equals(myId)) {
+                    if (serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId)) {
                         MapNode playerMapNode = new MapNode();
                         for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
                             if (node.getPlayerPositionState() == EPlayerPositionState.MyPlayerPosition
@@ -64,7 +74,7 @@ class ServerToClientGameStateConverter {
             }
 
             for (messagesbase.messagesfromserver.PlayerState serverPlayer : serverPlayers) {
-                if (myPlayerUniqueId.isEmpty() || !serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId.get())) {
+                if (!hasMyPlayerUniqueId || !serverPlayer.getUniquePlayerID().equals(myPlayerUniqueId)) {
                     MapNode playerMapNode = new MapNode();
                     for (messagesbase.messagesfromserver.FullMapNode node : serverMap.getMapNodes()) {
                         if (node.getPlayerPositionState() == EPlayerPositionState.EnemyPlayerPosition

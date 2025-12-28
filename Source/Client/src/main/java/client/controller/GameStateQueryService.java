@@ -13,20 +13,22 @@ class GameStateQueryService {
     private final NetworkCenter networkCenter;
 
     public GameStateQueryService(NetworkCenter networkCenter) {
-        this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
+        this.networkCenter = Objects.requireNonNull(networkCenter, ControllerTextConfig.REQUIRE_NETWORK_CENTER);
     }
 
     public boolean isFullMapAvailable() throws GameCommunicationException {
         try {
             messagesbase.messagesfromserver.GameState serverGameState = pollGameState();
-            return Optional.ofNullable(serverGameState.getMap())
-                    .map(m -> m.getMapNodes().size() == 100)
-                    .orElse(false);
+            try {
+                return Objects.requireNonNull(serverGameState.getMap()).getMapNodes().size() == 100;
+            } catch (NullPointerException e) {
+                return false;
+            }
         } catch (GameCommunicationException e) {
             throw e;
         } catch (Exception e) {
             throw new GameCommunicationException(
-                "Failed to check full map availability: " + e.getMessage(),
+                ControllerTextConfig.ERROR_FAILED_CHECK_FULL_MAP_AVAILABILITY_PREFIX + e.getMessage(),
                 e,
                 FailureReason.UNKNOWN.code(),
                 Operation.FULL_MAP_CHECK,
@@ -42,7 +44,7 @@ class GameStateQueryService {
             throw e;
         } catch (Exception e) {
             throw new GameCommunicationException(
-                "Failed to poll game state from server: " + e.getMessage(),
+                ControllerTextConfig.ERROR_FAILED_POLL_GAME_STATE_PREFIX + e.getMessage(),
                 e,
                 FailureReason.UNKNOWN.code(),
                 Operation.POLL_GAME_STATE,

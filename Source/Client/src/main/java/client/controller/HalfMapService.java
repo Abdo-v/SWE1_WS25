@@ -31,8 +31,8 @@ class HalfMapService {
 
     public HalfMapService(NetworkCenter networkCenter, CLIHandler cliHandler, GameOutput output) {
         this(
-                Objects.requireNonNull(networkCenter, "networkCenter is required"),
-                Objects.requireNonNull(output, "output is required"),
+                Objects.requireNonNull(networkCenter, ControllerTextConfig.REQUIRE_NETWORK_CENTER),
+                Objects.requireNonNull(output, ControllerTextConfig.REQUIRE_OUTPUT),
                 new MapGenerator(),
                 new MapValidator(),
                 new MapGenerationView(),
@@ -48,21 +48,21 @@ class HalfMapService {
             MapGenerationView mapGenerationView,
             MapValidationInternalsView mapValidationInternalsView
     ) {
-        this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
-        this.output = Objects.requireNonNull(output, "output is required");
-        this.mapGenerator = Objects.requireNonNull(mapGenerator, "mapGenerator is required");
-        this.mapValidator = Objects.requireNonNull(mapValidator, "mapValidator is required");
-        this.mapGenerationView = Objects.requireNonNull(mapGenerationView, "mapGenerationView is required");
-        this.mapValidationInternalsView = Objects.requireNonNull(mapValidationInternalsView, "mapValidationInternalsView is required");
+        this.networkCenter = Objects.requireNonNull(networkCenter, ControllerTextConfig.REQUIRE_NETWORK_CENTER);
+        this.output = Objects.requireNonNull(output, ControllerTextConfig.REQUIRE_OUTPUT);
+        this.mapGenerator = Objects.requireNonNull(mapGenerator, ControllerTextConfig.REQUIRE_MAP_GENERATOR);
+        this.mapValidator = Objects.requireNonNull(mapValidator, ControllerTextConfig.REQUIRE_MAP_VALIDATOR);
+        this.mapGenerationView = Objects.requireNonNull(mapGenerationView, ControllerTextConfig.REQUIRE_MAP_GENERATION_VIEW);
+        this.mapValidationInternalsView = Objects.requireNonNull(mapValidationInternalsView, ControllerTextConfig.REQUIRE_MAP_VALIDATION_INTERNALS_VIEW);
     }
 
     /**
      * Generates, validates, and sends the player's half map to the server.
      */
     public void generateAndSendHalfMap(String playerId, String gameStateId) throws GameCommunicationException, GameStateException {
-        String safeGameStateId = Objects.requireNonNull(gameStateId, "gameStateId is required").isBlank() ? "unknown" : gameStateId;
-        String safePlayerId = Optional.ofNullable(playerId).filter(id -> !id.isBlank()).orElseThrow(() -> new GameStateException(
-                "Cannot generate half map: player ID is missing",
+        String safeGameStateId = Objects.requireNonNull(gameStateId, ControllerTextConfig.REQUIRE_GAME_STATE_ID).isBlank() ? ControllerTextConfig.UNKNOWN : gameStateId;
+        String safePlayerId = ControllerTextConfig.optionalNonBlank(playerId).orElseThrow(() -> new GameStateException(
+            ControllerTextConfig.ERROR_CANNOT_GENERATE_HALF_MAP_NO_PLAYER_ID,
                 safeGameStateId,
                 Operation.GENERATE_HALF_MAP,
                 FailureReason.NO_PLAYER_ID
@@ -70,13 +70,13 @@ class HalfMapService {
 
         try {
             PlayerHalfMap halfMapToSend = generateValidHalfMap(safePlayerId, safeGameStateId);
-            mapGenerationView.printHalfMap(halfMapToSend, "Own Half Map");
+            mapGenerationView.printHalfMap(halfMapToSend, ControllerTextConfig.HALF_MAP_TITLE_OWN);
             sendHalfMap(halfMapToSend);
         } catch (GameCommunicationException e) {
             throw e;
         } catch (Exception e) {
             throw new GameStateException(
-                "Failed to generate or send half map: " + e.getMessage(),
+                ControllerTextConfig.ERROR_FAILED_GENERATE_OR_SEND_HALF_MAP_PREFIX + e.getMessage(),
                 e,
                 gameStateId,
                 Operation.GENERATE_HALF_MAP,
@@ -101,11 +101,17 @@ class HalfMapService {
 
             // Map validation errors are not handled via exceptions. Report internals and retry.
             mapValidationInternalsView.report(validation);
-            output.showMapValidationFailed("Attempt " + attempt + "/" + MAX_HALF_MAP_GENERATION_ATTEMPTS + ": " + validation.getErrorMessages());
+                output.showMapValidationFailed(
+                    ControllerTextConfig.MAP_VALIDATION_ATTEMPT_PREFIX + attempt
+                        + ControllerTextConfig.MAP_VALIDATION_ATTEMPT_SEPARATOR + MAX_HALF_MAP_GENERATION_ATTEMPTS
+                        + ControllerTextConfig.MAP_VALIDATION_ATTEMPT_SUFFIX + validation.getErrorMessages()
+                );
         }
 
         throw new GameStateException(
-                "Unable to generate a valid half map after " + MAX_HALF_MAP_GENERATION_ATTEMPTS + " attempts",
+                ControllerTextConfig.ERROR_UNABLE_TO_GENERATE_VALID_HALF_MAP_AFTER_PREFIX
+                    + MAX_HALF_MAP_GENERATION_ATTEMPTS
+                    + ControllerTextConfig.ERROR_UNABLE_TO_GENERATE_VALID_HALF_MAP_AFTER_SUFFIX,
                 gameStateId,
                 Operation.GENERATE_HALF_MAP,
                 FailureReason.MAP_ERROR
@@ -117,7 +123,7 @@ class HalfMapService {
             networkCenter.sendHalfMap(halfMap);
         } catch (Exception e) {
             throw new GameCommunicationException(
-                "Failed to send half map to server: " + e.getMessage(),
+                ControllerTextConfig.ERROR_FAILED_SEND_HALF_MAP_PREFIX + e.getMessage(),
                 e,
                 FailureReason.UNKNOWN.code(),
                 Operation.SEND_HALF_MAP,

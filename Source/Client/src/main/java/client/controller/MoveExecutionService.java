@@ -14,8 +14,8 @@ import client.model.PlayerState;
 import client.model.ai.WayFinder;
 import client.view.GameOutput;
 
-import java.util.Optional;
 import java.util.Objects;
+import java.util.Optional;
 
 final class MoveExecutionService {
 
@@ -24,64 +24,69 @@ final class MoveExecutionService {
     private final GameOutput output;
 
     MoveExecutionService(NetworkCenter networkCenter, WayFinder wayFinder, GameOutput output) {
-        this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
-        this.wayFinder = Objects.requireNonNull(wayFinder, "wayFinder is required");
-        this.output = Objects.requireNonNull(output, "output is required");
+        this.networkCenter = Objects.requireNonNull(networkCenter, ControllerTextConfig.REQUIRE_NETWORK_CENTER);
+        this.wayFinder = Objects.requireNonNull(wayFinder, ControllerTextConfig.REQUIRE_WAY_FINDER);
+        this.output = Objects.requireNonNull(output, ControllerTextConfig.REQUIRE_OUTPUT);
     }
 
     void makeMove(GameState gameState, GameMode gameMode)
             throws GameCommunicationException, AIDecisionException, GameStateException {
 
-        GameState state = Optional.ofNullable(gameState).orElseThrow(() -> new GameStateException(
-            "Cannot make move: game state is missing",
-            "unknown",
-            "MAKE_MOVE",
-            "missing"
-        ));
+        GameState state;
+        try {
+            state = Objects.requireNonNull(gameState);
+        } catch (NullPointerException e) {
+            throw new GameStateException(
+                    ControllerTextConfig.ERROR_CANNOT_MAKE_MOVE_GAME_STATE_MISSING,
+                    ControllerTextConfig.UNKNOWN,
+                    ControllerTextConfig.OP_MAKE_MOVE,
+                    ControllerTextConfig.MISSING
+            );
+        }
 
         state.getCurrentPlayerState().orElseThrow(() -> new GameStateException(
-            "Cannot make move: current player state is missing",
+            ControllerTextConfig.ERROR_CANNOT_MAKE_MOVE_PLAYER_STATE_MISSING,
             state.getGameStateID(),
-            "MAKE_MOVE",
-            "missing_player_state"
+            ControllerTextConfig.OP_MAKE_MOVE,
+            ControllerTextConfig.REASON_MISSING_PLAYER_STATE
         ));
 
-        GameMode effectiveMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
+        GameMode effectiveMode = ControllerTextConfig.defaultIfMissing(gameMode, GameMode.UNKNOWN);
 
         try {
             Direction nextMoveDirection;
             try {
                 try {
-                    nextMoveDirection = Objects.requireNonNull(wayFinder.findNext(), "WayFinder returned a missing next move");
+                    nextMoveDirection = Objects.requireNonNull(wayFinder.findNext(), ControllerTextConfig.ERROR_WAY_FINDER_MISSING_NEXT_MOVE);
                 } catch (NullPointerException ignored) {
                     throw new AIDecisionException(
-                            "WayFinder returned a missing next move",
-                            "WayFinder",
-                            "findNext",
+                            ControllerTextConfig.ERROR_WAY_FINDER_MISSING_NEXT_MOVE,
+                            ControllerTextConfig.AI_COMPONENT_WAY_FINDER,
+                            ControllerTextConfig.AI_CONTEXT_FIND_NEXT,
                             state.getCurrentPlayerState()
                                     .flatMap(PlayerState::getCurrentPosition)
                                     .map(Object::toString)
-                                    .orElse("<unknown_position>")
+                                    .orElse(ControllerTextConfig.UNKNOWN_POSITION)
                     );
                 }
             } catch (NoValidMoveAvailableException e) {
                 Optional<Direction> suggested = e.getSuggestedFallbackDirection();
                 if (suggested.isEmpty()) {
                     throw new AIDecisionException(
-                            "AI could not determine a move and did not provide a fallback",
+                            ControllerTextConfig.ERROR_AI_NO_FALLBACK,
                             e,
-                            e.getAiComponent().orElse("WayFinder"),
-                            e.getDecisionContext().orElse("findNext"),
+                            e.getAiComponent().orElse(ControllerTextConfig.AI_COMPONENT_WAY_FINDER),
+                            e.getDecisionContext().orElse(ControllerTextConfig.AI_CONTEXT_FIND_NEXT),
                             state.getCurrentPlayerState()
                                     .flatMap(PlayerState::getCurrentPosition)
                                     .map(Object::toString)
-                                    .orElse("<unknown_position>")
+                                    .orElse(ControllerTextConfig.UNKNOWN_POSITION)
                     );
                 }
 
                 nextMoveDirection = suggested.orElseThrow();
                 output.showAiError(
-                        "AI could not compute a move (" + e.getMessage() + "). Falling back to: " + nextMoveDirection
+                    ControllerTextConfig.AI_FALLBACK_MESSAGE_PREFIX + e.getMessage() + ControllerTextConfig.AI_FALLBACK_MESSAGE_MIDDLE + nextMoveDirection
                 );
             }
 
@@ -95,7 +100,7 @@ final class MoveExecutionService {
                 throw e;
             } catch (Exception e) {
                 throw new GameCommunicationException(
-                        "Failed to send move to server: " + e.getMessage(),
+                        ControllerTextConfig.ERROR_FAILED_SEND_MOVE_PREFIX + e.getMessage(),
                         e,
                     FailureReason.UNKNOWN.code(),
                         Operation.SEND_MOVE,
@@ -107,7 +112,7 @@ final class MoveExecutionService {
             throw e;
         } catch (Exception e) {
             throw new GameStateException(
-                    "Unexpected error during move making: " + e.getMessage(),
+                    ControllerTextConfig.ERROR_UNEXPECTED_MOVE_MAKING_PREFIX + e.getMessage(),
                     e,
                     state.getGameStateID(),
                     Operation.MAKE_MOVE.code(),

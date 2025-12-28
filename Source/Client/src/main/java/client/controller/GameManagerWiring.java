@@ -19,14 +19,14 @@ final class GameManagerWiring {
     }
 
     static CLIHandler createCLIHandler(GameMode gameMode) {
-        return new CLIHandler(Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN));
+        return new CLIHandler(ControllerTextConfig.defaultIfMissing(gameMode, GameMode.UNKNOWN));
     }
 
     static void wireObservers(GameState gameState, CLIHandler cliHandler, WayFinder wayFinder, DynamicCLIGameView dynamicView) {
-        Objects.requireNonNull(gameState, "gameState is required");
-        Objects.requireNonNull(cliHandler, "cliHandler is required");
-        Objects.requireNonNull(wayFinder, "wayFinder is required");
-        Objects.requireNonNull(dynamicView, "dynamicView is required");
+        Objects.requireNonNull(gameState, ControllerTextConfig.REQUIRE_GAME_STATE);
+        Objects.requireNonNull(cliHandler, ControllerTextConfig.REQUIRE_CLI_HANDLER);
+        Objects.requireNonNull(wayFinder, ControllerTextConfig.REQUIRE_WAY_FINDER);
+        Objects.requireNonNull(dynamicView, ControllerTextConfig.REQUIRE_DYNAMIC_VIEW);
 
         // Modern MVC wiring (composition): CLI only needs map updates.
         // Keep the old behavior of setting the initial state once.

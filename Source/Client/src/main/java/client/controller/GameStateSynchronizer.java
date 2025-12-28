@@ -13,7 +13,7 @@ class GameStateSynchronizer {
     private final NetworkCenter networkCenter;
 
     public GameStateSynchronizer(NetworkCenter networkCenter) {
-        this.networkCenter = Objects.requireNonNull(networkCenter, "networkCenter is required");
+        this.networkCenter = Objects.requireNonNull(networkCenter, ControllerTextConfig.REQUIRE_NETWORK_CENTER);
     }
 
     /**
@@ -21,21 +21,29 @@ class GameStateSynchronizer {
      */
     public void synchronize(GameState sharedGameState) throws GameCommunicationException, MapProcessingException {
         try {
-            GameState shared = Objects.requireNonNull(sharedGameState, "sharedGameState is required");
+            GameState shared = Objects.requireNonNull(sharedGameState, ControllerTextConfig.REQUIRE_SHARED_GAME_STATE);
 
-            messagesbase.messagesfromserver.GameState serverState = Optional.ofNullable(networkCenter.pollGameState())
-                    .orElseThrow(() -> new MapProcessingException(
-                            "Received missing game state from server",
-                            "GameState",
-                            "server_response_validation"
-                    ));
+            messagesbase.messagesfromserver.GameState serverState;
+            try {
+            serverState = Objects.requireNonNull(networkCenter.pollGameState());
+            } catch (NullPointerException e) {
+            throw new MapProcessingException(
+                ControllerTextConfig.ERROR_RECEIVED_MISSING_GAME_STATE_FROM_SERVER,
+                ControllerTextConfig.TYPE_GAME_STATE,
+                ControllerTextConfig.CONTEXT_SERVER_RESPONSE_VALIDATION
+            );
+            }
 
-            GameState polledState = Optional.ofNullable(networkCenter.convertServerGamestate(serverState))
-                    .orElseThrow(() -> new MapProcessingException(
-                            "Failed to convert server game state to client format",
-                            "GameState",
-                            "state_conversion"
-                    ));
+            GameState polledState;
+            try {
+            polledState = Objects.requireNonNull(networkCenter.convertServerGamestate(serverState));
+            } catch (NullPointerException e) {
+            throw new MapProcessingException(
+                ControllerTextConfig.ERROR_FAILED_CONVERT_SERVER_GAME_STATE,
+                ControllerTextConfig.TYPE_GAME_STATE,
+                ControllerTextConfig.CONTEXT_STATE_CONVERSION
+            );
+            }
 
             shared.updateGameState(polledState);
 
@@ -43,10 +51,10 @@ class GameStateSynchronizer {
             throw e;
         } catch (Exception e) {
             throw new MapProcessingException(
-                "Unexpected error during game state update: " + e.getMessage(),
+                ControllerTextConfig.ERROR_UNEXPECTED_GAME_STATE_UPDATE_PREFIX + e.getMessage(),
                 e,
-                "GameState",
-                "update_process",
+                ControllerTextConfig.TYPE_GAME_STATE,
+                ControllerTextConfig.CONTEXT_UPDATE_PROCESS,
                 -1,
                 -1,
                 ""

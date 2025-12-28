@@ -1,5 +1,6 @@
 package client.controller.network.service;
 
+import client.controller.ControllerTextConfig;
 import client.model.PlayerStatus;
 import messagesbase.messagesfromserver.EPlayerGameState;
 
@@ -11,7 +12,7 @@ import java.util.Objects;
 class ServerToClientStatusConverter {
 
     public PlayerStatus convert(EPlayerGameState serverStatus) {
-        Objects.requireNonNull(serverStatus, "Server status must be provided");
+        Objects.requireNonNull(serverStatus, ControllerTextConfig.ERROR_SERVER_STATUS_REQUIRED);
         switch (serverStatus) {
             case MustAct:
                 return PlayerStatus.MUST_ACT;
@@ -22,7 +23,7 @@ class ServerToClientStatusConverter {
             case Won:
                 return PlayerStatus.WON;
             default:
-                throw new IllegalArgumentException("Unknown server status: " + serverStatus);
+                throw new IllegalArgumentException(ControllerTextConfig.ERROR_UNKNOWN_SERVER_STATUS_PREFIX + serverStatus);
         }
     }
 }

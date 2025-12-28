@@ -23,8 +23,8 @@ class GameLoopService {
     private final GameOutput output;
 
     public GameLoopService(GameManager gameManager, GameOutput output) {
-        this.gameManager = Objects.requireNonNull(gameManager, "gameManager is required");
-        this.output = Objects.requireNonNullElse(output, new NoOpGameOutput());
+        this.gameManager = Objects.requireNonNull(gameManager, ControllerTextConfig.REQUIRE_GAME_MANAGER);
+        this.output = ControllerTextConfig.defaultIfMissing(output, new NoOpGameOutput());
     }
 
     public void startGameLoop(String gameMode) throws GameCommunicationException, GameStateException {
@@ -32,7 +32,7 @@ class GameLoopService {
     }
 
     private void startGameLoop(GameMode gameMode) throws GameCommunicationException, GameStateException {
-        GameMode effectiveMode = Objects.requireNonNullElse(gameMode, GameMode.UNKNOWN);
+        GameMode effectiveMode = ControllerTextConfig.defaultIfMissing(gameMode, GameMode.UNKNOWN);
         boolean dynamicMode = effectiveMode.isDynamicVisualization();
         if (dynamicMode) {
             output.showDynamicModeStarting();
@@ -111,7 +111,7 @@ class GameLoopService {
                 DebugSettings.printStackTraceIfDebug(e);
                 if (!e.isRecoverable()) {
                     throw new GameStateException(
-                        "Fatal map processing error: " + e.getMessage(),
+                        ControllerTextConfig.ERROR_FATAL_MAP_PROCESSING_PREFIX + e.getMessage(),
                         e,
                         gameManager.getGameState().getGameStateID(),
                         Operation.GAME_LOOP.code(),
@@ -124,7 +124,7 @@ class GameLoopService {
             } catch (Exception e) {
                 DebugSettings.printStackTraceIfDebug(e);
                 throw new GameStateException(
-                    "Unexpected error in game loop: " + e.getMessage(),
+                    ControllerTextConfig.ERROR_UNEXPECTED_GAME_LOOP_PREFIX + e.getMessage(),
                     e,
                     gameManager.getGameState().getGameStateID(),
                     Operation.GAME_LOOP.code(),

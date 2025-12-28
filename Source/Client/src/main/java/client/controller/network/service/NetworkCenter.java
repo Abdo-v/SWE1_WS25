@@ -8,6 +8,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import client.controller.ControllerTextConfig;
 import client.exception.GameCommunicationException;
 import client.exception.MapProcessingException;
 import client.model.Direction;
@@ -48,9 +49,9 @@ public class NetworkCenter {
         this.serverBaseUrl = serverBaseUrl;
         this.config = config;
         WebClient webClient = WebClient.builder()
-                .baseUrl(serverBaseUrl + "/games")
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_XML_VALUE) 
-                .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_XML_VALUE)
+            .baseUrl(serverBaseUrl + ControllerTextConfig.PATH_GAMES)
+            .defaultHeader(ControllerTextConfig.HTTP_HEADER_CONTENT_TYPE, ControllerTextConfig.MEDIA_TYPE_APPLICATION_XML)
+            .defaultHeader(ControllerTextConfig.HTTP_HEADER_ACCEPT, ControllerTextConfig.MEDIA_TYPE_APPLICATION_XML)
                 .build();
         this.httpClient = new WebClientNetworkCenterHttpClient(webClient);
         this.clientToServerConverter = new ClientToServerConverter();
@@ -67,7 +68,7 @@ public class NetworkCenter {
             ServerToClientConverter serverToClientConverter
     ) {
         this.gameId = Objects.requireNonNull(gameId, "gameId is required");
-        this.serverBaseUrl = Objects.requireNonNull(serverBaseUrl, "serverBaseUrl is required");
+        this.serverBaseUrl = Objects.requireNonNull(serverBaseUrl, ControllerTextConfig.REQUIRE_SERVER_BASE_URL);
         this.config = Objects.requireNonNull(config, "config is required");
         this.httpClient = Objects.requireNonNull(httpClient, "httpClient is required");
         this.clientToServerConverter = Objects.requireNonNull(clientToServerConverter, "clientToServerConverter is required");
@@ -89,7 +90,7 @@ public class NetworkCenter {
         try {
          // logger.debug("Sending player registration request to server");
             ResponseEnvelope<UniquePlayerIdentifier> resultReg = httpClient.post(
-                "/" + gameId + "/players",
+                "/" + gameId + ControllerTextConfig.PATH_PLAYERS,
                 playerReg,
                 new ParameterizedTypeReference<ResponseEnvelope<UniquePlayerIdentifier>>() {}
             );
@@ -97,10 +98,10 @@ public class NetworkCenter {
             if (resultReg.getState() == ERequestState.Error) {
              // logger.error("Player registration failed for {} {}: {}", firstName, lastName, resultReg.getExceptionMessage());
                 throw new GameCommunicationException(
-                    formatServerRejection("PLAYER_REGISTRATION", resultReg),
+                    formatServerRejection(ControllerTextConfig.OP_PLAYER_REGISTRATION, resultReg),
                     serverBaseUrl,
-                    "PLAYER_REGISTRATION",
-                    400,
+                    ControllerTextConfig.OP_PLAYER_REGISTRATION,
+                    ControllerTextConfig.HTTP_STATUS_SERVER_REJECTED,
                     resultReg.getExceptionName(),
                     resultReg.getExceptionMessage()
                 );
@@ -116,7 +117,7 @@ public class NetworkCenter {
                 "HTTP error during player registration: " + e.getMessage(),
                 e,
                 serverBaseUrl,
-                "PLAYER_REGISTRATION",
+                ControllerTextConfig.OP_PLAYER_REGISTRATION,
                 e.getStatusCode().value()
             );
         } catch (Exception e) {
@@ -128,7 +129,7 @@ public class NetworkCenter {
                 "Network connection failed during player registration",
                 e,
                 serverBaseUrl,
-                "PLAYER_REGISTRATION",
+                ControllerTextConfig.OP_PLAYER_REGISTRATION,
                 -1
             );
         }
@@ -145,7 +146,7 @@ public class NetworkCenter {
             throw new GameCommunicationException(
                 "Player must be registered before sending a half map",
                 serverBaseUrl,
-                "SEND_HALF_MAP",
+                ControllerTextConfig.OP_SEND_HALF_MAP,
                 -1
             );
         }
@@ -158,7 +159,7 @@ public class NetworkCenter {
             
          // logger.debug("Transmitting half map to server");
             ResponseEnvelope<messagesbase.messagesfromserver.PlayerState> response = httpClient.post(
-                "/" + gameId + "/halfmaps",
+                "/" + gameId + ControllerTextConfig.PATH_HALFMAPS,
                 clientHalfMap,
                 new ParameterizedTypeReference<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>>() {}
             );
@@ -166,10 +167,10 @@ public class NetworkCenter {
             if (response.getState() == ERequestState.Error) {
              // logger.error("Failed to send half map for player {}: {}", playerId.getUniquePlayerID(), response.getExceptionMessage());
                 throw new GameCommunicationException(
-                    formatServerRejection("SEND_HALF_MAP", response),
+                    formatServerRejection(ControllerTextConfig.OP_SEND_HALF_MAP, response),
                     serverBaseUrl,
-                    "SEND_HALF_MAP",
-                    400,
+                    ControllerTextConfig.OP_SEND_HALF_MAP,
+                    ControllerTextConfig.HTTP_STATUS_SERVER_REJECTED,
                     response.getExceptionName(),
                     response.getExceptionMessage()
                 );
@@ -183,7 +184,7 @@ public class NetworkCenter {
                 "HTTP error during half map submission: " + e.getMessage(),
                 e,
                 serverBaseUrl,
-                "SEND_HALF_MAP",
+                ControllerTextConfig.OP_SEND_HALF_MAP,
                 e.getStatusCode().value()
             );
         } catch (Exception e) {
@@ -195,7 +196,7 @@ public class NetworkCenter {
                 "Network connection failed during half map submission",
                 e,
                 serverBaseUrl,
-                "SEND_HALF_MAP",
+                ControllerTextConfig.OP_SEND_HALF_MAP,
                 -1
             );
         }
@@ -212,12 +213,12 @@ public class NetworkCenter {
             throw new GameCommunicationException(
                 "Player must be registered before sending a move",
                 serverBaseUrl,
-                "SEND_MOVE",
+                ControllerTextConfig.OP_SEND_MOVE,
                 -1
             );
         }
 
-        Direction safeDirection = Objects.requireNonNull(direction, "direction is required");
+        Direction safeDirection = Objects.requireNonNull(direction, ControllerTextConfig.REQUIRE_DIRECTION);
         sendMoveInternal(safeDirection);
     }
 
@@ -229,7 +230,7 @@ public class NetworkCenter {
             
          // logger.trace("Transmitting move {} to server for player {}", networkMove, playerId.getUniquePlayerID());
             ResponseEnvelope<messagesbase.messagesfromserver.PlayerState> response = httpClient.post(
-                "/" + gameId + "/moves",
+                "/" + gameId + ControllerTextConfig.PATH_MOVES,
                 playerMove,
                 new ParameterizedTypeReference<ResponseEnvelope<messagesbase.messagesfromserver.PlayerState>>() {}
             );
@@ -237,10 +238,10 @@ public class NetworkCenter {
             if (response.getState() == ERequestState.Error) {
              // logger.error("Failed to send move {} for player {}: {}", direction, playerId.getUniquePlayerID(), response.getExceptionMessage());
                 throw new GameCommunicationException(
-                    formatServerRejection("SEND_MOVE", response),
+                    formatServerRejection(ControllerTextConfig.OP_SEND_MOVE, response),
                     serverBaseUrl,
-                    "SEND_MOVE",
-                    400,
+                    ControllerTextConfig.OP_SEND_MOVE,
+                    ControllerTextConfig.HTTP_STATUS_SERVER_REJECTED,
                     response.getExceptionName(),
                     response.getExceptionMessage()
                 );
@@ -253,7 +254,7 @@ public class NetworkCenter {
                     "Invalid direction cannot be converted: " + direction,
                     e,
                     serverBaseUrl,
-                    "SEND_MOVE",
+                    ControllerTextConfig.OP_SEND_MOVE,
                     -1
             );
         } catch (WebClientResponseException e) {
@@ -262,7 +263,7 @@ public class NetworkCenter {
                 "HTTP error during move submission: " + e.getMessage(),
                 e,
                 serverBaseUrl,
-                "SEND_MOVE",
+                ControllerTextConfig.OP_SEND_MOVE,
                 e.getStatusCode().value()
             );
         } catch (Exception e) {
@@ -274,7 +275,7 @@ public class NetworkCenter {
                 "Network connection failed during move submission",
                 e,
                 serverBaseUrl,
-                "SEND_MOVE",
+                ControllerTextConfig.OP_SEND_MOVE,
                 -1
             );
         }
@@ -292,10 +293,10 @@ public class NetworkCenter {
         if (playerId.isEmpty()) {
          // logger.error("Attempted to poll game state without player registration");
             throw new GameCommunicationException(
-                "Player must be registered before polling game state",
+                ControllerTextConfig.ERROR_PLAYER_MUST_BE_REGISTERED_POLL_STATE,
                 serverBaseUrl,
-                "POLL_GAME_STATE",
-                -1
+                ControllerTextConfig.OP_POLL_GAME_STATE,
+                ControllerTextConfig.HTTP_STATUS_UNKNOWN_INT
             );
         }
         
@@ -303,63 +304,66 @@ public class NetworkCenter {
             Thread.sleep(config.pollGameStateDelayMillis());
             
             ResponseEnvelope<GameState> response = httpClient.get(
-                "/" + gameId + "/states/" + playerId.get().getUniquePlayerID(),
+                "/" + gameId + ControllerTextConfig.PATH_STATES_PREFIX + playerId.get().getUniquePlayerID(),
                 new ParameterizedTypeReference<ResponseEnvelope<GameState>>() {}
             );
             
             if (response.getState() == ERequestState.Error) {
              // logger.error("Failed to poll game state for player {}: {}", playerId.getUniquePlayerID(), response.getExceptionMessage());
                 throw new GameCommunicationException(
-                    formatServerRejection("POLL_GAME_STATE", response),
+                    formatServerRejection(ControllerTextConfig.OP_POLL_GAME_STATE, response),
                     serverBaseUrl,
-                    "POLL_GAME_STATE",
-                    400,
+                    ControllerTextConfig.OP_POLL_GAME_STATE,
+                    ControllerTextConfig.HTTP_STATUS_SERVER_REJECTED,
                     response.getExceptionName(),
                     response.getExceptionMessage()
                 );
             }
             
             GameState gameState = response.getData().orElseThrow(() -> new MapProcessingException(
-                    "Received game state missing from server response",
-                    "GameState",
-                    "server_response_validation"
+                    ControllerTextConfig.ERROR_RECEIVED_MISSING_GAME_STATE_FROM_SERVER_RESPONSE,
+                    ControllerTextConfig.TYPE_GAME_STATE,
+                    ControllerTextConfig.CONTEXT_SERVER_RESPONSE_VALIDATION
             ));
 
-            int nodeCount = Optional.ofNullable(gameState.getMap())
-                    .map(m -> m.getMapNodes())
-                    .map(Collection::size)
-                    .orElse(0);
+            int nodeCount;
+            try {
+                nodeCount = Objects.requireNonNull(gameState.getMap()).getMapNodes().size();
+            } catch (NullPointerException e) {
+                nodeCount = 0;
+            }
          // logger.trace("Game state polled successfully for player: {}, map nodes: {}", playerId.getUniquePlayerID(), nodeCount);
             
-            Optional.ofNullable(gameState.getMap())
-                    .map(m -> m.getMapNodes())
-                    .ifPresent(nodes -> {
-                        int expectedNodes = nodeCount == 50 ? 50 : (nodeCount == 100 ? 100 : -1);
-                        if (expectedNodes > 0 && nodeCount != expectedNodes && nodeCount != 0) {
-                            // logger.warn("Unexpected map node count: expected {} or 0, got {}", expectedNodes, nodeCount);
-                        }
-                    });
+            try {
+                Collection<?> nodes = Objects.requireNonNull(Objects.requireNonNull(gameState.getMap()).getMapNodes());
+                int expectedNodes = nodeCount == 50 ? 50 : (nodeCount == 100 ? 100 : -1);
+                if (!nodes.isEmpty() && expectedNodes > 0 && nodeCount != expectedNodes && nodeCount != 0) {
+                    // logger.warn("Unexpected map node count: expected {} or 0, got {}", expectedNodes, nodeCount);
+                }
+            } catch (NullPointerException ignored) {
+                // keep existing behavior: treat missing map/nodes as nodeCount=0 and skip validation
+            }
             
             return gameState;
             
         } catch (WebClientResponseException e) {
          // logger.error("HTTP error during game state polling: {}", e.getMessage(), e);
             throw new GameCommunicationException(
-                "HTTP error during game state polling: " + e.getMessage(),
+                ControllerTextConfig.ERROR_HTTP_ERROR_POLLING_GAME_STATE_PREFIX + e.getMessage(),
                 e,
                 serverBaseUrl,
-                "POLL_GAME_STATE",
+                ControllerTextConfig.OP_POLL_GAME_STATE,
                 e.getStatusCode().value()
             );
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
          // logger.error("Polling interrupted: {}", e.getMessage(), e);
             throw new GameCommunicationException(
-                "Game state polling was interrupted",
+                ControllerTextConfig.ERROR_GAME_STATE_POLLING_INTERRUPTED,
                 e,
                 serverBaseUrl,
-                "POLL_GAME_STATE",
-                -1
+                ControllerTextConfig.OP_POLL_GAME_STATE,
+                ControllerTextConfig.HTTP_STATUS_UNKNOWN_INT
             );
         } catch (Exception e) {
             if (e instanceof GameCommunicationException || e instanceof MapProcessingException) {
@@ -367,11 +371,11 @@ public class NetworkCenter {
             }
          // logger.error("Network error during game state polling: {}", e.getMessage(), e);
             throw new GameCommunicationException(
-                "Network connection failed during game state polling",
+                ControllerTextConfig.ERROR_NETWORK_CONNECTION_FAILED_POLLING_GAME_STATE,
                 e,
                 serverBaseUrl,
-                "POLL_GAME_STATE",
-                -1
+                ControllerTextConfig.OP_POLL_GAME_STATE,
+                ControllerTextConfig.HTTP_STATUS_UNKNOWN_INT
             );
         }
     }
@@ -383,7 +387,10 @@ public class NetworkCenter {
      */
     public client.model.GameState convertServerGamestate(messagesbase.messagesfromserver.GameState serverGameState) {
     // logger.trace("Converting server game state to client format for player: {}", playerId.map(UniquePlayerIdentifier::getUniquePlayerID).orElse("unknown"));
-        return serverToClientConverter.convertServerGamestate(serverGameState, playerId.orElseThrow(() -> new IllegalStateException("Player must be registered before converting game state")));
+        return serverToClientConverter.convertServerGamestate(
+                serverGameState,
+                playerId.orElseThrow(() -> new IllegalStateException(ControllerTextConfig.ERROR_PLAYER_MUST_BE_REGISTERED_CONVERT_STATE))
+        );
     }
 
     /**
@@ -397,14 +404,17 @@ public class NetworkCenter {
     }
 
     private static String formatServerRejection(String operation, ResponseEnvelope<?> envelope) {
-        Objects.requireNonNull(envelope, "envelope is required");
-        String safeOp = Objects.requireNonNullElse(operation, "UNKNOWN");
-        String exceptionName = Objects.requireNonNullElse(envelope.getExceptionName(), "ServerError").trim();
-        String exceptionMessage = Objects.requireNonNullElse(envelope.getExceptionMessage(), "").trim();
+        Objects.requireNonNull(envelope, ControllerTextConfig.REQUIRE_ENVELOPE);
+        String safeOp = ControllerTextConfig.safeStringOrDefault(operation, ControllerTextConfig.FALLBACK_OPERATION_UNKNOWN);
+        String exceptionName = ControllerTextConfig.safeStringOrDefault(envelope.getExceptionName(), ControllerTextConfig.FALLBACK_SERVER_ERROR_NAME).trim();
+        String exceptionMessage = ControllerTextConfig.safeStringOrDefault(envelope.getExceptionMessage(), "").trim();
         if (!exceptionMessage.isBlank()) {
-            return "Server rejected " + safeOp + ": " + exceptionName + " - " + exceptionMessage;
+            return ControllerTextConfig.SERVER_REJECTED_PREFIX + safeOp
+                    + ControllerTextConfig.SERVER_REJECTED_SEPARATOR_1 + exceptionName
+                    + ControllerTextConfig.SERVER_REJECTED_SEPARATOR_2 + exceptionMessage;
         }
-        return "Server rejected " + safeOp + ": " + exceptionName;
+        return ControllerTextConfig.SERVER_REJECTED_PREFIX + safeOp
+                + ControllerTextConfig.SERVER_REJECTED_SEPARATOR_1 + exceptionName;
     }
 
 }
