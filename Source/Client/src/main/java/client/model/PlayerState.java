@@ -2,7 +2,6 @@ package client.model;
 
 import client.model.mapper.MapNode;
 
-import java.util.Objects;
 import java.util.Optional;
 
 /**

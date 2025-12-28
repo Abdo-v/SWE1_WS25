@@ -6,7 +6,6 @@ import client.exception.GameCommunicationException;
 import client.exception.Operation;
 
 import java.util.Objects;
-import java.util.Optional;
 
 class GameStateQueryService {
 

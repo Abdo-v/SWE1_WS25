@@ -16,7 +16,6 @@ import client.view.MapGenerationView;
 import client.view.MapValidationInternalsView;
 
 import java.util.Objects;
-import java.util.Optional;
 
 class HalfMapService {
 

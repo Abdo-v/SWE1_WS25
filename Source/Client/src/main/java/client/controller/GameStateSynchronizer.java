@@ -6,7 +6,6 @@ import client.exception.MapProcessingException;
 import client.model.GameState;
 
 import java.util.Objects;
-import java.util.Optional;
 
 class GameStateSynchronizer {
 
