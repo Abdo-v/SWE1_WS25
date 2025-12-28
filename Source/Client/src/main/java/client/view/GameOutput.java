@@ -4,6 +4,12 @@ import client.model.Direction;
 import client.model.PlayerState;
 import client.model.PlayerStatus;
 
+/**
+ * UI boundary for presenting game progress, errors, and end-of-game screens.
+ *
+ * <p>Controllers/services should depend on this interface rather than printing directly,
+ * allowing different frontends (CLI, tests, no-op output).
+ */
 public interface GameOutput {
 
     void showMapValidationFailed(String errorMessages);

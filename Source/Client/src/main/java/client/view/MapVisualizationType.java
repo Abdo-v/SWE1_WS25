@@ -3,6 +3,12 @@ package client.view;
 import java.util.Objects;
 import java.util.Locale;
 
+/**
+ * Selects which subset of the map should be shown by snapshot-style CLI visualization.
+ *
+ * <p>Values are intentionally mapped from simple CLI strings; unknown inputs resolve to
+ * {@link #UNKNOWN} to keep argument handling robust.
+ */
 public enum MapVisualizationType {
     OWN("own"),
     OPPONENT("opponent"),

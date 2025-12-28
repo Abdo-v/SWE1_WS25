@@ -7,6 +7,12 @@ import client.model.PlayerStatus;
 import java.io.PrintStream;
 import java.util.Objects;
 
+/**
+ * Default {@link GameOutput} implementation that prints user-facing game messages to the console.
+ *
+ * <p>This view composes specialized screens (won/lost) and keeps output streams injectable so
+ * tests or alternate frontends can redirect output.
+ */
 public class GameManagerView implements GameOutput {
 
     private final PrintStream out;

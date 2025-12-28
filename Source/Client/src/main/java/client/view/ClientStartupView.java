@@ -8,6 +8,12 @@ import client.model.GameMode;
 
 import java.util.Objects;
 
+/**
+ * CLI output for the client startup sequence and early failure scenarios.
+ *
+ * <p>This view prints user-facing progress messages and summarizes exceptions in a way that is
+ * helpful during manual runs. Detailed stack traces are delegated to {@link DebugSettings}.
+ */
 public class ClientStartupView {
 
     public void showAutoFetchGameIdStart() {

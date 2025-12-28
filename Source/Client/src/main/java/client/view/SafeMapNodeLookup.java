@@ -5,6 +5,13 @@ import client.model.mapper.MapNode;
 
 import java.util.Optional;
 
+/**
+ * Safe accessor for map nodes that tolerates incomplete/partial map data.
+ *
+ * <p>Some views iterate coordinate ranges based on max bounds; during early game phases the
+ * underlying map representation may be incomplete or throw for missing cells. This helper
+ * converts such cases into {@link Optional#empty()}.
+ */
 final class SafeMapNodeLookup {
 
     private SafeMapNodeLookup() {

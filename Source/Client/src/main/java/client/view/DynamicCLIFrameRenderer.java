@@ -8,6 +8,13 @@ import client.model.mapper.MapNode;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Produces a complete, ready-to-print CLI "frame" from a {@link GameState}.
+ *
+ * <p>The renderer returns plain text (including newlines) so the caller can control
+ * output flushing and timing. Cell-level rendering is delegated to {@link MapCellRenderer}
+ * to keep snapshot and dynamic output consistent.
+ */
 final class DynamicCLIFrameRenderer {
 
     private static final String MAP_FOOTER = "--------------------";

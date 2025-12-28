@@ -5,6 +5,12 @@ import client.model.GameState;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Dynamic, emoji-based CLI visualization of the current {@link GameState}.
+ *
+ * <p>Rendering is debounced to keep the terminal responsive when multiple updates arrive in a
+ * short time window (e.g., model synchronization).
+ */
 public class DynamicCLIGameView implements client.observer.util.Observer {
 
     private static final long RENDER_DEBOUNCE_MILLIS = 15L;

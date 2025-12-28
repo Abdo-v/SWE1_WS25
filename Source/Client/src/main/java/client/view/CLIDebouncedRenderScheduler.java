@@ -8,6 +8,15 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Coalesces bursts of render requests into a single scheduled render.
+ *
+ * <p>This is used by the dynamic CLI view to avoid flicker and excessive console writes
+ * when the model emits multiple updates in quick succession.
+ *
+ * <p>Thread-safety: {@link #schedule(Runnable)} and {@link #cancelPending()} are safe to call
+ * from arbitrary threads; at most one pending task is kept.
+ */
 final class CLIDebouncedRenderScheduler {
 
     private static final ScheduledExecutorService EXECUTOR = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
