@@ -8,7 +8,7 @@ The client (Jar and source code in Eclipse) was tested multiple times on differe
 
 # Aufgabe 1 - Unteraufgabe 1: Refactoring der Teilaufgabe 2
 
-The project was refactored with the best practices derived from Blocks 3, 4 & 5 in mind, mainly addressing issues like SRP, DRY, encapsulation & information hiding, and other discussed topics.
+Das Projekt wurde unter Berücksichtigung der Best Practices aus den Blocks 3, 4 und 5 refaktoriert, wobei insbesondere Prinzipien wie SRP, DRY, Kapselung, Information Hiding und weitere besprochene Themen umgesetzt wurden.
 
 # Aufgabe 1 - Unteraufgabe 2: Benutzeroberflaeche (CLI)
 
