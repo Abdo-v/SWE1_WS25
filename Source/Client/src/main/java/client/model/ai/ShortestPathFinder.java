@@ -9,8 +9,6 @@ import client.model.Direction;
 import client.model.GameState;
 import client.model.common.DebugSettings;
 import client.model.mapper.MapNode;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 
 /**
  * Pathfinding helper that observes {@link GameState} updates.
@@ -20,7 +18,6 @@ import client.model.mapper.MapNode;
  */
 class ShortestPathFinder implements client.observer.util.Observer {
 
-    // private static final Logger logger = LoggerFactory.getLogger(ShortestPathFinder.class);
     private Optional<GameState> gameState;
 
     public ShortestPathFinder() {
@@ -41,11 +38,9 @@ class ShortestPathFinder implements client.observer.util.Observer {
             .flatMap(player -> player.getCurrentPosition())
             .orElseThrow(() -> new IllegalStateException("Current position must be set before finding next valid direction."));
         
-        // logger.trace("Pathfinding from {} to {}", current.printCoordinates(), target.printCoordinates());
         ArrayList<MapNode> path = findShortestPath(current, target);
 
         if (path.isEmpty()) {
-            // logger.warn("No valid path found to target {}", target.printCoordinates());
             if (DebugSettings.isDebugEnabled()) {
                 System.err.println("WayFinder: No valid path found to target node (empty path).");
             }
@@ -84,7 +79,6 @@ class ShortestPathFinder implements client.observer.util.Observer {
         MapNode safeTarget = target;
 
         if (safeStart.equalsByCoordinates(safeTarget)) {
-            // logger.debug("Start and target are the same, returning single-node path");
             path.add(safeStart);
             return path;
         }
@@ -143,9 +137,7 @@ class ShortestPathFinder implements client.observer.util.Observer {
 
     @Override
     public void update(GameState gameState) {
-        // logger.trace("ShortestPathFinder received GameState update");
                     this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
-        //System.out.print(StaticColors.BLUE + "S" + StaticColors.RESET);
     }
 
 }

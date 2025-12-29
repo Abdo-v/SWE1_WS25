@@ -135,7 +135,7 @@ $P_{ok} = 0.99 \times 1 = 0.99$
 
 $P_{shit} = 0.01 \times \infty = \infty$
 
-score ($\frac{\text{benefit}}{\text{cost}}$):
+score ($\frac{\text{possible benefit}}{\text{possible cost}}$):
 
 $\frac{0.99}{\infty}$ = 0
 

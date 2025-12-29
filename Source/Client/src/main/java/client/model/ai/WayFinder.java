@@ -8,8 +8,6 @@ import client.model.mapper.HalfMapDimensions;
 import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Optional;
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 
 /**
  * High-level AI move selector.
@@ -19,7 +17,6 @@ import java.util.Optional;
  * single step direction for the current turn.
  */
 public class WayFinder implements client.observer.util.Observer{
-    // private static final Logger logger = LoggerFactory.getLogger(WayFinder.class);
 
     private static final int HALF_MAP_TOTAL_NODES = HalfMapDimensions.TOTAL_NODES;
     private static final int FULL_MAP_TOTAL_NODES = HALF_MAP_TOTAL_NODES * 2;
@@ -50,7 +47,6 @@ public class WayFinder implements client.observer.util.Observer{
 
     @Override
     public void update(GameState state) {
-        // logger.debug("WayFinder received GameState update");
         updateFromState(Objects.requireNonNull(state, STATE_REQUIRED_MESSAGE));
     }
 
@@ -109,10 +105,7 @@ public class WayFinder implements client.observer.util.Observer{
             .filter(map -> wayHelper.getAllMountainFieldsMap().isEmpty())
             .ifPresent(map -> {
             wayHelper.setAllMountainFields(strategyGuide.getAllMountainFields());
-            //System.out.println("WayFinder: All mountain fields initialized: " + wayHelper.getAllMountainFieldsMap().toString());
         });
-        // logger.trace("WayFinder update completed");
-        //System.out.print(StaticColors.BLUE + "W" + StaticColors.RESET);
     }
 
 
@@ -122,8 +115,6 @@ public class WayFinder implements client.observer.util.Observer{
      * @throws AIDecisionException if required state is missing or an invariant is violated.
      */
     public Direction findNext() throws AIDecisionException, NoValidMoveAvailableException {
-        // logger.debug("Finding next move - treasure collected: {}, moves made: {}", gameState.isPresent() ? gameState.get().isTreasureCollected() : "unknown", movesMade);
-        
         // Validate game state before making decisions
         GameState state = gameState.orElseThrow(() -> new AIDecisionException(
                 "Cannot determine next move: game state not initialized",
@@ -152,12 +143,9 @@ public class WayFinder implements client.observer.util.Observer{
             Direction nextDirection = logic().moveBasedOnStrategy(state, current, objective);
             movesMade++;
             return nextDirection;
-        } catch (NoValidMoveAvailableException e) {
-            throw e;
-        } catch (AIDecisionException e) {
-            throw e; // Re-throw AI exceptions
+        } catch (NoValidMoveAvailableException | AIDecisionException e) {
+            throw e; // Re-throw expected exceptions unchanged
         } catch (Exception e) {
-        	// logger.error("Unexpected error in AI decision making: {}", e.getMessage(), e);
             throw new AIDecisionException(
                 "Unexpected error during move calculation: " + e.getMessage(),
                 e,
@@ -174,7 +162,6 @@ public class WayFinder implements client.observer.util.Observer{
 
     /** Registers internal helper observers on the current {@link GameState}. */
     public void addSubObservers(){
-        // logger.debug("Adding sub-observers to GameState");
         GameState state = gameState.orElseThrow(() -> new IllegalStateException("GameState must be set before adding sub-observers"));
         state.addObserver(this.wayHelper);
         state.addObserver(this.stateHolder);
@@ -182,12 +169,10 @@ public class WayFinder implements client.observer.util.Observer{
         state.addObserver(this.treasureSeeker);
         state.addObserver(this.fortSeeker);
         state.addObserver(this.strategyGuide);
-        // logger.debug("All sub-observers added successfully");
     }
 
     public void setGameState(GameState state){
         this.gameState = Optional.of(Objects.requireNonNull(state, STATE_REQUIRED_MESSAGE));
-        // logger.debug("GameState set for WayFinder");
     }
 
 }

@@ -1,7 +1,4 @@
 package client.controller;
-
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 import client.exception.GameCommunicationException;
 import client.exception.GameStateException;
 import client.exception.AIDecisionException;
@@ -24,7 +21,6 @@ import java.time.Duration;
  * view/AI observers. Most heavy lifting is delegated to dedicated services.
  */
 public class GameManager {
-    // private static final Logger logger = LoggerFactory.getLogger(GameManager.class);
     
     private final client.model.GameState gameState;
     private final NetworkCenter networkCenter;

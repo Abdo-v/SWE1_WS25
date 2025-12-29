@@ -29,8 +29,6 @@ public class MapNode {
         this.terrain = Terrain.GRASS;
         this.fortPresent = false;
         this.treasurePresent = false;
-        //System.err.println("DEBUG: MapNode default constructor called!");
-        //new Throwable("MapNode default constructor stack trace").printStackTrace(System.err);
     }
 
     public int getX() {

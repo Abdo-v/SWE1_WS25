@@ -4,9 +4,6 @@ import java.util.LinkedHashMap;
 import java.util.Objects;
 import java.util.Optional;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
-
 import client.model.GameState;
 import client.model.mapper.GameMap;
 import client.model.mapper.MapNode;
@@ -16,8 +13,6 @@ import client.model.mapper.PlayerHalfMap;
  * Tracks enemy fort discovery and provides traversal helpers for the fort phase.
  */
 class FortSeeker implements client.observer.util.Observer {
-
-    // private static final Logger logger = LoggerFactory.getLogger(FortSeeker.class);
 
     private Optional<GameState> gameState;
     private boolean enemyFortFound = false;
@@ -45,7 +40,6 @@ class FortSeeker implements client.observer.util.Observer {
 
     @Override
     public void update(GameState gameState) {
-        // logger.trace("FortSeeker received GameState update");
         this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
         wayHelper.update(gameState);
 

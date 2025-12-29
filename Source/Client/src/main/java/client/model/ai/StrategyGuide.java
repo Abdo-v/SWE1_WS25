@@ -1,7 +1,5 @@
 package client.model.ai;
 
-// import org.slf4j.Logger;
-// import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Objects;
@@ -17,7 +15,6 @@ import client.model.mapper.Terrain;
  * <p>Consumes {@link GameState} updates and delegates shared bookkeeping to {@link WayHelper}.
  */
 class StrategyGuide implements client.observer.util.Observer {
-    // private static final Logger logger = LoggerFactory.getLogger(StrategyGuide.class);
 
     private Optional<GameState> gameState;
     private final WayHelper wayHelper;
@@ -29,19 +26,8 @@ class StrategyGuide implements client.observer.util.Observer {
 
     @Override
     public void update(GameState gameState) {
-        // logger.trace("StrategyGuide received GameState update");
         this.gameState = Optional.of(Objects.requireNonNull(gameState, "gameState is required"));
         wayHelper.update(gameState);
-
-        Optional.of(gameState)
-                .flatMap(GameState::getMap)
-                .ifPresent(map -> {
-                    int totalNodes = map.getGameMapNodes().size();
-                    long mountainCount = map.getGameMapNodes().stream()
-                            .filter(node -> node.getTerrain() == Terrain.MOUNTAIN)
-                            .count();
-                    // logger.trace("Updated StrategyGuide - total nodes: {}, mountains: {}", totalNodes, mountainCount);
-                });
     }
 
     ArrayList<MapNode> getGrassNodesFromExtendedVision(MapNode currentNode){
@@ -55,18 +41,13 @@ class StrategyGuide implements client.observer.util.Observer {
                 grassNodes.add(node);
             }
         }
-        
-        // logger.debug("Extended vision from {} found {} grass nodes out of {} surrounding nodes", 
-        //             currentNode.printCoordinates(), grassNodes.size(), surroundingNodes.size());
         return grassNodes;
     }
     
     private ArrayList<MapNode> getSurroundingNodes(MapNode position) {
         Objects.requireNonNull(position, "position is required");
         
-        // logger.trace("Getting surrounding nodes for position: {}", position.printCoordinates());
         MapNode currentMapNode = position;
-        //System.err.println("extended VISION: called, current: " + currentMapNode.toString());
         ArrayList<MapNode> nodes = new ArrayList<>();
 
         if (gameState.isEmpty()) return nodes;
@@ -75,19 +56,15 @@ class StrategyGuide implements client.observer.util.Observer {
         if (mapOptional.isEmpty()) return nodes;
         var map = mapOptional.orElseThrow();
         
-        // get neighbors (also diagonal)
         int currentX = currentMapNode.getX();
         int currentY = currentMapNode.getY();
-        int outOfBoundsCount = 0;
         
         for(int x = currentX - 1; x <= currentX + 1; x++) {
             if (x < 0 || x > map.getMaxX()) {
-                outOfBoundsCount++;
                 continue; // Skip out of bounds X coordinates
             }
             for(int y = currentY - 1; y <= currentY + 1; y++) {
                 if (y < 0 || y > map.getMaxY()) {
-                    outOfBoundsCount++;
                     continue; // Skip out of bounds Y coordinates
                 }
                 try {
@@ -96,16 +73,11 @@ class StrategyGuide implements client.observer.util.Observer {
                         nodes.add(node);
                     }
                 } catch (IllegalArgumentException e) {
-                    // Out of bounds, skip this node
-                    outOfBoundsCount++;
-                    // logger.trace("Skipped out-of-bounds coordinate ({}, {})", x, y);
+                    // Intentionally ignored: the map may not contain a node for these coordinates
+                    // (e.g., sparse/irregular maps), so we skip invalid positions.
                 }
             }
         }
-        
-        // logger.trace("Found {} surrounding nodes for {} (skipped {} out-of-bounds)", 
-        //             nodes.size(), position.printCoordinates(), outOfBoundsCount);
-        //System.out.println("extended VISION: found nodes: " + nodes.toString());
         return nodes;
     }
     

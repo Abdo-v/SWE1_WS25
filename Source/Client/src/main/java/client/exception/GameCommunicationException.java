@@ -97,9 +97,6 @@ public class GameCommunicationException extends Exception {
     public Optional<String> getRemoteExceptionMessage() { return remoteExceptionMessage; }
 
     public boolean isRecoverable() {
-        // 5xx server errors are often temporary and recoverable
-        // 429 (Too Many Requests) is recoverable with backoff
-        // 408 (Request Timeout) is recoverable
         return httpStatusCode >= 500 || httpStatusCode == 429 || httpStatusCode == 408;
     }
 }

@@ -1,8 +1,6 @@
 package client.model;
 
 import client.observer.util.Observer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -18,8 +16,6 @@ import java.util.Set;
  * maintaining multiple observer buckets keyed by {@link GameStateEventType}.</p>
  */
 final class GameStateObservers {
-
-    private static final Logger logger = LoggerFactory.getLogger(GameStateObservers.class);
 
     private final GameState source;
 
@@ -95,7 +91,6 @@ final class GameStateObservers {
         try {
             observer.update(event);
         } catch (RuntimeException ex) {
-            logger.warn(ModelTextConfig.LOG_OBSERVER_THREW_DURING_UPDATE, event.type(), ex);
         }
     }
 }
