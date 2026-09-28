@@ -1,11 +1,5 @@
 [[_TOC_]]
 
-# general for TA3
-In this TA the Client from TA2 was extended and refactored, which itself was built on the Client of the last year.
-The client (Jar and source code in Eclipse) was tested multiple times on different operating systems and seems to be working fine.
-
-**Logging** was intentionally removed.
-
 # Aufgabe 1 - Unteraufgabe 1: Refactoring der Teilaufgabe 2
 
 Das Projekt wurde unter Berücksichtigung der Best Practices aus den Blocks 3, 4 und 5 refaktoriert, wobei insbesondere Prinzipien wie SRP, DRY, Kapselung, Information Hiding und weitere besprochene Themen umgesetzt wurden.
@@ -123,23 +117,7 @@ Ein GRASS-Kandidat bleibt im Search-Space, wenn:
 - `GridDijkstra.shortestPathCost(map, enemyTruePosition, node, MovementCostProfile.WAY_HELPER) <= 8`
 
 # Aufgabe 2 - Unteraufgabe 1: Logging
-nach einer schnellen, unkomplizierten Cost-Benefit-Analisys wurde Logging ignoriert.
-
-max Benefit von Logging = 1 (von insgesamt 30) Punkt $\rightarrow$ Wahsceinlichkeit: $P_{ok}$
-
-cost von fehgeschlagenem Logging = Sperrung vom Studium = $\infty$ $\rightarrow$ Wahsceinlichkeit: $P_{shit}$
-
-Annahme $P_{ok}$ = 99%
-
-$P_{ok} = 0.99 \times 1 = 0.99$
-
-$P_{shit} = 0.01 \times \infty = \infty$
-
-score ($\frac{\text{possible benefit}}{\text{possible cost}}$):
-
-$\frac{0.99}{\infty}$ = 0
-
-lohnt sich halt nicht (zumindest wenns schief geht, und es ist schon mal schief gegeangen)
+*redacted*
 
 
 # Aufgabe 2 - Unteraufgabe 2: Fehlerbehandlung

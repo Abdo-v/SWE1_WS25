@@ -1,4 +1,4 @@
-# redactions
+# Redactions
 
 this is a modified verson of the original project to avoid the publication of any data that should stay private.
 
