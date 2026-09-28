@@ -11,7 +11,7 @@ final class ClientDefaults {
     private ClientDefaults() {
     }
 
-    static final String PLAYER_FIRST_NAME = "Abdalrahman";
-    static final String PLAYER_LAST_NAME = "Mohammed";
-    static final String PLAYER_UACCOUNT = "abdalrahmm77";
+    static final String PLAYER_FIRST_NAME = "Redacted_first_name";
+    static final String PLAYER_LAST_NAME = "Redacted_last_name";
+    static final String PLAYER_UACCOUNT = "Redacted_uaccount";
 }
